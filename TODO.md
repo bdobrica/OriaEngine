@@ -191,7 +191,7 @@ Get a real private Telegram bot receiving and sending messages with minimal doma
 
 ### Tasks
 
-- [ ] Create development bot through BotFather manually (operator step).
+- [x] Create development bot through BotFather manually (operator confirmed).
 - [x] Document BotFather setup and live smoke test in [docs/telegram.md](docs/telegram.md).
 - [x] Add `TELEGRAM_BOT_TOKEN` configuration.
 - [x] Build aiogram dispatcher/router.
@@ -214,7 +214,7 @@ Get a real private Telegram bot receiving and sending messages with minimal doma
 
 ### Acceptance criteria
 
-- [ ] Sending `/start` to the development bot produces a response (manual live smoke test).
+- [x] Sending `/start` to the development bot produces a response (operator confirmed live smoke test, 2026-09-27).
 - [x] No birth data is requested yet.
 
 ---
