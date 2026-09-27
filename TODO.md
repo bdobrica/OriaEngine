@@ -83,35 +83,35 @@ Build a runnable service with strict configuration and privacy-safe logging.
 
 ### Tasks
 
-- [ ] Implement typed application settings.
-- [ ] Support `APP_ENV` and `LOG_LEVEL`.
-- [ ] Support `DATABASE_URL` and `REDIS_URL`.
-- [ ] Support Telegram configuration variables.
-- [ ] Support profile-encryption configuration.
-- [ ] Support SecondContext base URL/auth configuration.
-- [ ] Support Astrology MCP URL configuration.
-- [ ] Fail startup on malformed required production settings.
-- [ ] Add structured JSON logging.
-- [ ] Add log redaction helpers for secrets.
-- [ ] Define a rule that raw birth-profile payloads are never logged.
-- [ ] Create FastAPI app factory.
-- [ ] Add `/healthz`.
-- [ ] Add `/readyz` with dependency checks that can be extended later.
-- [ ] Add graceful shutdown hooks.
-- [ ] Add basic request/update correlation IDs.
+- [x] Implement typed application settings.
+- [x] Support `APP_ENV` and `LOG_LEVEL`.
+- [x] Support `DATABASE_URL` and `REDIS_URL`.
+- [x] Support Telegram configuration variables.
+- [x] Support profile-encryption configuration.
+- [x] Support SecondContext base URL/auth configuration.
+- [x] Support Astrology MCP URL configuration.
+- [x] Fail startup on malformed required production settings.
+- [x] Add structured JSON logging.
+- [x] Add log redaction helpers for secrets.
+- [x] Define a rule that raw birth-profile payloads are never logged.
+- [x] Create FastAPI app factory.
+- [x] Add `/healthz`.
+- [x] Add `/readyz` with dependency checks that can be extended later.
+- [x] Add graceful shutdown hooks.
+- [x] Add basic request/update correlation IDs.
 
 ### Tests
 
-- [ ] Unit-test configuration parsing.
-- [ ] Unit-test invalid production config failure.
-- [ ] Unit-test secret/redaction helpers.
-- [ ] Test `/healthz`.
+- [x] Unit-test configuration parsing.
+- [x] Unit-test invalid production config failure.
+- [x] Unit-test secret/redaction helpers.
+- [x] Test `/healthz`.
 
 ### Acceptance criteria
 
-- [ ] `make api` starts a local HTTP process.
-- [ ] `/healthz` returns success.
-- [ ] No configured secret value appears in logs during tests.
+- [x] `make api` starts a local HTTP process.
+- [x] `/healthz` returns success.
+- [x] No configured secret value appears in logs during tests.
 
 ---
 

@@ -203,6 +203,11 @@ Use a generated development key for `PROFILE_ENCRYPTION_KEY`. Production deploym
 
 ## Run locally
 
+The HTTP skeleton is available now with `make api` at
+`http://127.0.0.1:8001/healthz`; it needs no running dependencies or secrets in
+development. See [configuration, readiness and logging](docs/application.md) for
+the implemented settings and endpoint contracts.
+
 ### Full local Docker development stack
 
 When the Docker development stack is implemented:

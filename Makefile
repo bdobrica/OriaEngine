@@ -2,7 +2,7 @@ UV ?= uv
 
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap env format lint typecheck test-unit verify clean
+.PHONY: help bootstrap env api format lint typecheck test-unit verify clean
 
 help: ## Show available development commands
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -12,6 +12,9 @@ bootstrap: ## Install locked runtime and development dependencies
 
 env: ## Create .env from .env.example when absent
 	@test -e .env || cp .env.example .env
+
+api: ## Run the local HTTP gateway on http://127.0.0.1:8001
+	$(UV) run python -m oria_engine
 
 format: ## Format Python source and tests
 	$(UV) run ruff format .
