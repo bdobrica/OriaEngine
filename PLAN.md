@@ -1045,6 +1045,13 @@ The immediate delivery priority is a working demo. Implement the minimum needed
 to connect the core flow, deferring optional polish without weakening consent,
 privacy, or security requirements. The MVP completion criteria remain unchanged.
 
+For the staged demo, consent acceptance reaches `BirthDateRequired` without
+soliciting birth data until encrypted storage (Stage 6) and deterministic collection
+(Stage 7) are connected. Keep interim disclosure honest about unavailable profile
+and deletion controls. New profile writes and activation must check current consent
+inside their transaction under the user lock; the consent-only milestone does not
+replace those later checks. See [consent flow](docs/consent-flow.md).
+
 The Makefile is the supported developer interface.
 
 Expected commands:

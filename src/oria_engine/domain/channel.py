@@ -14,28 +14,24 @@ class ChannelMessage:
     provider_update_id: str
     received_at: datetime
     text: str = field(repr=False)
+    callback_data: str | None = field(default=None, repr=False)
+
+
+@dataclass(frozen=True)
+class ChannelButton:
+    text: str
+    data: str
 
 
 class ChannelClient(Protocol):
-    async def send_text(self, provider_chat_id: str, text: str) -> None:
+    async def send_text(
+        self, provider_chat_id: str, text: str, *, buttons: tuple[ChannelButton, ...] = ()
+    ) -> None:
         """Send plain text to a trusted channel routing identifier."""
 
 
-START_TEXT = (
-    "Hello, I'm Oria, an AI astrology personality. This demo is still being built. "
-    "Birth-profile setup is not available yet; please don't send birth details or other "
-    "personal information. Use /help to see what's available."
-)
 HELP_TEXT = (
-    "Available commands: /start and /help. Consent and birth-profile setup are coming next. "
+    "Available commands: /start, /help and /privacy. Use /start to review consent. "
+    "Birth-profile setup is coming next. "
     "Please don't send birth details or other personal information yet."
 )
-
-
-async def reply_to_message(
-    message: ChannelMessage, client: ChannelClient, *, command: str | None = None
-) -> None:
-    """Stateless baseline: no profile collection, message persistence, or model calls."""
-    await client.send_text(
-        message.provider_chat_id, START_TEXT if command == "start" else HELP_TEXT
-    )

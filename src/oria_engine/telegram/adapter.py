@@ -8,9 +8,17 @@ from typing import Any
 from aiogram import BaseMiddleware, Bot, Dispatcher, Router
 from aiogram.enums import ChatType
 from aiogram.filters import Command, CommandObject
-from aiogram.types import Message, TelegramObject, Update
+from aiogram.types import (
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+    TelegramObject,
+    Update,
+)
 
-from oria_engine.domain.channel import ChannelClient, ChannelMessage, reply_to_message
+from oria_engine.domain.channel import ChannelButton, ChannelClient, ChannelMessage
+from oria_engine.domain.consent import ConsentFlow
 from oria_engine.observability import correlation_scope
 
 logger = logging.getLogger(__name__)
@@ -43,8 +51,50 @@ class TelegramChannelClient:
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
-    async def send_text(self, provider_chat_id: str, text: str) -> None:
-        await self.bot.send_message(chat_id=int(provider_chat_id), text=text, parse_mode=None)
+    async def send_text(
+        self, provider_chat_id: str, text: str, *, buttons: tuple[ChannelButton, ...] = ()
+    ) -> None:
+        markup = (
+            InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text=button.text, callback_data=button.data)]
+                    for button in buttons
+                ]
+            )
+            if buttons
+            else None
+        )
+        await self.bot.send_message(
+            chat_id=int(provider_chat_id), text=text, parse_mode=None, reply_markup=markup
+        )
+
+
+def normalize_callback(update: Update, bot_id: int) -> ChannelMessage | None:
+    callback = update.callback_query
+    if callback is None:
+        return None
+    message = callback.message
+    if (
+        not isinstance(message, Message)
+        or message.chat.type != ChatType.PRIVATE
+        or callback.from_user.is_bot
+        or callback.from_user.id != message.chat.id
+        or message.from_user is None
+        or message.from_user.id != bot_id
+        or message.business_connection_id is not None
+        or callback.data is None
+    ):
+        return None
+    return ChannelMessage(
+        provider="telegram",
+        provider_user_id=str(callback.from_user.id),
+        provider_chat_id=str(message.chat.id),
+        provider_message_id=str(message.message_id),
+        provider_update_id=str(update.update_id),
+        received_at=datetime.now(UTC),
+        text="",
+        callback_data=callback.data,
+    )
 
 
 class PrivateMessageMiddleware(BaseMiddleware):
@@ -57,7 +107,7 @@ class PrivateMessageMiddleware(BaseMiddleware):
         if not isinstance(event, Update):
             return None
         with correlation_scope(telegram_update_id=event.update_id):
-            normalized = normalize_update(event)
+            normalized = normalize_update(event) or normalize_callback(event, data["bot"].id)
             if normalized is None:
                 return None
             data["channel_message"] = normalized
@@ -71,20 +121,32 @@ class PrivateMessageMiddleware(BaseMiddleware):
             return result
 
 
-def create_dispatcher(client: ChannelClient) -> Dispatcher:
+def create_dispatcher(client: ChannelClient, flow: ConsentFlow) -> Dispatcher:
     dispatcher = Dispatcher(disable_fsm=True)
     dispatcher.update.outer_middleware(PrivateMessageMiddleware())
     router = Router(name="private_messages")
 
-    @router.message(Command("start", "help"))
+    async def respond(channel_message: ChannelMessage, command: str | None = None) -> None:
+        reply = await flow.handle(channel_message, command=command)
+        # handle() commits before network I/O; failed delivery cannot undo consent.
+        await client.send_text(channel_message.provider_chat_id, reply.text, buttons=reply.buttons)
+
+    @router.message(Command("start", "help", "privacy"))
     async def command_handler(
         message: Message, channel_message: ChannelMessage, command: CommandObject
     ) -> None:
-        await reply_to_message(channel_message, client, command=command.command)
+        await respond(channel_message, command.command)
 
     @router.message()
     async def fallback_handler(message: Message, channel_message: ChannelMessage) -> None:
-        await reply_to_message(channel_message, client)
+        await respond(channel_message)
+
+    @router.callback_query()
+    async def consent_handler(callback: CallbackQuery, channel_message: ChannelMessage) -> None:
+        try:
+            await respond(channel_message)
+        finally:
+            await callback.answer()
 
     dispatcher.include_router(router)
     return dispatcher

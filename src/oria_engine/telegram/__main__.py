@@ -7,6 +7,8 @@ import sys
 from aiogram import Bot
 
 from oria_engine.config import ConfigurationError, Settings, load_settings
+from oria_engine.db.session import Database
+from oria_engine.domain.consent import ConsentFlow
 from oria_engine.observability import configure_logging
 from oria_engine.telegram.adapter import TelegramChannelClient, create_dispatcher
 
@@ -19,19 +21,30 @@ async def run_polling(settings: Settings) -> None:
     if not settings.telegram_bot_token.get_secret_value():
         raise ConfigurationError("Local polling requires TELEGRAM_BOT_TOKEN; see docs/telegram.md")
     bot = Bot(token=settings.telegram_bot_token.get_secret_value())
+    database: Database | None = None
     try:
         webhook = await bot.get_webhook_info()
         if webhook.url:
             raise ConfigurationError(
                 "Bot has an active webhook; use a dedicated development bot for polling"
             )
-        dispatcher = create_dispatcher(TelegramChannelClient(bot))
+        database = Database(settings)
+        dispatcher = create_dispatcher(
+            TelegramChannelClient(bot), ConsentFlow(database, settings.oria_policy_version)
+        )
         logger.info("application_started")
         await dispatcher.start_polling(
-            bot, allowed_updates=["message"], handle_as_tasks=False, close_bot_session=False
+            bot,
+            allowed_updates=["message", "callback_query"],
+            handle_as_tasks=False,
+            close_bot_session=False,
         )
     finally:
-        await bot.session.close()
+        try:
+            if database is not None:
+                await database.close()
+        finally:
+            await bot.session.close()
         logger.info("application_stopped")
 
 

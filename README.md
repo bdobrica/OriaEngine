@@ -235,15 +235,17 @@ make down
 
 ### Telegram polling mode
 
-Set `TELEGRAM_BOT_TOKEN` in `.env`, then run the private-chat polling baseline:
+Set `TELEGRAM_BOT_TOKEN` and `DATABASE_URL` in `.env`, start local infrastructure
+and apply migrations (`make infra-up migrate`), then run the private-chat bot:
 
 ```bash
 make run
 ```
 
-See [Telegram setup and smoke test](docs/telegram.md). `/start` and `/help` are
-available now; consent and profile setup come next. This baseline needs no worker
-or database. The commands below are planned for later stages.
+See [Telegram setup and smoke test](docs/telegram.md). `/start`, `/help`, `/privacy`
+and versioned consent buttons are available now; encrypted profile setup comes next.
+Consent uses PostgreSQL and needs no worker. See [consent behavior](docs/consent-flow.md).
+The commands below are planned for later stages.
 
 Run the worker in another terminal when it is not already running through Docker Compose:
 

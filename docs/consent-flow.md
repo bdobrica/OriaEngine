@@ -1,0 +1,65 @@
+# Deterministic consent flow
+
+`domain.consent.ConsentFlow` implements PLAN sections 5.1–5.2 and 13 using the
+existing [identity and consent repositories](identity-consent.md). No new schema,
+dependencies, Redis state or LLM calls are needed. Each update resolves trusted
+channel identifiers to the internal user UUID and reads/writes consent inside one
+transaction. Replies are sent after commit so delivery failure cannot undo a decision.
+
+## Disclosure and decisions
+
+The initial copy is `DISCLAIMER` in `domain/consent.py`, using
+`ORIA_POLICY_VERSION` (default `2026-09-01`). It covers AI identity, interpretive
+astrology, high-stakes limitations, birth date/time/place, chart purpose and future
+storage, prohibited unrelated PII, planned profile/edit/delete controls, and adult
+use. **I'm 18+ and agree** confirms adulthood and acceptance together; it is a
+self-attestation, not age verification. The copy explicitly describes this demo's
+limits: no profile collection or deletion yet, and identity/consent history remains
+after decline. `/privacy` shows the disclosure and the same decision buttons.
+
+Keep each deployed version associated with its disclosure in source history. Bump
+`ORIA_POLICY_VERSION` when the copy/data use changes and deploy consistently to all
+ingress processes. Changing copy without bumping the version does not invalidate
+existing database acceptances. The button fingerprint hashes both the version and
+copy, so buttons from another version/copy cannot record a current decision. It is
+a bounded routing identifier, not an authentication token; ownership always comes
+from the transport sender. Unknown/stale buttons redisplay current policy and
+leave the stored decision unchanged. Free text (including “yes”, “I agree”, birth
+details or pasted callback data) never grants consent.
+
+| Durable latest decision for configured policy | Resolved state | Behavior |
+| --- | --- | --- |
+| None, or a different policy version | `ConsentRequired` | Disclosure and buttons |
+| Accepted | `BirthDateRequired` | Confirm next step, pause collection until stages 6–7 |
+| Declined or revoked | `Closed` | Stop onboarding; `/start` can reoffer disclosure |
+
+Accept and Decline append versioned lifecycle records, including timestamps and
+channel. Repeating the same decision consecutively is idempotent. Decline after
+acceptance removes current consent. `/start` and `/privacy` only change what is
+displayed; they never grant consent or erase a decline. A new configured policy
+requires a fresh acceptance even after a previous decline or acceptance.
+
+## Scope and continuation
+
+No raw message or birth-profile payload is persisted, before or after consent.
+Stages 6–7 add encrypted profile storage and collection; Stage 10 adds activation.
+Those write/activation paths must take the user lock and check current consent in
+their own transaction, as described in the persistence contract. Today's absence
+of any profile write path preserves this invariant; it is not a substitute for
+those later checks. Profile/privacy/deletion workflows remain stages 17–18.
+
+Durable event deduplication and delayed replay handling remain Stage 11. Old
+same-policy buttons can still change later decisions; no exactly-once delivery is
+claimed. Pending same-policy callbacks can be retried after a process restart.
+
+## Verification
+
+`tests/integration/test_consent_flow.py` exercises first contact and unsolicited
+text, explicit decisions and timestamps, restart via a fresh flow instance,
+sender isolation, policy changes and stale buttons, deleted users, and the complete
+dispatcher-to-database path with failed delivery. Existing repository subprocess
+tests verify consent survives process restarts. Unit tests replay Telegram callbacks,
+reject unsupported ownership/chat contexts, check acknowledgement and keyboards,
+and verify privacy-safe logging and polling resource cleanup.
+
+Run `make verify`. See the [manual consent smoke test](telegram.md) for live validation.

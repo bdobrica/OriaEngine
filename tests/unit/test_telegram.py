@@ -11,12 +11,14 @@ from aiogram.types import Update, WebhookInfo
 from pydantic import SecretStr
 
 from oria_engine.config import ConfigurationError, Settings
-from oria_engine.domain.channel import HELP_TEXT, START_TEXT
+from oria_engine.domain.channel import ChannelButton
+from oria_engine.domain.consent import ConsentReply, OnboardingState
 from oria_engine.observability import configure_logging, correlation_id, update_id
 from oria_engine.telegram.__main__ import main, run_polling
 from oria_engine.telegram.adapter import (
     TelegramChannelClient,
     create_dispatcher,
+    normalize_callback,
     normalize_update,
 )
 
@@ -53,7 +55,9 @@ def test_normalization_minimizes_metadata():
 async def test_nonprivate_chats_are_ignored(kind):
     client = AsyncMock()
     bot = Bot(TOKEN)
-    await create_dispatcher(client).feed_update(bot, update(chat_type=kind))
+    flow = AsyncMock()
+    await create_dispatcher(client, flow).feed_update(bot, update(chat_type=kind))
+    flow.handle.assert_not_called()
     client.send_text.assert_not_called()
 
 
@@ -71,25 +75,32 @@ async def test_nonprivate_chats_are_ignored(kind):
 )
 async def test_unsupported_updates_are_ignored(event):
     client = AsyncMock()
-    await create_dispatcher(client).feed_update(Bot(TOKEN), event)
+    flow = AsyncMock()
+    await create_dispatcher(client, flow).feed_update(Bot(TOKEN), event)
+    flow.handle.assert_not_called()
     assert normalize_update(event) is None
     client.send_text.assert_not_called()
 
 
 @pytest.mark.parametrize(
-    ("text", "expected"),
+    ("text", "command"),
     [
-        ("/start", START_TEXT),
-        ("/start deep-link", START_TEXT),
-        ("/help", HELP_TEXT),
-        ("private birth details", HELP_TEXT),
-        ("/unknown", HELP_TEXT),
+        ("/start", "start"),
+        ("/start deep-link", "start"),
+        ("/help", "help"),
+        ("/privacy", "privacy"),
+        ("private birth details", None),
+        ("/unknown", None),
     ],
 )
-async def test_private_replies_use_channel_client(text, expected):
+async def test_private_replies_use_channel_client(text, command):
     client = AsyncMock()
-    await create_dispatcher(client).feed_update(Bot(TOKEN), update(text))
-    client.send_text.assert_awaited_once_with("42", expected)
+    flow = AsyncMock()
+    flow.handle.return_value = ConsentReply(OnboardingState.CONSENT_REQUIRED, "disclosure")
+    await create_dispatcher(client, flow).feed_update(Bot(TOKEN), update(text))
+    assert flow.handle.call_args.kwargs == {"command": command}
+    assert flow.handle.call_args.args[0].text == text
+    client.send_text.assert_awaited_once_with("42", "disclosure", buttons=())
     assert correlation_id.get() is None
     assert update_id.get() is None
 
@@ -105,19 +116,23 @@ async def test_outbound_api_is_plain_text():
     assert method.parse_mode is None
 
 
-@pytest.mark.parametrize("fails", [False, True])
+@pytest.mark.parametrize("fails", [False, "send", "database"])
 async def test_logs_exclude_payload_and_errors(fails, capsys):
     configure_logging(Settings(telegram_bot_token=SecretStr(TOKEN)))
     client = AsyncMock()
 
-    async def send(*args):
+    async def send(*args, **kwargs):
         assert correlation_id.get() is not None
         assert update_id.get() == 99
-        if fails:
+        if fails == "send":
             raise RuntimeError("private birth details " + TOKEN)
 
     client.send_text.side_effect = send
-    await create_dispatcher(client).feed_update(Bot(TOKEN), update("private birth details"))
+    flow = AsyncMock()
+    flow.handle.return_value = ConsentReply(OnboardingState.CONSENT_REQUIRED, "disclosure")
+    if fails == "database":
+        flow.handle.side_effect = RuntimeError("private birth details " + TOKEN)
+    await create_dispatcher(client, flow).feed_update(Bot(TOKEN), update("private birth details"))
     logs = capsys.readouterr().err
     assert TOKEN not in logs
     assert "private birth details" not in logs
@@ -150,6 +165,7 @@ async def test_polling_lifecycle(outcome):
         pending_update_count=0,
     )
     dispatcher = AsyncMock()
+    database = AsyncMock()
     failure = {
         "error": RuntimeError,
         "cancel": asyncio.CancelledError,
@@ -160,6 +176,7 @@ async def test_polling_lifecycle(outcome):
     with (
         patch("oria_engine.telegram.__main__.Bot", return_value=bot),
         patch("oria_engine.telegram.__main__.create_dispatcher", return_value=dispatcher),
+        patch("oria_engine.telegram.__main__.Database", return_value=database),
     ):
         if failure:
             with pytest.raises(failure):
@@ -170,10 +187,76 @@ async def test_polling_lifecycle(outcome):
     bot.delete_webhook.assert_not_called()
     if outcome == "webhook":
         dispatcher.start_polling.assert_not_called()
+        database.close.assert_not_called()
     else:
+        database.close.assert_awaited_once()
         dispatcher.start_polling.assert_awaited_once_with(
-            bot, allowed_updates=["message"], handle_as_tasks=False, close_bot_session=False
+            bot,
+            allowed_updates=["message", "callback_query"],
+            handle_as_tasks=False,
+            close_bot_session=False,
         )
+
+
+def callback_update(data="consent:accept:synthetic", **changes):
+    message = update().message.model_dump()
+    message["from_user"] = {"id": 123456, "is_bot": True, "first_name": "Oria"}
+    callback = {
+        "id": "synthetic-callback",
+        "chat_instance": "synthetic-chat",
+        "from": {"id": 42, "is_bot": False, "first_name": "Synthetic"},
+        "message": message,
+        "data": data,
+    }
+    callback.update(changes)
+    return Update.model_validate({"update_id": 100, "callback_query": callback})
+
+
+async def test_callback_uses_clicker_identity_and_acknowledges_even_send_failure():
+    event = callback_update()
+    normalized = normalize_callback(event, 123456)
+    assert normalized.provider_user_id == normalized.provider_chat_id == "42"
+    assert normalized.text == ""
+    assert normalized.callback_data == "consent:accept:synthetic"
+    assert "consent:accept" not in repr(normalized)
+    flow = AsyncMock()
+    flow.handle.return_value = ConsentReply(OnboardingState.BIRTH_DATE_REQUIRED, "accepted")
+    client = AsyncMock()
+    client.send_text.side_effect = RuntimeError("sensitive")
+    session = AsyncMock()
+    await create_dispatcher(client, flow).feed_update(Bot(TOKEN, session=session), event)
+    assert flow.handle.call_args.args[0].provider_user_id == "42"
+    assert session.call_args.args[1].callback_query_id == "synthetic-callback"
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"message": None, "inline_message_id": "inline"},
+        {"from": {"id": 43, "is_bot": False, "first_name": "Other"}},
+        {"from": {"id": 42, "is_bot": True, "first_name": "Bot"}},
+        {"data": None},
+        {"message": update(chat_type="group").message.model_dump()},
+        {"message": update().message.model_dump()},
+        {"message": {"message_id": 12, "date": 0, "chat": {"id": 42, "type": "private"}}},
+    ],
+)
+async def test_unsupported_callbacks_do_not_reach_consent(changes):
+    flow = AsyncMock()
+    await create_dispatcher(AsyncMock(), flow).feed_update(Bot(TOKEN), callback_update(**changes))
+    flow.handle.assert_not_called()
+
+
+async def test_outbound_consent_keyboard():
+    session = AsyncMock()
+    await TelegramChannelClient(Bot(TOKEN, session=session)).send_text(
+        "42", "policy", buttons=(ChannelButton("Agree", "consent:accept:test"),)
+    )
+    method = session.call_args.args[1]
+    assert method.parse_mode is None
+    button = method.reply_markup.inline_keyboard[0][0]
+    assert button.text == "Agree"
+    assert button.callback_data == "consent:accept:test"
 
 
 def test_entrypoint_suppresses_sensitive_startup_exception(capsys):

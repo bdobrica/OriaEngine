@@ -227,31 +227,37 @@ Require explicit consent before collecting or persisting birth data.
 
 ### Tasks
 
-- [ ] Write initial disclaimer text and assign a version.
-- [ ] Clearly state that Oria is an AI astrology personality.
-- [ ] State that astrology is interpretive and not a factual/scientific forecast.
-- [ ] State exactly which birth fields are required.
-- [ ] State that unrelated PII will not be solicited.
-- [ ] State profile/privacy/deletion controls.
-- [ ] Add adult-use confirmation for MVP.
-- [ ] Add Telegram inline buttons for accept/decline.
-- [ ] Implement `ConsentRequired` state from durable DB state.
-- [ ] Persist acceptance with policy version and timestamp.
-- [ ] Persist decline without collecting profile data.
-- [ ] If user sends possible birth data before consent, do not store it as profile data.
-- [ ] Add re-consent behavior when policy version changes.
+- [x] Write initial disclaimer text and assign a version.
+- [x] Clearly state that Oria is an AI astrology personality.
+- [x] State that astrology is interpretive and not a factual/scientific forecast.
+- [x] State exactly which birth fields are required.
+- [x] State that unrelated PII will not be solicited.
+- [x] State profile/privacy/deletion controls.
+- [x] Add adult-use confirmation for MVP.
+- [x] Add Telegram inline buttons for accept/decline.
+- [x] Implement `ConsentRequired` state from durable DB state.
+- [x] Persist acceptance with policy version and timestamp.
+- [x] Persist decline without collecting profile data.
+- [x] If user sends possible birth data before consent, do not store it as profile data.
+- [x] Add re-consent behavior when policy version changes.
 
 ### Tests
 
-- [ ] `/start` with no consent shows disclaimer.
-- [ ] Decline stops onboarding.
-- [ ] Accept advances onboarding.
-- [ ] Text entered before consent is not written to birth profile.
-- [ ] New policy version requires fresh consent.
+- [x] `/start` with no consent shows disclaimer.
+- [x] Decline stops onboarding.
+- [x] Accept advances onboarding.
+- [x] Text entered before consent is not written to birth profile.
+- [x] New policy version requires fresh consent.
 
 ### Acceptance criteria
 
-- [ ] No code path creates an active birth profile for a user without current consent.
+- [x] No code path creates an active birth profile for a user without current consent.
+
+Acceptance reaches `BirthDateRequired` but pauses collection until stages 6–7.
+No profile creation/activation path exists yet; add transactional current-consent
+checks when those paths are implemented. See [consent flow](docs/consent-flow.md).
+The live consent-button smoke test in [Telegram setup](docs/telegram.md) remains
+an operator check; automated tests use synthetic updates and isolated PostgreSQL.
 
 ---
 

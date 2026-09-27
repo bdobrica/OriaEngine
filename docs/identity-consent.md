@@ -2,7 +2,7 @@
 
 `oria_engine.db.models` and `oria_engine.db.repositories` implement the storage
 foundation from PLAN sections 12–13. Apply migration `0002` with `make migrate`.
-Telegram handlers and the disclaimer/onboarding flow remain stages 4–5.
+The [Telegram consent flow](consent-flow.md) uses these repositories in Stage 5.
 
 | Table | Stored state |
 | --- | --- |
@@ -63,7 +63,7 @@ inbound-event deduplication, including delayed replay handling, belongs to stage
   never reveals an older acceptance. A new policy requires a fresh acceptance.
 
 These methods are deterministic persistence operations, not permission for a model
-to grant consent. Stage 5 must call them only after the corresponding explicit user
+to grant consent. The consent flow calls them only after the corresponding explicit user
 action. Profile activation must check current consent within its own transaction;
 future profile writes should take the same user lock to serialize with withdrawal.
 
