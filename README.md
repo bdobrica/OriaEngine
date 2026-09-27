@@ -235,11 +235,15 @@ make down
 
 ### Telegram polling mode
 
-For development, OriaEngine supports Telegram long polling so no public HTTPS endpoint is required:
+Set `TELEGRAM_BOT_TOKEN` in `.env`, then run the private-chat polling baseline:
 
 ```bash
 make run
 ```
+
+See [Telegram setup and smoke test](docs/telegram.md). `/start` and `/help` are
+available now; consent and profile setup come next. This baseline needs no worker
+or database. The commands below are planned for later stages.
 
 Run the worker in another terminal when it is not already running through Docker Compose:
 

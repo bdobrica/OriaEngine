@@ -14,7 +14,14 @@ from oria_engine.config import Settings
 correlation_id: ContextVar[str | None] = ContextVar("correlation_id", default=None)
 update_id: ContextVar[int | None] = ContextVar("update_id", default=None)
 EVENTS = frozenset(
-    {"application_started", "application_stopped", "request_completed", "request_failed"}
+    {
+        "application_started",
+        "application_stopped",
+        "request_completed",
+        "request_failed",
+        "update_completed",
+        "update_failed",
+    }
 )
 
 

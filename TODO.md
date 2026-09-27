@@ -191,30 +191,31 @@ Get a real private Telegram bot receiving and sending messages with minimal doma
 
 ### Tasks
 
-- [ ] Create bot through BotFather manually and document the step.
-- [ ] Add `TELEGRAM_BOT_TOKEN` configuration.
-- [ ] Build aiogram dispatcher/router.
-- [ ] Support private chats only.
-- [ ] Ignore or politely reject group/channel interactions.
-- [ ] Add `/start`.
-- [ ] Add `/help` placeholder.
-- [ ] Normalize Telegram updates into internal channel messages.
-- [ ] Implement outbound `ChannelClient` abstraction.
-- [ ] Implement Telegram `ChannelClient` adapter.
-- [ ] Add local long-polling entrypoint.
-- [ ] Add `make run` for local polling mode.
-- [ ] Ensure message text is not dumped into normal application logs.
+- [ ] Create development bot through BotFather manually (operator step).
+- [x] Document BotFather setup and live smoke test in [docs/telegram.md](docs/telegram.md).
+- [x] Add `TELEGRAM_BOT_TOKEN` configuration.
+- [x] Build aiogram dispatcher/router.
+- [x] Support private chats only.
+- [x] Ignore or politely reject group/channel interactions.
+- [x] Add `/start`.
+- [x] Add `/help` placeholder.
+- [x] Normalize Telegram updates into internal channel messages.
+- [x] Implement outbound `ChannelClient` abstraction.
+- [x] Implement Telegram `ChannelClient` adapter.
+- [x] Add local long-polling entrypoint.
+- [x] Add `make run` for local polling mode.
+- [x] Ensure message text is not dumped into normal application logs.
 
 ### Tests
 
-- [ ] Telegram update normalization.
-- [ ] Private-chat filter.
-- [ ] Outbound message adapter with mocked Telegram API.
+- [x] Telegram update normalization.
+- [x] Private-chat filter.
+- [x] Outbound message adapter with mocked Telegram API.
 
 ### Acceptance criteria
 
-- [ ] Sending `/start` to the development bot produces a response.
-- [ ] No birth data is requested yet.
+- [ ] Sending `/start` to the development bot produces a response (manual live smoke test).
+- [x] No birth data is requested yet.
 
 ---
 
