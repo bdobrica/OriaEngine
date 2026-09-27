@@ -3,14 +3,39 @@
 import os
 import secrets
 import subprocess
+import sys
 import uuid
 from pathlib import Path
 
 import pytest
 
 from oria_engine.config import Settings
+from oria_engine.db.session import Database
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def migrate(url, *args):
+    env = os.environ.copy()
+    env.update(APP_ENV="test", DATABASE_URL=url)
+    result = subprocess.run(
+        [sys.executable, "-m", "alembic", "-c", str(ROOT / "alembic.ini"), *args],
+        cwd=Path.cwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, "Migration command failed"
+
+
+@pytest.fixture
+async def database(infrastructure):
+    db = Database(Settings(_env_file=None, database_url=infrastructure[0]))
+    try:
+        yield db
+    finally:
+        await db.close()
 
 
 @pytest.fixture(autouse=True)

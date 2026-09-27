@@ -9,6 +9,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from oria_engine.config import load_settings
+from oria_engine.db import models  # noqa: F401 -- register domain metadata for autogeneration
 from oria_engine.db.session import Base
 from oria_engine.observability import configure_logging
 

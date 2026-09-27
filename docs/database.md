@@ -36,10 +36,12 @@ side effects; run one migration process at a time.
 
 `make migrate` upgrades to head and is safe to repeat. The initial revision
 `0001` establishes the Alembic version baseline without domain tables.
-Identity and consent tables are the next implementation stage.
+Revision `0002` adds the identity and consent tables described in
+[Identity and consent](identity-consent.md).
 `make migrate-down` rolls back one revision and is guarded to development/test.
 It uses the configured database URL: verify that URL points to your intended
-development database before running it. Future downgrades can discard data.
+development database before running it. Downgrading `0002` drops all identity
+and consent data.
 
 For a new schema change, import the affected models in `migrations/env.py`,
 then generate and review a revision:
@@ -74,10 +76,14 @@ async with database.transaction() as session:
 The helper commits on success, rolls back on exception or cancellation, and
 closes the session. Separate operations/tasks get separate sessions.
 Repositories accept an existing `AsyncSession`; they may flush but do not commit,
-close sessions, or open hidden transactions. The application operation owns the
-transaction boundary. User-owned queries require an explicit internal user UUID
+close sessions, or commit independent transactions. Identity creation uses a
+savepoint to recover a uniqueness race without discarding caller work; the outer
+transaction still owns both rows. The application operation owns the transaction
+boundary. User-owned queries require an explicit internal user UUID
 and a user predicate; no generic unscoped CRUD repository is provided.
-Use only the OriaEngine database, never another component's tables.
+The sole pre-UUID lookup is trusted transport identity resolution; see
+[repository boundaries](identity-consent.md). Use only the OriaEngine database,
+never another component's tables.
 
 SQL echo is disabled and SQLAlchemy hides bound parameters in its diagnostics.
 This does not make driver exceptions safe to log: retain the application logging

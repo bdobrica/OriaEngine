@@ -1,40 +1,10 @@
 import asyncio
-import os
-import subprocess
-import sys
-from pathlib import Path
 
 import pytest
 from redis.asyncio import Redis
 from sqlalchemy import text
 
-from oria_engine.config import Settings
-from oria_engine.db.session import Database
-
-from .conftest import ROOT
-
-
-def migrate(url, *args):
-    env = os.environ.copy()
-    env.update(APP_ENV="test", DATABASE_URL=url)
-    result = subprocess.run(
-        [sys.executable, "-m", "alembic", "-c", str(ROOT / "alembic.ini"), *args],
-        cwd=Path.cwd(),
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    assert result.returncode == 0, "Migration command failed"
-
-
-@pytest.fixture
-async def database(infrastructure):
-    db = Database(Settings(_env_file=None, database_url=infrastructure[0]))
-    try:
-        yield db
-    finally:
-        await db.close()
+from .conftest import migrate
 
 
 async def test_migrations_empty_repeat_downgrade_and_metadata(database, infrastructure):
@@ -42,7 +12,7 @@ async def test_migrations_empty_repeat_downgrade_and_metadata(database, infrastr
     migrate(url, "upgrade", "head")
     migrate(url, "upgrade", "head")
     async with database.transaction() as session:
-        assert await session.scalar(text("SELECT version_num FROM alembic_version")) == "0001"
+        assert await session.scalar(text("SELECT version_num FROM alembic_version")) == "0002"
     migrate(url, "check")
     migrate(url, "downgrade", "base")
     async with database.transaction() as session:

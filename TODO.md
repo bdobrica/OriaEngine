@@ -155,31 +155,31 @@ Create durable internal identity and consent state independent of Telegram objec
 
 ### Tasks
 
-- [ ] Add `users` table.
-- [ ] Add `social_identities` table.
-- [ ] Add unique `(provider, provider_user_id)` constraint.
-- [ ] Store only Telegram identifiers needed for routing.
-- [ ] Do not store Telegram username/display name by default.
-- [ ] Add `consents` table with policy version and lifecycle timestamps.
-- [ ] Implement user repository.
-- [ ] Implement social identity repository.
-- [ ] Implement consent repository.
-- [ ] Implement `get_or_create_user_for_social_identity()`.
-- [ ] Implement current-consent lookup.
-- [ ] Define policy version in configuration.
+- [x] Add `users` table.
+- [x] Add `social_identities` table.
+- [x] Add unique `(provider, provider_user_id)` constraint.
+- [x] Store only Telegram identifiers needed for routing.
+- [x] Do not store Telegram username/display name by default.
+- [x] Add `consents` table with policy version and lifecycle timestamps.
+- [x] Implement user repository.
+- [x] Implement social identity repository.
+- [x] Implement consent repository.
+- [x] Implement `get_or_create_user_for_social_identity()`.
+- [x] Implement current-consent lookup.
+- [x] Define policy version in configuration.
 
 ### Tests
 
-- [ ] User creation.
-- [ ] Identity lookup.
-- [ ] Duplicate identity protection.
-- [ ] Consent accept/decline/revoke lifecycle.
-- [ ] Cross-user scoping tests.
+- [x] User creation.
+- [x] Identity lookup.
+- [x] Duplicate identity protection.
+- [x] Consent accept/decline/revoke lifecycle.
+- [x] Cross-user scoping tests.
 
 ### Acceptance criteria
 
-- [ ] A Telegram provider ID resolves to exactly one internal UUID.
-- [ ] Consent state survives process restarts.
+- [x] A Telegram provider ID resolves to exactly one internal UUID.
+- [x] Consent state survives process restarts.
 
 ---
 
