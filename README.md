@@ -174,6 +174,9 @@ make infra-up
 make migrate
 ```
 
+See [local infrastructure and migrations](docs/database.md) for configuration,
+reset/rollback commands, transaction conventions, and isolated database tests.
+
 ## Configuration
 
 The initial configuration surface is expected to include:

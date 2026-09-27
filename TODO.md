@@ -2,6 +2,11 @@
 
 This checklist translates `PLAN.md` into a consecutive implementation path.
 
+**Current priority: move quickly toward a working demo.** Prefer the smallest
+end-to-end path through the required stages; defer optional polish and speculative
+abstractions. Preserve consent, privacy, security, and component boundaries.
+A demo is an intermediate milestone, not completion of the MVP release gate.
+
 The stages are intentionally ordered so each stage leaves the repository in a testable state and provides the foundation required by the next stage. Avoid implementing post-MVP features until the MVP completion gate at the end of this document passes.
 
 ```mermaid
@@ -123,22 +128,22 @@ Establish PostgreSQL as canonical state and Redis as disposable coordination inf
 
 ### Tasks
 
-- [ ] Add Docker Compose services for PostgreSQL and Redis.
-- [ ] Add health checks for both services.
-- [ ] Add `make infra-up`.
-- [ ] Add `make infra-down`.
-- [ ] Add `make infra-reset` for local/test use only.
-- [ ] Initialize Alembic.
-- [ ] Add `make migrate`.
-- [ ] Add `make migrate-down` for development.
-- [ ] Add SQLAlchemy async engine/session management.
-- [ ] Add transaction helper/repository base conventions.
+- [x] Add Docker Compose services for PostgreSQL and Redis.
+- [x] Add health checks for both services.
+- [x] Add `make infra-up`.
+- [x] Add `make infra-down`.
+- [x] Add `make infra-reset` for local/test use only.
+- [x] Initialize Alembic.
+- [x] Add `make migrate`.
+- [x] Add `make migrate-down` for development.
+- [x] Add SQLAlchemy async engine/session management.
+- [x] Add transaction helper/repository base conventions.
 
 ### Acceptance criteria
 
-- [ ] `make infra-up` produces healthy PostgreSQL and Redis services.
-- [ ] `make migrate` succeeds on an empty database.
-- [ ] Re-running `make migrate` is safe.
+- [x] `make infra-up` produces healthy PostgreSQL and Redis services.
+- [x] `make migrate` succeeds on an empty database.
+- [x] Re-running `make migrate` is safe.
 
 ---
 

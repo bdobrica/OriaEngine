@@ -1041,6 +1041,10 @@ Production secrets must come from the deployment platform's secret mechanism rat
 
 ## 29. Local development workflows
 
+The immediate delivery priority is a working demo. Implement the minimum needed
+to connect the core flow, deferring optional polish without weakening consent,
+privacy, or security requirements. The MVP completion criteria remain unchanged.
+
 The Makefile is the supported developer interface.
 
 Expected commands:
