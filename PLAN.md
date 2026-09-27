@@ -426,7 +426,7 @@ erDiagram
         uuid user_id FK
         bytes encrypted_payload
         string encryption_key_version
-        string calculation_version
+        int schema_version
         timestamptz created_at
         timestamptz updated_at
     }
@@ -491,7 +491,9 @@ The decrypted payload may contain:
 }
 ```
 
-The exact payload schema should be versioned so future migration is possible.
+The version 1 payload and encryption/storage boundary are defined in
+[Birth profiles](docs/birth-profiles.md). Calculation version belongs to the
+derived astrology profile; raw storage carries schema and encryption key versions.
 
 ### Derived chart data
 
@@ -1048,9 +1050,10 @@ privacy, or security requirements. The MVP completion criteria remain unchanged.
 For the staged demo, consent acceptance reaches `BirthDateRequired` without
 soliciting birth data until encrypted storage (Stage 6) and deterministic collection
 (Stage 7) are connected. Keep interim disclosure honest about unavailable profile
-and deletion controls. New profile writes and activation must check current consent
-inside their transaction under the user lock; the consent-only milestone does not
-replace those later checks. See [consent flow](docs/consent-flow.md).
+and deletion controls. Encrypted profile writes now check current consent inside
+their transaction under the user lock. Stage 7 must use that repository; Stage 10
+activation must perform the same check. See [birth-profile storage](docs/birth-profiles.md)
+and [consent flow](docs/consent-flow.md).
 
 The Makefile is the supported developer interface.
 

@@ -64,3 +64,24 @@ class Consent(Base):
     accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     declined_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class BirthProfile(Base):
+    __tablename__ = "birth_profiles"
+    __table_args__ = (
+        UniqueConstraint("user_id"),
+        CheckConstraint("schema_version > 0", name="positive_schema_version"),
+        CheckConstraint("octet_length(encrypted_payload) >= 29", name="encrypted_envelope"),
+        CheckConstraint(
+            "encryption_key_version ~ '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'",
+            name="encryption_key_version",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    encrypted_payload: Mapped[bytes]
+    encryption_key_version: Mapped[str] = mapped_column(String(64))
+    schema_version: Mapped[int]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

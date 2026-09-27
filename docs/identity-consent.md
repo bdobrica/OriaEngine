@@ -64,8 +64,9 @@ inbound-event deduplication, including delayed replay handling, belongs to stage
 
 These methods are deterministic persistence operations, not permission for a model
 to grant consent. The consent flow calls them only after the corresponding explicit user
-action. Profile activation must check current consent within its own transaction;
-future profile writes should take the same user lock to serialize with withdrawal.
+action. [Birth-profile writes](birth-profiles.md) take the same user lock and check
+current consent to serialize with withdrawal. Future activation must also check
+current consent within its own transaction.
 
 ## Verification
 

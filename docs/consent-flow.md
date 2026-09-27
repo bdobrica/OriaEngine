@@ -41,12 +41,11 @@ requires a fresh acceptance even after a previous decline or acceptance.
 
 ## Scope and continuation
 
-No raw message or birth-profile payload is persisted, before or after consent.
-Stages 6–7 add encrypted profile storage and collection; Stage 10 adds activation.
-Those write/activation paths must take the user lock and check current consent in
-their own transaction, as described in the persistence contract. Today's absence
-of any profile write path preserves this invariant; it is not a substitute for
-those later checks. Profile/privacy/deletion workflows remain stages 17–18.
+The Telegram flow persists no raw message or birth-profile payload, before or
+after consent. Stage 6 provides [encrypted storage](birth-profiles.md), with
+current-consent checks under the user lock for every write. Stage 7 connects
+collection; Stage 10 adds activation and must perform the same transactional
+consent check. Profile/privacy/deletion workflows remain stages 17–18.
 
 Durable event deduplication and delayed replay handling remain Stage 11. Old
 same-policy buttons can still change later decisions; no exactly-once delivery is

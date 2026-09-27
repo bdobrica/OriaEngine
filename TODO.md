@@ -254,8 +254,8 @@ Require explicit consent before collecting or persisting birth data.
 - [x] No code path creates an active birth profile for a user without current consent.
 
 Acceptance reaches `BirthDateRequired` but pauses collection until stages 6–7.
-No profile creation/activation path exists yet; add transactional current-consent
-checks when those paths are implemented. See [consent flow](docs/consent-flow.md).
+Encrypted profile writes check current consent transactionally; activation remains
+Stage 10 and must retain that check. See [consent flow](docs/consent-flow.md).
 The live consent-button smoke test in [Telegram setup](docs/telegram.md) remains
 an operator check; automated tests use synthetic updates and isolated PostgreSQL.
 
@@ -269,33 +269,37 @@ Persist the minimum calculation profile using application-level encryption.
 
 ### Tasks
 
-- [ ] Define versioned Pydantic `BirthProfilePayload` schema.
-- [ ] Include birth date.
-- [ ] Include optional birth local time.
-- [ ] Include `birth_time_accuracy` = `exact | approximate | unknown`.
-- [ ] Include normalized birthplace object.
-- [ ] Add `birth_profiles` table.
-- [ ] Store ciphertext rather than plaintext birth fields.
-- [ ] Store encryption key version.
-- [ ] Implement AES-GCM encryption service.
-- [ ] Use unique nonce per encryption operation.
-- [ ] Bind ciphertext to user/profile context with authenticated associated data where appropriate.
-- [ ] Implement profile repository with encrypted reads/writes.
-- [ ] Never expose decrypted payload in repr/logging.
-- [ ] Add profile schema version.
-- [ ] Add profile update timestamp.
+- [x] Define versioned Pydantic `BirthProfilePayload` schema.
+- [x] Include birth date.
+- [x] Include optional birth local time.
+- [x] Include `birth_time_accuracy` = `exact | approximate | unknown`.
+- [x] Include normalized birthplace object.
+- [x] Add `birth_profiles` table.
+- [x] Store ciphertext rather than plaintext birth fields.
+- [x] Store encryption key version.
+- [x] Implement AES-GCM encryption service.
+- [x] Use unique nonce per encryption operation.
+- [x] Bind ciphertext to user/profile context with authenticated associated data where appropriate.
+- [x] Implement profile repository with encrypted reads/writes.
+- [x] Never expose decrypted payload in repr/logging.
+- [x] Add profile schema version.
+- [x] Add profile update timestamp.
 
 ### Tests
 
-- [ ] Encryption round-trip.
-- [ ] Wrong key fails safely.
-- [ ] Tampered ciphertext fails authentication.
-- [ ] Repository stores no plaintext test birth values.
-- [ ] User A cannot load user B profile.
+- [x] Encryption round-trip.
+- [x] Wrong key fails safely.
+- [x] Tampered ciphertext fails authentication.
+- [x] Repository stores no plaintext test birth values.
+- [x] User A cannot load user B profile.
 
 ### Acceptance criteria
 
-- [ ] Direct DB inspection cannot reveal raw birth date/time/place values.
+- [x] Direct DB inspection cannot reveal raw birth date/time/place values.
+
+See [birth-profile storage](docs/birth-profiles.md) for schema, key handling and
+repository boundaries. Stage 7 connects collection to this consent-checked store;
+Stage 8 supplies place normalization. Telegram collection remains paused.
 
 ---
 
