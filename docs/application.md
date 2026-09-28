@@ -26,6 +26,7 @@ platform; do not deploy a development `.env` or commit secrets.
 | `PROFILE_ENCRYPTION_KEY_VERSION` | `v1`; nonempty version identifier |
 | `SECOND_CONTEXT_BASE_URL` | `http://localhost:8080`; HTTP(S) |
 | `SECOND_CONTEXT_BEARER_TOKEN` | Empty; optional bearer authentication |
+| `SECOND_CONTEXT_SUBJECT_NAMESPACE` | Empty for legacy scopes; e.g. `oria` enables service subject headers and requires a bearer token |
 | `ASTROLOGY_MCP_URL` | `http://localhost:8000/mcp`; HTTP(S) |
 | `ORIA_POLICY_VERSION` | `2026-09-28.1`; nonempty version identifier |
 

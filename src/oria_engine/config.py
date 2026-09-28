@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     profile_encryption_key_version: str = "v1"
     second_context_base_url: str = "http://localhost:8080"
     second_context_bearer_token: SecretStr = SecretStr("")
+    second_context_subject_namespace: str = ""
     astrology_mcp_url: str = "http://localhost:8000/mcp"
     oria_policy_version: str = "2026-09-28.3"
 
@@ -66,6 +67,11 @@ class Settings(BaseSettings):
         bearer = self.second_context_bearer_token.get_secret_value()
         if bearer and any(c.isspace() or ord(c) < 32 for c in bearer):
             raise ValueError("second_context_bearer_token: invalid format")
+        namespace = self.second_context_subject_namespace
+        if namespace and (not re.fullmatch(r"[a-z][a-z0-9_-]{0,31}", namespace) or not bearer):
+            raise ValueError(
+                "second_context_subject_namespace: requires valid namespace and bearer token"
+            )
         key = self.profile_encryption_key.get_secret_value()
         if key:
             try:

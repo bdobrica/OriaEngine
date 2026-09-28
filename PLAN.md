@@ -1149,9 +1149,9 @@ Confirmed profiles now calculate through MCP and retain a versioned derived cach
 Failed calculations are recoverable with /retry_profile. Polling now persists and
 enqueues events; `make worker` owns consent, onboarding, calculation and delivery.
 PostgreSQL recovers work after Redis loss and anchors idempotent domain changes.
-The Stage 12 adapter foundation and stable session mapping are implemented.
-SecondContext subject purge and multi-user service authentication remain unresolved
-upstream dependencies; see [adapter status](docs/second-context.md).
+The Stage 12 adapter, stable session mapping, scoped service authentication and
+SecondContext subject purge are implemented; see [adapter setup](docs/second-context.md).
+Next is Stage 13: transit calculations and active-message routing.
 The worker does not call it yet; interpretation still requires Stages 13–16.
 See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
 Full profile display and deletion remain unavailable. The queued-processing disclosure uses

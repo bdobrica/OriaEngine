@@ -7,8 +7,8 @@ The first MVP targets **Telegram**. A user can talk to Oria in a DM, explicitly 
 OriaEngine is designed to build on [SecondContext](https://github.com/bdobrica/SecondContext) for persistent conversational memory while keeping private birth-profile data in a separate, encrypted application store.
 
 > **Project status:** design / early MVP implementation.
-> The [SecondContext adapter foundation](docs/second-context.md) has scoped sessions
-> and HTTP tests; upstream purge/authentication work and worker wiring remain.
+> The [SecondContext adapter](docs/second-context.md) supports scoped sessions,
+> service authentication and purge. Active conversation worker wiring remains.
 >
 > Astrology is used here as an interpretive framework. Oria should not be treated as a source of scientific prediction, medical advice, legal advice, financial advice, or other high-stakes professional guidance.
 

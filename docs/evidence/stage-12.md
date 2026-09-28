@@ -54,3 +54,37 @@ were performed. Upstream response/ingest endpoints do not support idempotency ke
 an outer retry after an ambiguous write can duplicate remote state. Stage 16 must
 account for this before claiming exactly-once context effects. The existing two
 Starlette/AnyIO deprecation warnings are unrelated to this change.
+
+
+## Completion follow-up — 2026-09-28
+
+After explicit user authorization to extend `../SecondContext`, implemented its
+reserved-namespace service credentials and durable subject purge, then connected
+the Oria adapter. `SECOND_CONTEXT_SUBJECT_NAMESPACE` is opt-in; leaving it empty
+preserves the original plain UUID scope. Purge requires an explicit completed
+acknowledgement for the requested subject. Stage 12 is now complete; the limitations
+above describe the earlier foundation commit, not the completed upstream extension.
+
+The owning SecondContext repository now contains ADR 0001, the versioned
+`docs/contracts/service-context-v1.md` contract, migration 000003 and durable
+verification evidence. Its full `make verify` passed using isolated PostgreSQL and
+Qdrant with synthetic LLM responses. Tests prove continuity, foreign-user isolation,
+all canonical data families and orphan-vector purge, retained foreign data, remote
+failure/retry, SQL failure after remote deletion, repeated/absent-subject purge,
+ordinary-token compatibility and concurrent API instance fencing. Its migration
+passed down/up/repeated-up checks. No OpenAI key was used or needed.
+
+Oria focused namespace/purge/config tests: **64 passed**. Final **`make verify`
+passed**: lint/format, strict mypy (44 source files), 172 unit tests, 63 integration
+tests and 58 contract tests — **293 total**. The contract lane includes the real
+Astrology MCP container; SecondContext adapter HTTP tests use the synthetic stub.
+Two existing Starlette/AnyIO deprecation warnings remain unchanged.
+
+The polling worker still does not call SecondContext; Stages 13–16 supply active
+routing and response policy, and Stage 18 wires end-to-end confirmed deletion.
+Before activation, disclosure must describe transcript retention and the retained
+pseudonymous deletion marker. Remote response/ingestion idempotency is still a
+Stage 16 concern. Production deployment, operator migrations, real-user deletion,
+real OpenAI/Telegram calls and secret changes were not performed.
+
+Upstream implementation revision: `4bb8dba86e7f91cb49db6b9c6aad311d03b57099` (SecondContext).

@@ -13,7 +13,6 @@ from oria_engine.context.contracts import (
     ContextScope,
     ContextUnavailable,
     ConversationRequest,
-    PurgeUnsupported,
 )
 from oria_engine.context.second_context import SecondContextProvider
 from tests.support.second_context import SecondContextStub
@@ -180,13 +179,74 @@ async def test_deadline_and_cancellation():
         await client.aclose()
 
 
-async def test_purge_fails_closed_without_faking_partial_deletion():
-    stub = SecondContextStub()
-    client = provider(stub)
+async def test_service_namespace_continuity_and_purge():
+    stub = SecondContextStub(token="synthetic-secret", namespace="oria")
+    client = SecondContextProvider(
+        Settings(
+            _env_file=None,
+            second_context_subject_namespace="oria",
+            second_context_bearer_token="synthetic-secret",
+        ),
+        transport=httpx.MockTransport(stub),
+    )
+    first, second = scope(), scope()
+    request = ConversationRequest(filtered_message="Hello")
     try:
-        with pytest.raises(PurgeUnsupported):
+        await client.remember(first, "concise_readings")
+        await client.remember(second, "less_mystical_language")
+        assert "concise" in (await client.respond(first, request)).text
+        assert "mystical" in (await client.respond(second, request)).text
+        for _ in range(2):
+            await client.purge(first.user_id)
+        with pytest.raises(ContextUnavailable):
+            await client.respond(first, request)
+        assert "mystical" in (await client.respond(second, request)).text
+        assert str(first.session_id) not in stub.sessions
+        assert f"oria:{first.user_id}" not in stub.memories
+        for sent in stub.requests:
+            assert sent.headers["X-SecondContext-Subject"] == json.loads(sent.content)["user"]
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.parametrize(
+    "status,body",
+    [
+        (404, {}),
+        (503, {"status": "completed"}),
+        (200, {}),
+        (200, {"contract_version": 1, "user": "foreign", "status": "completed"}),
+        (200, {"contract_version": 1, "user": "foreign", "status": "pending"}),
+        (200, {"contract_version": 2, "user": "foreign", "status": "completed"}),
+    ],
+)
+async def test_purge_requires_explicit_scoped_completion(status, body):
+    client = provider(lambda request: httpx.Response(status, json=body))
+    try:
+        with pytest.raises(ContextUnavailable):
             await client.purge(uuid4())
-        assert not stub.requests
+    finally:
+        await client.aclose()
+
+
+async def test_purge_retry_after_downstream_failure():
+    target = uuid4()
+    calls = []
+
+    def handle(request):
+        calls.append(json.loads(request.content))
+        if len(calls) == 1:
+            return httpx.Response(503)
+        return httpx.Response(
+            200, json={"contract_version": 1, "user": str(target), "status": "completed"}
+        )
+
+    client = provider(handle)
+    try:
+        with pytest.raises(ContextUnavailable):
+            await client.purge(target)
+        await client.purge(target)
+        assert calls == [{"user": str(target)}] * 2
     finally:
         await client.aclose()
 

@@ -100,3 +100,28 @@ def test_validation_error_repr_hides_inputs(monkeypatch):
     with pytest.raises(ValidationError) as error:
         Settings()
     assert secret not in str(error.value)
+
+
+@pytest.mark.parametrize(
+    "namespace,token",
+    [("oria", ""), ("oria:", "secret"), ("other/namespace", "secret"), ("A", "secret")],
+)
+def test_service_namespace_requires_explicit_token_and_valid_name(namespace, token):
+    with pytest.raises(ValueError):
+        Settings(
+            _env_file=None,
+            second_context_subject_namespace=namespace,
+            second_context_bearer_token=token,
+        )
+
+
+def test_service_namespace_is_opt_in():
+    assert Settings(_env_file=None).second_context_subject_namespace == ""
+    assert (
+        Settings(
+            _env_file=None,
+            second_context_subject_namespace="oria",
+            second_context_bearer_token="synthetic",
+        ).second_context_subject_namespace
+        == "oria"
+    )

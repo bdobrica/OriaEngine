@@ -16,7 +16,6 @@ from oria_engine.context.contracts import (
     ContextUnavailable,
     ConversationRequest,
     MemoryKind,
-    PurgeUnsupported,
 )
 
 
@@ -42,6 +41,13 @@ class _Memory(BaseModel):
     source: Literal["oria"]
 
 
+class _Purge(BaseModel):
+    model_config = ConfigDict(hide_input_in_errors=True)
+    contract_version: Literal[1]
+    user: str
+    status: Literal["completed"]
+
+
 class SecondContextProvider:
     def __init__(
         self,
@@ -51,6 +57,7 @@ class SecondContextProvider:
         timeout: float = 20,
     ) -> None:
         self.timeout = timeout
+        self.namespace = settings.second_context_subject_namespace
         token = settings.second_context_bearer_token.get_secret_value()
         self._client = httpx.AsyncClient(
             base_url=settings.second_context_base_url.rstrip("/") + "/",
@@ -61,6 +68,9 @@ class SecondContextProvider:
             transport=transport,
         )
 
+    def subject(self, user_id: UUID) -> str:
+        return f"{self.namespace}:{user_id}" if self.namespace else str(user_id)
+
     async def aclose(self) -> None:
         await self._client.aclose()
 
@@ -69,7 +79,12 @@ class SecondContextProvider:
             async with asyncio.timeout(self.timeout):
                 for attempt in range(3):
                     try:
-                        async with self._client.stream("POST", path, json=payload) as response:
+                        headers = (
+                            {"X-SecondContext-Subject": payload["user"]} if self.namespace else {}
+                        )
+                        async with self._client.stream(
+                            "POST", path, json=payload, headers=headers
+                        ) as response:
                             if not 200 <= response.status_code < 300:
                                 raise ContextUnavailable()
                             data = bytearray()
@@ -97,7 +112,7 @@ class SecondContextProvider:
             )
         payload = {
             "model": "context-agent-1",
-            "user": str(scope.user_id),
+            "user": self.subject(scope.user_id),
             "input": request.filtered_message,
             "instructions": instructions,
             "stream": False,
@@ -112,7 +127,9 @@ class SecondContextProvider:
             result = _Response.model_validate_json(data)
             if result.metadata.session_id != scope.session_id:
                 raise ValueError()
-            if result.metadata.context_packet.get("user_external_id") != str(scope.user_id):
+            if result.metadata.context_packet.get("user_external_id") != self.subject(
+                scope.user_id
+            ):
                 raise ValueError()
             return ContextReply(response_id=result.id, text=result.output_text)
         except (ValidationError, ValueError):
@@ -127,7 +144,7 @@ class SecondContextProvider:
         data = await self._post(
             "memory/ingest",
             {
-                "user": str(scope.user_id),
+                "user": self.subject(scope.user_id),
                 "raw_text": phrase,
                 "summary": phrase,
                 "type": "preference"
@@ -145,6 +162,11 @@ class SecondContextProvider:
             raise ContextUnavailable("Invalid conversational memory response") from None
 
     async def purge(self, user_id: UUID) -> None:
-        # Do not substitute memory-item deletion: messages, sessions, people, beliefs,
-        # outcomes and derived indexes must also be erased by the owning service.
-        raise PurgeUnsupported("SecondContext subject purge is not supported by this API")
+        subject = self.subject(user_id)
+        data = await self._post("v1/subjects/purge", {"user": subject})
+        try:
+            result = _Purge.model_validate_json(data)
+            if result.user != subject:
+                raise ValueError()
+        except (ValidationError, ValueError):
+            raise ContextUnavailable("Invalid subject purge response") from None

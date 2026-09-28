@@ -7,9 +7,11 @@ import httpx
 
 
 class SecondContextStub:
-    def __init__(self, *, token=None, subject=None):
+    def __init__(self, *, token=None, subject=None, namespace=None):
         self.token = token
         self.subject = subject
+        self.namespace = namespace
+        self.purged = set()
         self.sessions = {}
         self.memories = {}
         self.requests = []
@@ -22,6 +24,20 @@ class SecondContextStub:
         user = body["user"]
         if self.subject and self.subject != user:
             return httpx.Response(400, json={"error": {"code": "identity_conflict"}})
+        if self.namespace and (
+            not user.startswith(self.namespace + ":")
+            or request.headers.get("X-SecondContext-Subject") != user
+        ):
+            return httpx.Response(403)
+        if request.url.path.endswith("/v1/subjects/purge"):
+            self.purged.add(user)
+            self.memories.pop(user, None)
+            self.sessions = {key: owner for key, owner in self.sessions.items() if owner != user}
+            return httpx.Response(
+                200, json={"contract_version": 1, "user": user, "status": "completed"}
+            )
+        if user in self.purged:
+            return httpx.Response(410)
         session = body["metadata"]["session_id"]
         if session in self.sessions and self.sessions[session] != user:
             return httpx.Response(404)

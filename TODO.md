@@ -520,9 +520,9 @@ SecondContext adapter. The later Stage 16 builds interpretation onto this worker
 
 Add persistent conversational memory without exposing the raw birth profile as general semantic memory.
 
-Implemented foundation: [adapter and limitations](docs/second-context.md).
-Subject-wide purge and multi-user service authentication remain upstream dependencies;
-the adapter is not yet connected to the Telegram worker.
+Implemented: [adapter, service setup and deletion contract](docs/second-context.md).
+SecondContext now supplies scoped service authentication and durable subject purge.
+Next: Stage 13; Stage 16 connects the adapter to the Telegram worker.
 
 ### Tasks
 
@@ -539,8 +539,8 @@ the adapter is not yet connected to the Telegram worker.
 - [x] Add context-memory guidance for conversational preferences and prior topics.
 - [x] Add SecondContext mock/stub for test suites.
 - [x] Define and test deletion adapter contract.
-- [ ] Implement/contribute a scoped subject purge endpoint in SecondContext.
-- [ ] Agree and implement authenticated multi-user service delegation upstream; existing bearer tokens bind to one subject.
+- [x] Implement/contribute a scoped subject purge endpoint in SecondContext.
+- [x] Agree and implement authenticated multi-user service delegation upstream; existing bearer tokens bind to one subject.
 
 ### Contract tests
 
@@ -548,13 +548,13 @@ the adapter is not yet connected to the Telegram worker.
 - [x] Correct session reuse.
 - [x] No cross-user context.
 - [x] Downstream error handling.
-- [x] Unsupported purge fails explicitly without pretending memory-item deletion is complete.
-- [ ] Successful scoped purge and repeat/partial-failure recovery against the upstream implementation.
+- [x] Missing/failed/wrong-subject purge responses never count as completed deletion.
+- [x] Successful scoped purge and repeat/partial-failure recovery against the upstream implementation.
 
 ### Acceptance criteria
 
-- [x] A user's second conversation can reference an allowed prior preference through the HTTP stub; live-provider validation remains unrun.
-- [ ] The integration has a working way to purge the user's SecondContext data.
+- [x] A user's second conversation can reference an allowed prior preference; adapter stubs and real upstream PostgreSQL/Qdrant tests pass with synthetic LLM responses.
+- [x] The integration has a working way to purge the user's SecondContext data.
 
 ---
 

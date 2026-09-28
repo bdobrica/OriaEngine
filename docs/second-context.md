@@ -28,24 +28,45 @@ uncertainty and selected prior topics; it cannot accept arbitrary birth details.
 Current facts are supplied in instructions only. Upstream transcripts still persist
 user and assistant text, including any facts repeated in a generated answer.
 
-## Runtime status and remaining dependencies
+## Service setup and deletion
 
-The polling/worker demo does not call this adapter yet. Stages 13–16 add active
-routing, filtering, prompt/persona assembly, output validation and worker wiring.
+Use SecondContext revision `4bb8dba86e7f91cb49db6b9c6aad311d03b57099` or a
+compatible later release. Apply its migration `000003` and configure
+its runtime with `AUTH_ENABLED=true` and `AUTH_SERVICE_TOKENS=oria:=<service-secret>`.
+Use the same secret in Oria's `SECOND_CONTEXT_BEARER_TOKEN`, and set
+`SECOND_CONTEXT_SUBJECT_NAMESPACE=oria`. Keep secrets in runtime configuration;
+no OpenAI key is needed for the test suites. `SECOND_CONTEXT_BASE_URL` points to
+the private SecondContext API, as before.
+
+The namespace is opt-in: leaving it empty preserves existing plain UUID scopes
+and ordinary subject-bound token behavior. With `oria`, the external subject is
+`oria:<internal UUID>` and each HTTP request gets its own `X-SecondContext-Subject`
+header. Keep this identity configuration stable; switching namespaces does not
+migrate data and may conflict with existing globally unique session identifiers.
+
+`SecondContextProvider.purge(user_id)` calls the authenticated versioned subject
+purge endpoint and validates the exact subject and completed acknowledgement.
+Failures never count as deletion success; callers retry the same UUID. The owning
+service erases canonical content and the active vector index, retaining a minimal
+subject/timestamp marker to fence delayed writes. A returning deleted user needs
+a fresh Oria UUID. Backups, retired indexes and provider retention have separate
+lifecycles; deletion does not magically erase those copies.
+
+## Runtime status
+
+Stage 12 is implemented, including the upstream service-auth/purge contract and
+real PostgreSQL/Qdrant tests with synthetic LLM responses. Stages 13–16 still add
+active routing, filtering, prompt/persona assembly, output validation and worker
+wiring. The polling/worker demo does not call this adapter yet. Stage 18 owns
+confirmed, durable application-wide deletion across Oria and SecondContext.
+
 Before enabling external conversation storage, update the consent/privacy disclosure
-to describe actual SecondContext retention and the available deletion controls.
-The current policy version remains unchanged because the live flow sends no new data.
+to describe actual SecondContext retention and deletion controls, including the
+minimal deletion marker. The current policy version remains unchanged because
+the live flow sends no new data.
 
-The inspected sibling SecondContext checkout lacks subject-wide purge, and its
-bearer tokens bind to individual subjects. A shared token cannot support multiple
-Oria UUIDs. The adapter preserves those restrictions and fails explicitly for purge.
-Upstream work is required before Stage 12's purge acceptance criterion can pass.
-Changing authentication delegation needs an explicit security decision in the owning
-repository; Oria must not bypass it with direct database access or a default user.
-
-No live-provider call is necessary for tests. The reusable HTTP stub in
-`tests/support/second_context.py` checks identity/session isolation and holds only
-synthetic preferences. It demonstrates adapter continuity but is not evidence that
-a deployed SecondContext instance, embeddings, retrieval or live LLM works.
-Run `make test-contract` for HTTP tests, `make test-integration` for real PostgreSQL
-session/migration/consent tests, and `make verify` for the full gate.
+The reusable HTTP stub in `tests/support/second_context.py` exercises consumer-side
+scope, continuity and strict purge parsing. Upstream tests exercise the actual API,
+PostgreSQL and Qdrant with synthetic LLM responses. No real OpenAI/Telegram calls or
+operator database changes are required. Run `make test-contract` for adapter tests,
+`make test-integration` for Oria's database tests, and `make verify` for the full gate.
