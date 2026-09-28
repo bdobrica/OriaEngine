@@ -66,7 +66,7 @@ def test_time_accuracy(birth_payload, accuracy):
 @pytest.mark.parametrize(
     "values",
     [
-        {"schema_version": 2},
+        {"schema_version": 3},
         {"email": "synthetic@example.invalid"},
         {"birth_date": "1990-02-30"},
         {"birth_local_time": "25:00"},

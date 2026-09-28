@@ -156,7 +156,8 @@ async def test_polling_configuration_fails_before_network(production):
         bot.assert_not_called()
 
 
-async def test_polling_requires_encryption_and_updated_disclosure(encryption):
+@pytest.mark.parametrize("old_policy", ["2026-09-01", "2026-09-28"])
+async def test_polling_requires_encryption_and_updated_disclosure(encryption, old_policy):
     with patch("oria_engine.telegram.__main__.Bot") as bot:
         with pytest.raises(ConfigurationError, match="encryption"):
             await run_polling(Settings(telegram_bot_token=SecretStr(TOKEN)))
@@ -165,7 +166,7 @@ async def test_polling_requires_encryption_and_updated_disclosure(encryption):
             pytest.raises(ConfigurationError, match="ORIA_POLICY_VERSION"),
         ):
             await run_polling(
-                Settings(telegram_bot_token=SecretStr(TOKEN), oria_policy_version="2026-09-01")
+                Settings(telegram_bot_token=SecretStr(TOKEN), oria_policy_version=old_policy)
             )
         bot.assert_not_called()
 

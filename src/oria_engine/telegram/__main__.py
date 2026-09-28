@@ -10,7 +10,7 @@ from oria_engine.config import ConfigurationError, Settings, load_settings
 from oria_engine.db.session import Database
 from oria_engine.domain.consent import ConsentFlow
 from oria_engine.domain.onboarding import OnboardingFlow
-from oria_engine.domain.places import UnavailablePlaceResolver
+from oria_engine.domain.places import LocalPlaceResolver
 from oria_engine.observability import configure_logging
 from oria_engine.privacy.encryption import ProfileEncryption
 from oria_engine.telegram.adapter import TelegramChannelClient, create_dispatcher
@@ -24,8 +24,11 @@ async def run_polling(settings: Settings) -> None:
     if not settings.telegram_bot_token.get_secret_value():
         raise ConfigurationError("Local polling requires TELEGRAM_BOT_TOKEN; see docs/telegram.md")
     encryption = ProfileEncryption(settings)
-    if settings.oria_policy_version == "2026-09-01":
-        raise ConfigurationError("Set ORIA_POLICY_VERSION=2026-09-28 for the collection disclosure")
+    if settings.oria_policy_version in {"2026-09-01", "2026-09-28"}:
+        raise ConfigurationError(
+            "Set ORIA_POLICY_VERSION=2026-09-28.1 for the collection disclosure"
+        )
+    resolver = LocalPlaceResolver()
     bot = Bot(token=settings.telegram_bot_token.get_secret_value())
     database: Database | None = None
     try:
@@ -40,9 +43,7 @@ async def run_polling(settings: Settings) -> None:
             ConsentFlow(
                 database,
                 settings.oria_policy_version,
-                OnboardingFlow(
-                    encryption, settings.oria_policy_version, UnavailablePlaceResolver()
-                ),
+                OnboardingFlow(encryption, settings.oria_policy_version, resolver),
             ),
         )
         logger.info("application_started")

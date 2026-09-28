@@ -299,8 +299,7 @@ Persist the minimum calculation profile using application-level encryption.
 
 See [birth-profile storage](docs/birth-profiles.md) for schema, key handling and
 repository boundaries. Stage 7 connects collection to this consent-checked store;
-Stage 8 supplies live place normalization. Telegram collects date/time and pauses
-at place lookup until that resolver is available.
+Stage 8 supplies live place normalization and historical time clarification.
 
 ---
 
@@ -342,8 +341,8 @@ Collect only the allowed birth data through deterministic application states.
 - [x] The only profile fields the application can solicit/store are those required by the birth-profile schema.
 
 Encrypted drafts survive restart; final profiles require explicit confirmation.
-See [onboarding](docs/onboarding.md). Full-flow tests use deterministic place fixtures;
-live polling pauses at place lookup until Stage 8 implements the gazetteer.
+See [onboarding](docs/onboarding.md). Live polling now uses the bundled gazetteer
+and historical timezone rules; tests also retain isolated deterministic fixtures.
 Stage 10 supplies calculation/activation; saved-profile controls remain Stage 17.
 
 ---
@@ -357,21 +356,27 @@ Turn city/country and local birth time into deterministic calculation inputs wit
 ### Tasks
 
 - [x] Define `PlaceResolver` interface (introduced for Stage 7 candidate selection).
-- [ ] Select/import a local or controlled gazetteer dataset.
-- [ ] Implement city + country lookup.
-- [ ] Return multiple candidates when ambiguous.
-- [ ] Store selected latitude/longitude.
-- [ ] Resolve IANA timezone from the selected location.
-- [ ] Implement historical local-time conversion with `zoneinfo`.
-- [ ] Detect ambiguous/non-existent local times around DST transitions.
-- [ ] Ask the user for clarification when conversion cannot be made safely.
-- [ ] Preserve original local values.
-- [ ] Add deterministic test fixtures for multiple countries and DST cases.
+- [x] Select/import a local or controlled gazetteer dataset.
+- [x] Implement city + country lookup.
+- [x] Return multiple candidates when ambiguous.
+- [x] Store selected latitude/longitude.
+- [x] Resolve IANA timezone from the selected location.
+- [x] Implement historical local-time conversion with `zoneinfo`.
+- [x] Detect ambiguous/non-existent local times around DST transitions.
+- [x] Ask the user for clarification when conversion cannot be made safely.
+- [x] Preserve original local values.
+- [x] Add deterministic test fixtures for multiple countries and DST cases.
 
 ### Acceptance criteria
 
-- [ ] A known city/date/time resolves reproducibly to the expected UTC instant.
-- [ ] No LLM call is involved in coordinate/timezone calculation.
+- [x] A known city/date/time resolves reproducibly to the expected UTC instant.
+- [x] No LLM call is involved in coordinate/timezone calculation.
+
+See [place resolution](docs/place-resolution.md) for dataset coverage and refresh,
+time clarification, and profile schema compatibility. Live polling can now save a
+confirmed profile; Stages 9–10 remain the calculation boundary. Before calculation,
+Stage 10 must clarify unresolved legacy profile times and version derived data
+against the bundled timezone rules. Live Telegram smoke testing remains an operator check.
 
 ---
 

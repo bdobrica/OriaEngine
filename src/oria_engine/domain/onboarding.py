@@ -1,5 +1,6 @@
 """Deterministic, consent-gated onboarding. No Telegram types or model calls."""
 
+from unicodedata import normalize
 from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,11 +9,12 @@ from oria_engine.db.birth_profiles import BirthProfileRepository, ConsentRequire
 from oria_engine.db.onboarding import OnboardingRepository
 from oria_engine.db.repositories import ConsentRepository, UserRepository, UserUnavailableError
 from oria_engine.domain.birth_profile import BirthPlace
+from oria_engine.domain.birth_time import birth_zone, utc_candidates
 from oria_engine.domain.channel import ChannelButton, ChannelMessage
 from oria_engine.domain.consent import ConsentReply
 from oria_engine.domain.consent import OnboardingState as State
 from oria_engine.domain.onboarding_data import OnboardingDraft, parse_birth_date, parse_birth_time
-from oria_engine.domain.places import PlaceResolutionUnavailable, PlaceResolver
+from oria_engine.domain.places import PlaceResolutionUnavailable, PlaceResolver, TooManyPlaces
 from oria_engine.privacy.encryption import ProfileEncryption
 
 DATE_PROMPT = "What is your birth date? Use YYYY-MM-DD or DD Mon YYYY (for example, 13 Apr 1990)."
@@ -36,6 +38,15 @@ def resolve_state(draft: OnboardingDraft | None, *, profile_exists: bool = False
         return State.BIRTH_TIME_REQUIRED
     if draft.birth_place is None:
         return State.BIRTH_PLACE_CONFIRMATION if draft.candidates else State.BIRTH_PLACE_REQUIRED
+    if draft.birth_local_time is not None:
+        try:
+            candidates = utc_candidates(
+                draft.birth_date, draft.birth_local_time, draft.birth_place.timezone
+            )
+        except ValueError:
+            return State.BIRTH_TIME_CLARIFICATION
+        if not candidates or (len(candidates) == 2 and draft.birth_time_occurrence is None):
+            return State.BIRTH_TIME_CLARIFICATION
     return State.PROFILE_CONFIRMATION
 
 
@@ -59,6 +70,42 @@ def reply_for(draft: OnboardingDraft, *, prefix: str = "") -> ConsentReply:
             button(f"{p.display_name} ({p.region or p.city}, {p.country_code})", f"place-{i}")
             for i, p in enumerate(draft.candidates)
         ) + (button("Another city", "edit-place"),)
+    elif state == State.BIRTH_TIME_CLARIFICATION:
+        assert draft.birth_date is not None and draft.birth_local_time is not None
+        assert draft.birth_place is not None
+        try:
+            instants = utc_candidates(
+                draft.birth_date, draft.birth_local_time, draft.birth_place.timezone
+            )
+        except ValueError:
+            instants = ()
+        if len(instants) == 2:
+            text = (
+                "That local time occurred twice when clocks changed. Which occurrence "
+                "matches your birth record? If you cannot tell, choose Unknown time."
+            )
+            zone = birth_zone(draft.birth_place.timezone)
+            buttons = tuple(
+                button(
+                    f"{label} (UTC{instant.astimezone(zone):%z})",
+                    f"occurrence-{i}",
+                )
+                for i, (label, instant) in enumerate(
+                    zip(("First", "Second"), instants, strict=True)
+                )
+            )
+        else:
+            text = (
+                "That local date/time cannot be converted safely in the selected timezone "
+                "(it may fall in a clock-change gap). Please check the date, time and place, "
+                "or choose Unknown time. I won't shift the time automatically."
+            )
+        buttons += (
+            button("Edit date", "edit-date"),
+            button("Edit time", "edit-time"),
+            button("Edit place", "edit-place"),
+            button("Unknown time", "unknown"),
+        )
     else:
         time_text = (
             "unknown"
@@ -73,6 +120,9 @@ def reply_for(draft: OnboardingDraft, *, prefix: str = "") -> ConsentReply:
             f"{draft.birth_place.country_code}\nTimezone: {draft.birth_place.timezone}\n"
             "Chart calculation will follow when available."
         )
+        instant = draft.profile().utc_instant()
+        if instant is not None:
+            text += f"\nUTC: {instant.isoformat()} (time accuracy: {draft.birth_time_accuracy})"
         buttons = (
             button("Confirm profile", "confirm"),
             button("Edit date", "edit-date"),
@@ -130,21 +180,37 @@ class OnboardingFlow:
                 await profiles.save(user_id, draft.profile())
                 await drafts.clear(user_id)
                 return ConsentReply(State.COMPUTING_PROFILE, SAVED_TEXT)
-            if state == State.PROFILE_CONFIRMATION and action == "edit-date":
+            editable = state in {State.PROFILE_CONFIRMATION, State.BIRTH_TIME_CLARIFICATION}
+            if editable and action == "edit-date":
                 draft = draft.model_copy(update={"birth_date": None})
-            elif state == State.PROFILE_CONFIRMATION and action == "edit-time":
+            elif editable and action == "edit-time":
                 draft = draft.model_copy(
                     update={"birth_local_time": None, "birth_time_accuracy": None}
                 )
-            elif (
-                state in {State.PROFILE_CONFIRMATION, State.BIRTH_PLACE_CONFIRMATION}
-                and action == "edit-place"
-            ):
+            elif (editable or state == State.BIRTH_PLACE_CONFIRMATION) and action == "edit-place":
                 draft = draft.model_copy(update={"birth_place": None, "candidates": ()})
-            elif state == State.BIRTH_TIME_REQUIRED and action == "unknown":
+            elif (
+                state in {State.BIRTH_TIME_REQUIRED, State.BIRTH_TIME_CLARIFICATION}
+                and action == "unknown"
+            ):
                 draft = draft.model_copy(
                     update={"birth_local_time": None, "birth_time_accuracy": "unknown"}
                 )
+            elif state == State.BIRTH_TIME_CLARIFICATION and action in {
+                "occurrence-0",
+                "occurrence-1",
+            }:
+                assert draft.birth_date is not None and draft.birth_local_time is not None
+                assert draft.birth_place is not None
+                try:
+                    instants = utc_candidates(
+                        draft.birth_date, draft.birth_local_time, draft.birth_place.timezone
+                    )
+                except ValueError:
+                    return reply_for(draft)
+                if len(instants) != 2:
+                    return reply_for(draft)
+                draft = draft.model_copy(update={"birth_time_occurrence": int(action[-1])})
             elif state == State.BIRTH_PLACE_CONFIRMATION and action in {
                 f"place-{i}" for i in range(len(draft.candidates))
             }:
@@ -167,16 +233,18 @@ class OnboardingFlow:
                         update={"birth_local_time": local_time, "birth_time_accuracy": accuracy}
                     )
                 elif state == State.BIRTH_PLACE_REQUIRED:
-                    parts = [part.strip() for part in text.split(",")]
+                    parts = [normalize("NFC", part.strip()) for part in text.split(",")]
                     if len(parts) != 2 or any(
                         not 1 <= len(part) <= 128
                         or not any(c.isalpha() for c in part)
-                        or not all(c.isalpha() or c in " -'." for c in part)
+                        or not all(c.isalpha() or c in " -'.’" for c in part)
                         for part in parts
                     ):
                         return reply_for(draft, prefix="Use city, country only.")
                     try:
                         candidates = await self.resolver.resolve(*parts)
+                    except TooManyPlaces:
+                        return reply_for(draft, prefix="Many matches. Use city - region, country.")
                     except PlaceResolutionUnavailable:
                         return reply_for(
                             draft,
@@ -187,7 +255,13 @@ class OnboardingFlow:
                             ),
                         )
                     if not candidates:
-                        return reply_for(draft, prefix="No matching place. Check city and country.")
+                        return reply_for(
+                            draft,
+                            prefix=(
+                                "No matching place in the local dataset. "
+                                "Check city and country (or ISO country code)."
+                            ),
+                        )
                     # Validate and bound resolver output before storing or presenting it.
                     draft = OnboardingDraft.model_validate(
                         {
@@ -202,5 +276,7 @@ class OnboardingFlow:
                     draft, prefix="I couldn't use that entry. Please try the requested format."
                 )
         draft = draft.model_copy(update={"token": uuid4().hex})
+        if callback is None or action not in {"occurrence-0", "occurrence-1"}:
+            draft = draft.model_copy(update={"birth_time_occurrence": None})
         await drafts.save(user_id, draft)
         return reply_for(draft)

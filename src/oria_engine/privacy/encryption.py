@@ -80,7 +80,9 @@ class ProfileEncryption:
         nonce = os.urandom(12)
         return nonce + self._cipher.encrypt(
             nonce,
-            validated.model_dump_json().encode(),
+            validated.model_dump_json(
+                exclude={"birth_time_occurrence"} if validated.schema_version == 1 else None
+            ).encode(),
             self._aad(user_id, profile_id, validated.schema_version),
         )
 
@@ -96,7 +98,7 @@ class ProfileEncryption:
         try:
             if (
                 key_version != self.key_version
-                or schema_version != 1
+                or schema_version not in (1, 2)
                 or len(encrypted_payload) < 29
             ):
                 raise ValueError()

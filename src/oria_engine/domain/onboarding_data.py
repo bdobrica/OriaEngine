@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 from pydantic import Field, model_validator
 
 from oria_engine.domain.birth_profile import BirthPlace, BirthProfilePayload, PrivateModel
+from oria_engine.domain.birth_time import resolve_utc
 
 
 class OnboardingDraft(PrivateModel):
@@ -18,6 +19,7 @@ class OnboardingDraft(PrivateModel):
     birth_local_time: time | None = None
     birth_time_accuracy: Literal["exact", "approximate", "unknown"] | None = None
     birth_place: BirthPlace | None = None
+    birth_time_occurrence: Literal[0, 1] | None = None
     candidates: tuple[BirthPlace, ...] = Field(default=(), max_length=8)
 
     @model_validator(mode="after")
@@ -29,13 +31,29 @@ class OnboardingDraft(PrivateModel):
             raise ValueError("Known time requires an offset-free local time")
         if self.birth_place is not None and self.candidates:
             raise ValueError("Selected place cannot have pending candidates")
+        if self.birth_time_occurrence is not None:
+            if self.birth_date is None or self.birth_place is None:
+                raise ValueError("Time clarification requires date and place")
+            resolve_utc(
+                self.birth_date,
+                self.birth_local_time,
+                self.birth_place.timezone,
+                self.birth_time_occurrence,
+            )
         return self
 
     def profile(self) -> BirthProfilePayload:
         return BirthProfilePayload.model_validate(
             self.model_dump(
-                include={"birth_date", "birth_local_time", "birth_time_accuracy", "birth_place"}
+                include={
+                    "birth_date",
+                    "birth_local_time",
+                    "birth_time_accuracy",
+                    "birth_place",
+                    "birth_time_occurrence",
+                }
             )
+            | {"schema_version": 2}
         )
 
 

@@ -1,0 +1,15 @@
+{
+  "city_count": 34146,
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "outputs_sha256": {
+    "places.json.gz": "6195b0c26f083ab4441db29911d0c36ce4436259e8c00496f8a278ef3f24ddb5",
+    "timezones.zip": "e4638862b2ef19591805412575acb3d495fd39631bfcf75d1d851283d21d729d"
+  },
+  "sha256": {
+    "admin1CodesASCII.txt": "1da92a6323a5fec3176f3f743bf4cf4040fd56a876da55e46fbca23c863aa60a",
+    "cities15000.zip": "2b63225616ed25a77577883b073ba65531e545e682ca9e2eddfaa776d3bd3972",
+    "countryInfo.txt": "93bafc525813f22e4711ff9ed6d626343094ce48c26388dc7c49189b3d7d5512"
+  },
+  "source": "https://download.geonames.org/export/dump/",
+  "tzdata": "# version 2025b"
+}

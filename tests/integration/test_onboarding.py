@@ -16,7 +16,7 @@ from oria_engine.domain.channel import ChannelMessage
 from oria_engine.domain.consent import ConsentFlow
 from oria_engine.domain.consent import OnboardingState as State
 from oria_engine.domain.onboarding import OnboardingFlow
-from oria_engine.domain.places import UnavailablePlaceResolver
+from oria_engine.domain.places import LocalPlaceResolver, UnavailablePlaceResolver
 from oria_engine.observability import configure_logging
 from oria_engine.telegram.adapter import create_dispatcher
 
@@ -253,3 +253,79 @@ async def test_telegram_collects_commits_before_failed_send_and_logs_no_fields(
     assert (
         await restarted.handle(message("/start"), command="start")
     ).state == State.BIRTH_TIME_REQUIRED
+
+
+@pytest.mark.parametrize("occurrence", [0, 1])
+async def test_local_resolver_repeated_time_restart_edit_and_confirm(store, encryption, occurrence):
+    resolver = LocalPlaceResolver()
+
+    def restarted():
+        return ConsentFlow(store, "v1", OnboardingFlow(encryption, "v1", resolver))
+
+    f = restarted()
+    await f.handle(message(callback=f.buttons[0].data))
+    await f.handle(message("2020-11-01"))
+    await f.handle(message("approximate 01:30"))
+    places = await f.handle(message("New York City, USA"))
+    reply = await f.handle(message(callback=places.buttons[0].data))
+    assert reply.state == State.BIRTH_TIME_CLARIFICATION
+    choice = reply.buttons[occurrence].data
+    # Neither text nor a forged confirmation action bypasses clarification.
+    assert (await f.handle(message("yes"))).state == State.BIRTH_TIME_CLARIFICATION
+    assert (
+        await f.handle(message(callback=choice.rsplit(":", 1)[0] + ":confirm"))
+    ).state == State.BIRTH_TIME_CLARIFICATION
+    f = restarted()
+    summary = await f.handle(message(callback=choice))
+    assert summary.state == State.PROFILE_CONFIRMATION
+    user_id = await owner(store)
+    async with store.transaction() as session:
+        draft = await OnboardingRepository(session, encryption, "v1").get(user_id)
+        assert draft.birth_time_occurrence == occurrence
+        assert draft.birth_local_time.isoformat() == "01:30:00"
+    # Changing a source field invalidates the old occurrence and confirmation token.
+    old_confirm = button(summary, "Confirm profile")
+    await f.handle(message(callback=button(summary, "Edit date")))
+    reply = await f.handle(message("2020-11-01"))
+    assert reply.state == State.BIRTH_TIME_CLARIFICATION
+    assert (await f.handle(message(callback=old_confirm))).state == State.BIRTH_TIME_CLARIFICATION
+    summary = await f.handle(message(callback=reply.buttons[occurrence].data))
+    f = restarted()
+    assert (
+        await f.handle(message(callback=button(summary, "Confirm profile")))
+    ).state == State.COMPUTING_PROFILE
+    async with store.transaction() as session:
+        profile = await BirthProfileRepository(session, encryption, policy_version="v1").get(
+            user_id
+        )
+        assert profile.schema_version == 2
+        assert profile.birth_time_accuracy == "approximate"
+        assert profile.birth_time_occurrence == occurrence
+        assert profile.utc_instant() == datetime(2020, 11, 1, 5 + occurrence, 30, tzinfo=UTC)
+
+
+async def test_local_resolver_gap_requires_correction_or_unknown(store, encryption):
+    f = ConsentFlow(store, "v1", OnboardingFlow(encryption, "v1", LocalPlaceResolver()))
+    await f.handle(message(callback=f.buttons[0].data))
+    await f.handle(message("2020-03-08"))
+    await f.handle(message("02:30"))
+    places = await f.handle(message("New York City, US"))
+    reply = await f.handle(message(callback=places.buttons[0].data))
+    assert reply.state == State.BIRTH_TIME_CLARIFICATION
+    assert not any("occurrence" in b.data or b.text == "Confirm profile" for b in reply.buttons)
+    # Correction produces the entered local time, not an automatic shift through the gap.
+    await f.handle(message(callback=button(reply, "Edit time")))
+    summary = await f.handle(message("03:30"))
+    assert summary.state == State.PROFILE_CONFIRMATION
+    assert "07:30:00+00:00" in summary.text
+    await f.handle(message(callback=button(summary, "Edit time")))
+    reply = await f.handle(message("02:30"))
+    summary = await f.handle(message(callback=button(reply, "Unknown time")))
+    assert summary.state == State.PROFILE_CONFIRMATION
+    await f.handle(message(callback=button(summary, "Confirm profile")))
+    user_id = await owner(store)
+    async with store.transaction() as session:
+        profile = await BirthProfileRepository(session, encryption, policy_version="v1").get(
+            user_id
+        )
+        assert profile.birth_local_time is None and profile.utc_instant() is None

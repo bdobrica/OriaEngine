@@ -1,14 +1,16 @@
 # Encrypted birth profiles
 
-`domain.birth_profile.BirthProfilePayload` is the version 1 internal storage
+`domain.birth_profile.BirthProfilePayload` is the versioned internal storage
 schema. It accepts only birth date, optional offset-free local time, time accuracy
 (`exact`, `approximate`, `unknown`), and a normalized birthplace. Known accuracy
 requires a time; unknown requires no time. Place fields are display name, city,
 optional region, two-letter uppercase country code, bounded latitude/longitude,
 and a recognized IANA timezone. Unknown fields are rejected at both levels.
 The schema checks shape, not whether a city matches coordinates or a country;
-the deterministic place resolver owns that responsibility in Stage 8. Historical
-time conversion remains Stage 8; [onboarding](onboarding.md) handles date/time entry.
+the deterministic place resolver owns that responsibility. Version 2 adds an
+optional occurrence for repeated wall times and validates historical conversion.
+Version 1 remains readable. See [place resolution](place-resolution.md) for the
+compatibility rules; [onboarding](onboarding.md) handles date/time entry.
 
 Apply migration `0003` with `make migrate`. `birth_profiles` has one row per user:
 UUID, owner UUID, encrypted payload, schema/key versions, and creation/update
@@ -72,7 +74,7 @@ owner isolation, consent/deletion guards, concurrent writes, withdrawal ordering
 rollback, repeated migration, downgrade/re-upgrade and metadata drift.
 Tests use synthetic profiles and newly generated keys in isolated infrastructure.
 
-Deterministic [onboarding](onboarding.md) now connects collection to this repository;
-Stage 8 supplies the live normalized-place resolver. Telegram collects date/time
-and pauses at place lookup. Stage 10 must check consent and confirmation before
+Deterministic [onboarding](onboarding.md) now connects collection to this repository.
+The local resolver supplies normalized places and asks for clock-change clarification.
+Stage 10 must check consent and confirmation before
 activation and invalidate derived results on edits.

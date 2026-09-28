@@ -12,7 +12,7 @@ from oria_engine.domain.channel import HELP_TEXT, ChannelButton, ChannelMessage
 if TYPE_CHECKING:
     from oria_engine.domain.onboarding import OnboardingFlow
 
-# Collection disclosure uses the configured policy version (default 2026-09-28).
+# Collection disclosure uses the configured policy version (default 2026-09-28.1).
 # Change the configured version whenever the disclosure/data use changes.
 DISCLAIMER = (
     "Hi — I'm Oria, an AI astrology personality. Astrology is interpretive, not a factual "
@@ -25,8 +25,9 @@ DISCLAIMER = (
     "home address, employer, passwords, government IDs or payment details.\n\n"
     "The completed service will let you inspect your profile (/profile), correct it "
     "(/edit-profile), review privacy and withdraw consent (/privacy), and delete your data "
-    "(/delete-me). In this demo, date/time collection and editing during setup are available. "
-    "Place lookup, chart calculation, saved-profile controls and deletion are not available yet. "
+    "(/delete-me). In this demo, birth-profile collection, local place lookup, timezone "
+    "clarification and editing during setup are available. Chart calculation, saved-profile "
+    "controls and deletion are not available yet. "
     "We store internal identity, Telegram routing IDs, consent decisions and encrypted "
     "onboarding progress, including incomplete birth details. Confirmed profiles are encrypted. "
     "Send only the birth field requested; raw message text is not stored by OriaEngine. "
@@ -55,6 +56,7 @@ class OnboardingState(StrEnum):
     BIRTH_TIME_REQUIRED = "BirthTimeRequired"
     BIRTH_PLACE_REQUIRED = "BirthPlaceRequired"
     BIRTH_PLACE_CONFIRMATION = "BirthPlaceConfirmation"
+    BIRTH_TIME_CLARIFICATION = "BirthTimeClarification"
     PROFILE_CONFIRMATION = "ProfileConfirmation"
     COMPUTING_PROFILE = "ComputingProfile"
 

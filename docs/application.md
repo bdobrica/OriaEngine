@@ -27,7 +27,7 @@ platform; do not deploy a development `.env` or commit secrets.
 | `SECOND_CONTEXT_BASE_URL` | `http://localhost:8080`; HTTP(S) |
 | `SECOND_CONTEXT_BEARER_TOKEN` | Empty; optional bearer authentication |
 | `ASTROLOGY_MCP_URL` | `http://localhost:8000/mcp`; HTTP(S) |
-| `ORIA_POLICY_VERSION` | `2026-09-28`; nonempty version identifier |
+| `ORIA_POLICY_VERSION` | `2026-09-28.1`; nonempty version identifier |
 
 HTTP URLs reject embedded credentials, query strings and fragments. Authentication
 belongs in the dedicated secret settings. Version identifiers use letters, digits,

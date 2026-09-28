@@ -150,7 +150,12 @@ stateDiagram-v2
     BirthDateRequired --> BirthTimeRequired: Valid date
     BirthTimeRequired --> BirthPlaceRequired: Exact / approximate / unknown
     BirthPlaceRequired --> BirthPlaceConfirmation: Candidate location(s)
-    BirthPlaceConfirmation --> ProfileConfirmation: Location selected
+    BirthPlaceConfirmation --> ProfileConfirmation: Location selected / safe or unknown time
+    BirthPlaceConfirmation --> BirthTimeClarification: Repeated or non-existent local time
+    BirthTimeClarification --> ProfileConfirmation: Choose occurrence or unknown
+    BirthTimeClarification --> BirthDateRequired: Correct date
+    BirthTimeClarification --> BirthTimeRequired: Correct time
+    BirthTimeClarification --> BirthPlaceRequired: Correct place
     ProfileConfirmation --> BirthDateRequired: Edit date
     ProfileConfirmation --> BirthTimeRequired: Edit time
     ProfileConfirmation --> BirthPlaceRequired: Edit place
@@ -491,7 +496,7 @@ The decrypted payload may contain:
 }
 ```
 
-The version 1 payload and encryption/storage boundary are defined in
+The versioned payload and encryption/storage boundary are defined in
 [Birth profiles](docs/birth-profiles.md). Calculation version belongs to the
 derived astrology profile; raw storage carries schema and encryption key versions.
 
@@ -529,6 +534,14 @@ Preferred MVP behavior:
 External geocoders may be added behind an interface, but a local resolver is preferable for privacy and deterministic testing.
 
 Time conversion must be covered with regression fixtures around DST and historical timezone changes.
+
+The demo uses bundled GeoNames city records, including their location-specific
+IANA timezone assignments, and a fixed TZif snapshot. Repeated local times require
+an explicit occurrence choice; gaps require correction or unknown time. Original
+local values are preserved in encrypted profile schema 2; schema 1 remains readable.
+See [place resolution](docs/place-resolution.md) for coverage, compatibility and
+dataset generation. Stage 10 must version derived calculations against the source
+profile and timezone snapshot, and clarify unresolved legacy times before use.
 
 ---
 
@@ -1038,7 +1051,7 @@ SECOND_CONTEXT_BASE_URL=http://secondcontext:8080
 SECOND_CONTEXT_BEARER_TOKEN=
 
 ASTROLOGY_MCP_URL=http://astrology-mcp:8000/mcp
-ORIA_POLICY_VERSION=2026-09-28
+ORIA_POLICY_VERSION=2026-09-28.1
 ```
 
 Production secrets must come from the deployment platform's secret mechanism rather than committed files.
@@ -1055,9 +1068,10 @@ privacy, or security requirements. The MVP completion criteria remain unchanged.
 
 For the staged demo, consent acceptance starts or resumes deterministic onboarding.
 Encrypted drafts preserve date/time progress and candidate selection; confirmed
-profiles use the consent-checked storage repository. Live polling pauses at place
-lookup until Stage 8 supplies the gazetteer through `PlaceResolver`; tests inject
-normalized fixtures. Keep disclosure honest about unavailable saved-profile and
+profiles use the consent-checked storage repository. Live polling resolves local
+places through `PlaceResolver`, clarifies clock changes, and saves confirmed profiles.
+Calculation remains the next demo boundary (Stages 9–10).
+Keep disclosure honest about unavailable saved-profile and
 deletion controls, and bump the policy version for the collection disclosure.
 All draft/profile writes check current consent under the user lock. Stage 10
 activation must retain that check. See [onboarding](docs/onboarding.md),

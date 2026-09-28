@@ -9,13 +9,14 @@ transaction. Replies are sent after commit so delivery failure cannot undo a dec
 ## Disclosure and decisions
 
 The initial copy is `DISCLAIMER` in `domain/consent.py`, using
-`ORIA_POLICY_VERSION` (default `2026-09-28`). It covers AI identity, interpretive
+`ORIA_POLICY_VERSION` (default `2026-09-28.1`). It covers AI identity, interpretive
 astrology, high-stakes limitations, birth date/time/place, chart purpose and future
 storage, prohibited unrelated PII, planned profile/edit/delete controls, and adult
 use. **I'm 18+ and agree** confirms adulthood and acceptance together; it is a
 self-attestation, not age verification. The copy explicitly describes this demo's
-limits: encrypted date/time drafts are collected, live place lookup and deletion
-are unavailable, and prior data remains after decline. `/privacy` shows the
+limits: encrypted birth profiles and drafts are collected, local place lookup and
+time clarification are available, calculation and deletion remain unavailable,
+and prior data remains after decline. `/privacy` shows the
 disclosure and the same decision buttons.
 
 Keep each deployed version associated with its disclosure in source history. Bump

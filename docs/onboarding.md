@@ -16,6 +16,7 @@ write drafts or profiles.
 | `BirthTimeRequired` | 24-hour `HH:MM` (exact), `exact HH:MM`, `approximate HH:MM`, or `unknown` / Unknown button |
 | `BirthPlaceRequired` | `city, country` only; deterministic resolver returns candidates |
 | `BirthPlaceConfirmation` | Select a candidate, or request another city |
+| `BirthTimeClarification` | Select an occurrence of a repeated time, correct a gap, or choose unknown |
 | `ProfileConfirmation` | Review summary; confirm or edit date, time or place |
 | `ComputingProfile` | Confirmed encrypted profile awaits the later calculation stage |
 
@@ -30,7 +31,8 @@ profile attributes. Both draft and final schemas forbid extra keys.
 The resolver derives state from draft completeness, with consent taking priority.
 `/start` resumes without resetting fields; `/help`, `/privacy`, unknown commands
 and stale callbacks do not become birth input. Editing clears only the selected
-field. Confirmation creates the strict `BirthProfilePayload` through the existing
+field and invalidates any time-occurrence selection. Confirmation creates the strict
+`BirthProfilePayload` through the existing
 consent-checked repository and removes the draft atomically. A confirmed profile
 is not marked active and does not trigger an unavailable calculation service.
 Saved-profile inspection/editing and deletion remain later stages.
@@ -40,7 +42,9 @@ Saved-profile inspection/editing and deletion remain later stages.
 Migration `0004` adds one `onboarding_drafts` row per owner, containing ciphertext,
 schema/key versions and an update timestamp. The encrypted version 1 draft holds
 only the permitted birth fields, up to eight normalized candidates, consent UUID
-and a random callback revision token. No raw message or unresolved query is saved.
+and a random callback revision token, plus an optional time-occurrence selection.
+Older drafts without the optional field still load. No raw message or unresolved
+query is saved.
 Progress survives process/Redis loss; no process-local state is authoritative.
 Downgrading `0004` removes drafts while retaining confirmed profiles and consent.
 
@@ -58,18 +62,17 @@ Decline retains encrypted progress and stops processing; this is not deletion.
 Same-policy consent-button replay and durable text-update deduplication remain
 Stage 11. No exactly-once Telegram delivery is claimed.
 
-## Stage 8 boundary and local demo
+## Local demo
 
 `domain.places.PlaceResolver` is the local async interface for city/country lookup.
-Its concrete gazetteer and historical timezone conversion belong to Stage 8.
-Polling currently uses `UnavailablePlaceResolver`: date/time collection works,
-but place lookup gives an honest pause and retains progress. Automated full-flow
-tests inject deterministic normalized fixtures; they do not demonstrate live place
-resolution. No placeholder coordinates or guessed timezone enter a real profile.
+Polling uses `LocalPlaceResolver` with bundled GeoNames data and historical
+timezone rules. See [place resolution](place-resolution.md) for coverage, time
+clarification and dataset generation. Confirmed profiles await Stage 10 calculation.
 
 Before `make run`, apply `make migrate`, retain a stable `PROFILE_ENCRYPTION_KEY`,
-and set `ORIA_POLICY_VERSION=2026-09-28` in the ignored local `.env`. Polling rejects
-the old default `2026-09-01`. Operators using custom policy versions must also bump
+and set `ORIA_POLICY_VERSION=2026-09-28.1` in the ignored local `.env`. Polling rejects
+the previous defaults `2026-09-01` and `2026-09-28`. Operators using custom policy
+versions must also bump
 their version when deploying the updated collection disclosure. No local secrets
 or developer database are modified by implementation tests.
 

@@ -8,7 +8,7 @@
 2. Run `make env` and put the token in `TELEGRAM_BOT_TOKEN` in your local `.env`.
    Never commit the token or paste it into logs, issues, or test fixtures.
 3. Configure `DATABASE_URL`, a stable `PROFILE_ENCRYPTION_KEY`, and
-   `ORIA_POLICY_VERSION=2026-09-28` (bump custom versions too). Run `make infra-up`
+   `ORIA_POLICY_VERSION=2026-09-28.1` (bump custom versions too). Run `make infra-up`
    and `make migrate` to apply revision `0004`, then
    `make run` with `APP_ENV=development`. Only one polling process can use
    a bot token at a time ([aiogram polling documentation](https://docs.aiogram.dev/en/latest/dispatcher/long_polling.html)).
@@ -16,8 +16,12 @@
    Expect the versioned disclosure with **I'm 18+ and agree** and **Decline** buttons.
    Decline stops onboarding; `/start` offers the choice again. Accept records consent
    and asks for a birth date. Use synthetic `1990-04-13`, then `approximate 03:42`
-   (or `unknown`). The bot requests city/country; `Cluj-Napoca, RO` currently reports
-   that local lookup awaits Stage 8. `/privacy` lets you decline even after acceptance.
+   (or `unknown`). Enter `Cluj-Napoca, RO`, select the candidate, and review the
+   profile summary and UTC conversion. Try editing a field before confirming.
+   Confirmation saves the encrypted profile; calculation is still pending.
+   For a separate synthetic user, try `2020-11-01`, `01:30`, `New York City, US`:
+   selecting the city should ask for the first/second occurrence or unknown time.
+   `/privacy` lets you decline even after acceptance.
    Use synthetic data for this smoke test; deletion is not implemented yet.
 5. Restart the process and send `/start`: consent and collected fields should survive. Changing
    `ORIA_POLICY_VERSION` and restarting should require fresh consent; an old policy's
