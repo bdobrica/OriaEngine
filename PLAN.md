@@ -22,7 +22,7 @@ The MVP should demonstrate that the system can:
 
 1. receive and reply to private Telegram messages;
 2. obtain explicit, versioned user consent before collecting birth data;
-3. collect only the birth information required for the astrological model;
+3. collect only the birth information required for the astrology calculation engine;
 4. normalize that information into a mathematically usable birth instant and location;
 5. persist the user's private profile securely in PostgreSQL;
 6. call a deterministic astrology calculation service exposed through FastMCP;
@@ -247,7 +247,8 @@ flowchart TD
     WK --> CTX[SecondContext<br/>Persistent conversational context]
     WK --> MCP[Astrology MCP<br/>FastMCP container]
 
-    MCP --> MODEL[Existing mathematical<br/>astrology model]
+    MCP --> ENGINE[Oria astrology<br/>calculation engine]
+    ENGINE --> EPHEMERIS[Swiss Ephemeris]
 
     WK --> POL[Policy + Persona<br/>response construction]
     POL --> TGA
@@ -324,7 +325,7 @@ The repository should be organized by domain responsibilities rather than by Tel
 - `src/oria_engine/persona/` — Oria persona and response prompt construction;
 - `src/oria_engine/privacy/` — encryption, redaction, deletion orchestration;
 - `src/oria_engine/observability/` — logging and metrics;
-- `services/astrology_mcp/` — FastMCP service wrapping the mathematical model;
+- `services/astrology_mcp/` — FastMCP service exposing the astrology calculation engine;
 - `migrations/` — Alembic migrations;
 - `tests/unit/` — pure and mocked tests;
 - `tests/integration/` — Postgres/Redis/service integration tests;
@@ -547,7 +548,34 @@ profile and timezone snapshot, and clarify unresolved legacy times before use.
 
 ## 16. Astrology MCP service
 
-The mathematical model runs in a separate Docker container and is exposed through FastMCP over the private application network.
+The **astrology calculation engine** runs in a separate Docker container and is
+exposed through FastMCP over the private application network. For the MVP, build
+this engine using **Swiss Ephemeris plus a thin Oria-owned Python calculation
+layer**. No pre-existing calculation implementation or trained ML artifact is
+required from the operator.
+
+The component responsibilities are:
+
+| Component | Responsibility |
+| --- | --- |
+| Swiss Ephemeris | Astronomical calculations: planetary positions, velocities, Julian dates and house/angle calculations |
+| Oria Astrology Engine | Deterministic derived features, calculation conventions, availability and uncertainty |
+| Astrology MCP | Versioned, typed API/tool boundary exposing the engine |
+| LLM | Interpretation and conversation grounded in the returned facts |
+| Future predictive/statistical model | Optional learned layer outside v0.1 and the MVP |
+
+Use the [Swiss Ephemeris programming interface](https://www.astro.com/swisseph/swephprg.htm)
+through Python bindings such as [pyswisseph](https://pypi.org/project/pyswisseph/).
+Record the binding/library versions and the ephemeris backend/data actually used.
+Pin the calculation dependencies and data; do not silently change ephemerides
+when files are missing. Review library, binding and data licensing before
+distribution or public service activation; Swiss Ephemeris offers
+[AGPL and professional licensing](https://www.astro.com/swisseph/swephinfo_e.htm).
+Selecting the engine here does not change the repository's license.
+
+Kerykeion was considered as a higher-level alternative. The chosen MVP direction
+is the thin Oria layer over Swiss Ephemeris, preserving raw numerical values and
+explicit conventions for future research without introducing a second engine.
 
 The service should be **stateless with respect to user identity**. It should receive mathematical inputs rather than Telegram identities or usernames.
 
@@ -555,15 +583,49 @@ The service should be **stateless with respect to user identity**. It should rec
 flowchart LR
     W[Oria worker] --> C[MCP client]
     C --> S[FastMCP Astrology Service]
-    S --> M[Mathematical model]
-    M --> S
+    S --> E[Oria Astrology Engine]
+    E --> SE[Swiss Ephemeris]
+    SE --> E
+    E --> S
     S --> C
     C --> W
 ```
 
+### Calculation facts and interpretation
+
+The pipeline is birth inputs → ephemeris → positions/houses → deterministic
+features → structured JSON facts → LLM interpretation. Calculation results are
+computed by code, never inferred by the LLM.
+
+Preserve continuous measurements alongside traditional labels:
+
+- ecliptic longitude, zodiac sign and degree within the sign;
+- longitude velocity in degrees/day and retrograde state;
+- Ascendant, MC, house cusps and placements when the inputs support them;
+- angular separation, aspect target angle and orb distance in degrees;
+- relative angular velocity with a documented body-order/sign convention;
+- conjunction, opposition, square, trine and sextile classifications under explicit orb rules;
+- applying/separating state when it can be determined safely.
+
+Time to an exact aspect requires a defined calculation method. A current-speed
+linear extrapolation is an estimate, not a solved future crossing; label its
+method and limitations, or return unavailable. Stationary motion, retrograde
+turns and multiple crossings must not produce an unsupported exact-time claim.
+This field is optional for Stage 9; transit relationships belong to Stage 13.
+Declination parallels/contra-parallels remain a later extension.
+
+Publish calculation conventions with the contract: zodiac/reference frame,
+supported bodies, house system, aspect/orb rules, units, rounding/tolerances,
+supported dates and unavailable-result behavior. Preserve exact/approximate/unknown
+birth-time accuracy. Unknown time must not invent an instant or authoritative
+houses/Ascendant; any date-only positional approximation needs explicit provenance
+and uncertainty. Unsupported house calculations must not silently substitute a
+different house system.
+
 ### Initial MCP tools
 
-The exact functions depend on the existing mathematical model, but the contract should resemble:
+Stage 9 implements the natal tool below. Stage 13 adds transits using the same
+calculation engine and versioned contract conventions.
 
 #### `calculate_natal_chart`
 
@@ -573,15 +635,16 @@ Inputs:
 - local birth date when time is unknown;
 - latitude;
 - longitude;
-- calculation options/model version.
+- birth-time accuracy;
+- calculation options and requested engine/contract version when applicable.
 
 Outputs:
 
-- planetary positions;
+- planetary positions, zodiac positions, velocities and retrograde state;
 - angles when valid;
 - houses when valid;
-- aspects;
-- calculation metadata;
+- aspects with angular separations, target angles, orbs and supported motion features;
+- calculation engine, binding, ephemeris/data and contract version metadata;
 - uncertainty/availability flags.
 
 #### `calculate_transits`
@@ -599,7 +662,7 @@ Outputs:
 - orb distances;
 - applying/separating state where supported;
 - time-to-exact values where supported;
-- model/calculation metadata.
+- engine/ephemeris versions and calculation metadata.
 
 #### Optional later tools
 
@@ -1149,7 +1212,10 @@ Run against isolated PostgreSQL and Redis containers and verify:
 
 Use golden fixtures to verify that the calculation service returns stable structured results for known inputs.
 
-The calculation engine version must be captured in each result so intentional algorithm/model changes can update fixtures explicitly.
+The calculation engine version must be captured in each result so intentional
+algorithm or ephemeris changes can update fixtures explicitly. Golden fixtures
+must have documented reference values, conventions and numerical tolerances;
+the illustrative values in design discussions are not reference charts.
 
 ### SecondContext contract tests
 
@@ -1224,7 +1290,7 @@ flowchart LR
     W1 --> S[SecondContext]
     W2 --> S
 
-    A --> AM[Astrology model]
+    A --> AE[Astrology calculation engine]
 ```
 
 Only the HTTPS gateway needs to be reachable by Telegram. PostgreSQL, Redis, workers, Astrology MCP, and SecondContext should remain on private networks.
@@ -1299,6 +1365,13 @@ After v0.1 validates the interaction model, possible extensions include:
 - social posting/content generation as a separate channel from private DM conversations.
 
 Predictive experimentation should remain separate from the user-facing interpretive product. If implemented, it should use prospective evaluation, negative examples, held-out data, timestamped predictions, and calibration metrics rather than retrospective narrative fitting.
+
+Such research could combine deterministic astrology features with separately
+consented user-reported outcomes, comparing a non-astrological baseline against
+the same baseline plus astrology features. Logistic regression, hierarchical
+Bayesian models, boosted trees or survival models are possible future methods,
+not MVP dependencies or evidence of predictive value. Outcome collection,
+training and personalized statistical predictions are outside v0.1.
 
 ---
 

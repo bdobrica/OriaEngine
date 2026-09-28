@@ -384,18 +384,31 @@ against the bundled timezone rules. Live Telegram smoke testing remains an opera
 
 ### Goal
 
-Expose the existing mathematical model as deterministic, structured MCP tools.
+Build the astrology calculation engine with Swiss Ephemeris and a thin Oria-owned
+Python feature layer, then expose it as deterministic, structured MCP tools.
+No trained model or pre-existing implementation is expected. The LLM interprets
+calculated facts; it does not generate the numerical chart values. See
+[PLAN section 16](PLAN.md#16-astrology-mcp-service) for component boundaries and
+calculation conventions. Learned predictive models remain outside the MVP.
 
 ### Tasks
 
 - [ ] Create FastMCP server in `services/astrology_mcp/`.
 - [ ] Add Dockerfile for astrology MCP service.
 - [ ] Add service to Docker Compose private network.
-- [ ] Wrap existing mathematical model behind a clean service interface.
+- [ ] Integrate Swiss Ephemeris through Python bindings and a thin Oria calculation layer.
+- [ ] Pin binding/engine versions and ephemeris backend/data; prevent silent backend fallback.
+- [ ] Document library/binding/data licensing before distribution or public service activation.
 - [ ] Define typed input/output schemas.
+- [ ] Publish supported bodies/dates, zodiac/reference frame, house system, orb rules, units and numerical tolerances.
 - [ ] Implement `calculate_natal_chart`.
-- [ ] Include calculation/model version in output.
+- [ ] Return longitude, zodiac sign/degree, longitude velocity and retrograde state.
+- [ ] Return Ascendant/MC, house cusps and placements only when valid; flag unsupported houses without silently changing systems.
+- [ ] Compute conjunction/opposition/square/trine/sextile with continuous separation, target angle and orb values.
+- [ ] Preserve relative angular velocity and supported applying/separating state with documented conventions.
+- [ ] Include calculation engine, binding, ephemeris/data and contract versions in output.
 - [ ] Include availability/uncertainty flags.
+- [ ] Define explicit approximate/unknown-time behavior without inventing an exact birth instant.
 - [ ] Do not accept Telegram/user identifiers.
 - [ ] Add health/readiness strategy for container orchestration.
 - [ ] Add `make mcp`.
@@ -405,12 +418,20 @@ Expose the existing mathematical model as deterministic, structured MCP tools.
 
 - [ ] Golden natal fixture with known exact-time chart.
 - [ ] Golden fixture with unknown birth time.
+- [ ] Document independent reference values, calculation options and tolerances for golden fixtures; do not use illustrative example JSON as a reference chart.
+- [ ] Cover angle wraparound, orb boundaries, retrograde/stationary motion and unavailable house calculations.
 - [ ] Verify no houses/ascendant are returned as authoritative when time is unknown.
 - [ ] Validate schema stability.
 
 ### Acceptance criteria
 
 - [ ] OriaEngine can call the container over MCP and receive a typed natal result.
+
+Stage 9 remains focused on natal calculation. Stage 13 adds natal-to-transit
+relationships. Time-to-exact may be unavailable until a validated method exists;
+linear extrapolations must be marked as estimates. Declination parallels and
+contra-parallels are later extensions. No outcome collection or predictive-model
+training is part of this stage.
 
 ---
 
@@ -423,7 +444,7 @@ Compute and cache the user's natal chart after profile confirmation.
 ### Tasks
 
 - [ ] Add `astrology_profiles` table.
-- [ ] Store calculation engine/model version.
+- [ ] Store calculation engine and ephemeris/data versions.
 - [ ] Store source profile version/hash.
 - [ ] Store derived structured result in JSONB or defined relational form.
 - [ ] Implement `AstrologyClient` interface.
@@ -532,8 +553,8 @@ Support useful personalized astrology conversations after onboarding.
 
 - [ ] Add `calculate_transits` MCP tool.
 - [ ] Return structured transiting positions/aspects/orbs.
-- [ ] Include applying/separating state where model supports it.
-- [ ] Include time-to-exact where model supports it.
+- [ ] Include applying/separating state where the calculation engine supports it.
+- [ ] Include time-to-exact where validated; label linear estimates and return unavailable otherwise.
 - [ ] Define active-message intent schema.
 - [ ] Support `natal_explanation`.
 - [ ] Support `current_transits`.
