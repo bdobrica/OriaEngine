@@ -19,7 +19,7 @@ class ChannelMessage:
 
 @dataclass(frozen=True)
 class ChannelButton:
-    text: str
+    text: str = field(repr=False)
     data: str
 
 
@@ -32,6 +32,7 @@ class ChannelClient(Protocol):
 
 HELP_TEXT = (
     "Available commands: /start, /help and /privacy. Use /start to review consent. "
-    "Birth-profile setup is coming next. "
-    "Please don't send birth details or other personal information yet."
+    "After accepting, /start resumes birth-profile setup. Send only the requested birth field. "
+    "Local place lookup and chart calculation are coming next. "
+    "Use /privacy to review the policy or stop onboarding."
 )

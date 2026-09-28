@@ -9,13 +9,14 @@ transaction. Replies are sent after commit so delivery failure cannot undo a dec
 ## Disclosure and decisions
 
 The initial copy is `DISCLAIMER` in `domain/consent.py`, using
-`ORIA_POLICY_VERSION` (default `2026-09-01`). It covers AI identity, interpretive
+`ORIA_POLICY_VERSION` (default `2026-09-28`). It covers AI identity, interpretive
 astrology, high-stakes limitations, birth date/time/place, chart purpose and future
 storage, prohibited unrelated PII, planned profile/edit/delete controls, and adult
 use. **I'm 18+ and agree** confirms adulthood and acceptance together; it is a
 self-attestation, not age verification. The copy explicitly describes this demo's
-limits: no profile collection or deletion yet, and identity/consent history remains
-after decline. `/privacy` shows the disclosure and the same decision buttons.
+limits: encrypted date/time drafts are collected, live place lookup and deletion
+are unavailable, and prior data remains after decline. `/privacy` shows the
+disclosure and the same decision buttons.
 
 Keep each deployed version associated with its disclosure in source history. Bump
 `ORIA_POLICY_VERSION` when the copy/data use changes and deploy consistently to all
@@ -30,7 +31,7 @@ details or pasted callback data) never grants consent.
 | Durable latest decision for configured policy | Resolved state | Behavior |
 | --- | --- | --- |
 | None, or a different policy version | `ConsentRequired` | Disclosure and buttons |
-| Accepted | `BirthDateRequired` | Confirm next step, pause collection until stages 6–7 |
+| Accepted | Resolved from profile/draft completeness | Start or resume deterministic onboarding |
 | Declined or revoked | `Closed` | Stop onboarding; `/start` can reoffer disclosure |
 
 Accept and Decline append versioned lifecycle records, including timestamps and
@@ -41,11 +42,13 @@ requires a fresh acceptance even after a previous decline or acceptance.
 
 ## Scope and continuation
 
-The Telegram flow persists no raw message or birth-profile payload, before or
-after consent. Stage 6 provides [encrypted storage](birth-profiles.md), with
-current-consent checks under the user lock for every write. Stage 7 connects
-collection; Stage 10 adds activation and must perform the same transactional
-consent check. Profile/privacy/deletion workflows remain stages 17–18.
+The Telegram flow persists no raw messages. After consent, [onboarding](onboarding.md)
+stores strict encrypted drafts and confirmed [birth profiles](birth-profiles.md),
+with current-consent checks under the user lock for every write. Stage 10 adds
+activation with the same transactional consent check. Saved-profile/privacy/deletion
+workflows remain stages 17–18. `ConsentFlow` without an injected onboarding handler
+retains the consent-only paused response for isolated use/tests; polling wires the
+onboarding handler and requires encryption configuration.
 
 Durable event deduplication and delayed replay handling remain Stage 11. Old
 same-policy buttons can still change later decisions; no exactly-once delivery is

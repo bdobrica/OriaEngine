@@ -846,6 +846,12 @@ Versioned consent history.
 
 Encrypted raw birth-profile payload plus schema/key versions.
 
+### `onboarding_drafts`
+
+Encrypted partial birth fields, normalized place candidates and callback revision
+metadata. One row per user preserves deterministic onboarding across restarts;
+confirmation replaces the draft with the strict final birth profile atomically.
+
 ### `astrology_profiles`
 
 Derived natal calculation data and calculation provenance.
@@ -1032,7 +1038,7 @@ SECOND_CONTEXT_BASE_URL=http://secondcontext:8080
 SECOND_CONTEXT_BEARER_TOKEN=
 
 ASTROLOGY_MCP_URL=http://astrology-mcp:8000/mcp
-ORIA_POLICY_VERSION=2026-09-01
+ORIA_POLICY_VERSION=2026-09-28
 ```
 
 Production secrets must come from the deployment platform's secret mechanism rather than committed files.
@@ -1047,13 +1053,15 @@ The immediate delivery priority is a working demo. Implement the minimum needed
 to connect the core flow, deferring optional polish without weakening consent,
 privacy, or security requirements. The MVP completion criteria remain unchanged.
 
-For the staged demo, consent acceptance reaches `BirthDateRequired` without
-soliciting birth data until encrypted storage (Stage 6) and deterministic collection
-(Stage 7) are connected. Keep interim disclosure honest about unavailable profile
-and deletion controls. Encrypted profile writes now check current consent inside
-their transaction under the user lock. Stage 7 must use that repository; Stage 10
-activation must perform the same check. See [birth-profile storage](docs/birth-profiles.md)
-and [consent flow](docs/consent-flow.md).
+For the staged demo, consent acceptance starts or resumes deterministic onboarding.
+Encrypted drafts preserve date/time progress and candidate selection; confirmed
+profiles use the consent-checked storage repository. Live polling pauses at place
+lookup until Stage 8 supplies the gazetteer through `PlaceResolver`; tests inject
+normalized fixtures. Keep disclosure honest about unavailable saved-profile and
+deletion controls, and bump the policy version for the collection disclosure.
+All draft/profile writes check current consent under the user lock. Stage 10
+activation must retain that check. See [onboarding](docs/onboarding.md),
+[birth-profile storage](docs/birth-profiles.md) and [consent flow](docs/consent-flow.md).
 
 The Makefile is the supported developer interface.
 

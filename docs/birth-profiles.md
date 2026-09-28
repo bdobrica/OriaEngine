@@ -8,7 +8,7 @@ optional region, two-letter uppercase country code, bounded latitude/longitude,
 and a recognized IANA timezone. Unknown fields are rejected at both levels.
 The schema checks shape, not whether a city matches coordinates or a country;
 the deterministic place resolver owns that responsibility in Stage 8. Historical
-time conversion, date-entry parsing and onboarding remain subsequent stages.
+time conversion remains Stage 8; [onboarding](onboarding.md) handles date/time entry.
 
 Apply migration `0003` with `make migrate`. `birth_profiles` has one row per user:
 UUID, owner UUID, encrypted payload, schema/key versions, and creation/update
@@ -72,7 +72,7 @@ owner isolation, consent/deletion guards, concurrent writes, withdrawal ordering
 rollback, repeated migration, downgrade/re-upgrade and metadata drift.
 Tests use synthetic profiles and newly generated keys in isolated infrastructure.
 
-Stage 7 connects deterministic collection to this repository; Stage 8 supplies
-normalized places. Telegram still pauses after consent and does not collect birth
-data. Stage 10 must check consent and explicit confirmation before activation and
-invalidate derived results on edits.
+Deterministic [onboarding](onboarding.md) now connects collection to this repository;
+Stage 8 supplies the live normalized-place resolver. Telegram collects date/time
+and pauses at place lookup. Stage 10 must check consent and confirmation before
+activation and invalidate derived results on edits.

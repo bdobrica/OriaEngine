@@ -9,7 +9,10 @@ from aiogram import Bot
 from oria_engine.config import ConfigurationError, Settings, load_settings
 from oria_engine.db.session import Database
 from oria_engine.domain.consent import ConsentFlow
+from oria_engine.domain.onboarding import OnboardingFlow
+from oria_engine.domain.places import UnavailablePlaceResolver
 from oria_engine.observability import configure_logging
+from oria_engine.privacy.encryption import ProfileEncryption
 from oria_engine.telegram.adapter import TelegramChannelClient, create_dispatcher
 
 logger = logging.getLogger(__name__)
@@ -20,6 +23,9 @@ async def run_polling(settings: Settings) -> None:
         raise ConfigurationError("Local polling is disabled in production; use the webhook gateway")
     if not settings.telegram_bot_token.get_secret_value():
         raise ConfigurationError("Local polling requires TELEGRAM_BOT_TOKEN; see docs/telegram.md")
+    encryption = ProfileEncryption(settings)
+    if settings.oria_policy_version == "2026-09-01":
+        raise ConfigurationError("Set ORIA_POLICY_VERSION=2026-09-28 for the collection disclosure")
     bot = Bot(token=settings.telegram_bot_token.get_secret_value())
     database: Database | None = None
     try:
@@ -30,7 +36,14 @@ async def run_polling(settings: Settings) -> None:
             )
         database = Database(settings)
         dispatcher = create_dispatcher(
-            TelegramChannelClient(bot), ConsentFlow(database, settings.oria_policy_version)
+            TelegramChannelClient(bot),
+            ConsentFlow(
+                database,
+                settings.oria_policy_version,
+                OnboardingFlow(
+                    encryption, settings.oria_policy_version, UnavailablePlaceResolver()
+                ),
+            ),
         )
         logger.info("application_started")
         await dispatcher.start_polling(

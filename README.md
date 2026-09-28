@@ -199,7 +199,7 @@ SECOND_CONTEXT_BASE_URL=http://localhost:8080
 SECOND_CONTEXT_BEARER_TOKEN=
 
 ASTROLOGY_MCP_URL=http://localhost:8000/mcp
-ORIA_POLICY_VERSION=2026-09-01
+ORIA_POLICY_VERSION=2026-09-28
 ```
 
 Use a generated development key for `PROFILE_ENCRYPTION_KEY`. Production deployments must provide secrets through the deployment platform rather than a committed environment file.

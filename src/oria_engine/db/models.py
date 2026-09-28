@@ -85,3 +85,21 @@ class BirthProfile(Base):
     schema_version: Mapped[int]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class OnboardingProgress(Base):
+    __tablename__ = "onboarding_drafts"
+    __table_args__ = (
+        CheckConstraint("schema_version = 1", name="schema_version"),
+        CheckConstraint("octet_length(encrypted_payload) >= 29", name="encrypted_envelope"),
+        CheckConstraint(
+            "encryption_key_version ~ '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'",
+            name="encryption_key_version",
+        ),
+    )
+
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    encrypted_payload: Mapped[bytes]
+    encryption_key_version: Mapped[str] = mapped_column(String(64))
+    schema_version: Mapped[int]
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

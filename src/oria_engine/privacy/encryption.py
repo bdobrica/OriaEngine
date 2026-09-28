@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from oria_engine.config import ConfigurationError, Settings
 from oria_engine.domain.birth_profile import BirthProfilePayload
+from oria_engine.domain.onboarding_data import OnboardingDraft
 
 
 class ProfileEncryptionError(ValueError):
@@ -24,6 +25,39 @@ class ProfileEncryption:
             raise ConfigurationError("Profile encryption requires a configured key")
         self._cipher = AESGCM(base64.b64decode(key, altchars=b"-_", validate=True))
         self.key_version = settings.profile_encryption_key_version
+
+    def _draft_aad(self, user_id: UUID) -> bytes:
+        return json.dumps(
+            ["oria:onboarding-draft:aes256gcm:v1", str(user_id), 1, self.key_version],
+            separators=(",", ":"),
+        ).encode()
+
+    def encrypt_draft(self, draft: OnboardingDraft, *, user_id: UUID) -> bytes:
+        try:
+            validated = OnboardingDraft.model_validate(draft)
+        except ValidationError:
+            raise ProfileEncryptionError("Invalid onboarding draft") from None
+        nonce = os.urandom(12)
+        return nonce + self._cipher.encrypt(
+            nonce, validated.model_dump_json().encode(), self._draft_aad(user_id)
+        )
+
+    def decrypt_draft(
+        self, encrypted_payload: bytes, *, user_id: UUID, key_version: str, schema_version: int
+    ) -> OnboardingDraft:
+        try:
+            if (
+                key_version != self.key_version
+                or schema_version != 1
+                or len(encrypted_payload) < 29
+            ):
+                raise ValueError()
+            plaintext = self._cipher.decrypt(
+                encrypted_payload[:12], encrypted_payload[12:], self._draft_aad(user_id)
+            )
+            return OnboardingDraft.model_validate_json(plaintext)
+        except (InvalidTag, ValueError):
+            raise ProfileEncryptionError("Onboarding draft could not be decrypted") from None
 
     def _aad(self, user_id: UUID, profile_id: UUID, schema_version: int) -> bytes:
         return json.dumps(

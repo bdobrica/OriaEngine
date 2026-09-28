@@ -39,6 +39,7 @@ side effects; run one migration process at a time.
 Revision `0002` adds the identity and consent tables described in
 [Identity and consent](identity-consent.md).
 Revision `0003` adds [encrypted birth profiles](birth-profiles.md).
+Revision `0004` adds [encrypted onboarding drafts](onboarding.md).
 `make migrate-down` rolls back one revision and is guarded to development/test.
 It uses the configured database URL: verify that URL points to your intended
 development database before running it. Downgrading `0002` drops all identity

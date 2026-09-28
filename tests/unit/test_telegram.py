@@ -156,8 +156,22 @@ async def test_polling_configuration_fails_before_network(production):
         bot.assert_not_called()
 
 
+async def test_polling_requires_encryption_and_updated_disclosure(encryption):
+    with patch("oria_engine.telegram.__main__.Bot") as bot:
+        with pytest.raises(ConfigurationError, match="encryption"):
+            await run_polling(Settings(telegram_bot_token=SecretStr(TOKEN)))
+        with (
+            patch("oria_engine.telegram.__main__.ProfileEncryption", return_value=encryption),
+            pytest.raises(ConfigurationError, match="ORIA_POLICY_VERSION"),
+        ):
+            await run_polling(
+                Settings(telegram_bot_token=SecretStr(TOKEN), oria_policy_version="2026-09-01")
+            )
+        bot.assert_not_called()
+
+
 @pytest.mark.parametrize("outcome", ["success", "error", "cancel", "webhook"])
-async def test_polling_lifecycle(outcome):
+async def test_polling_lifecycle(outcome, encryption):
     bot = AsyncMock()
     bot.get_webhook_info.return_value = WebhookInfo(
         url="https://example.test/hook" if outcome == "webhook" else "",
@@ -177,6 +191,7 @@ async def test_polling_lifecycle(outcome):
         patch("oria_engine.telegram.__main__.Bot", return_value=bot),
         patch("oria_engine.telegram.__main__.create_dispatcher", return_value=dispatcher),
         patch("oria_engine.telegram.__main__.Database", return_value=database),
+        patch("oria_engine.telegram.__main__.ProfileEncryption", return_value=encryption),
     ):
         if failure:
             with pytest.raises(failure):

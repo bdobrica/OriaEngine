@@ -7,20 +7,24 @@
    account step; see the [Telegram tutorial](https://core.telegram.org/bots/tutorial).
 2. Run `make env` and put the token in `TELEGRAM_BOT_TOKEN` in your local `.env`.
    Never commit the token or paste it into logs, issues, or test fixtures.
-3. Configure `DATABASE_URL`, run `make infra-up` and `make migrate`, then
+3. Configure `DATABASE_URL`, a stable `PROFILE_ENCRYPTION_KEY`, and
+   `ORIA_POLICY_VERSION=2026-09-28` (bump custom versions too). Run `make infra-up`
+   and `make migrate` to apply revision `0004`, then
    `make run` with `APP_ENV=development`. Only one polling process can use
    a bot token at a time ([aiogram polling documentation](https://docs.aiogram.dev/en/latest/dispatcher/long_polling.html)).
 4. Open your development bot's private chat and send `/start`, then `/help`.
    Expect the versioned disclosure with **I'm 18+ and agree** and **Decline** buttons.
    Decline stops onboarding; `/start` offers the choice again. Accept records consent
-   and explains that profile setup is not available yet. `/privacy` shows the disclosure
-   and lets you decline even after acceptance. Do not send real birth details.
-5. Restart the process and send `/start`: accepted consent should survive. Changing
+   and asks for a birth date. Use synthetic `1990-04-13`, then `approximate 03:42`
+   (or `unknown`). The bot requests city/country; `Cluj-Napoca, RO` currently reports
+   that local lookup awaits Stage 8. `/privacy` lets you decline even after acceptance.
+   Use synthetic data for this smoke test; deletion is not implemented yet.
+5. Restart the process and send `/start`: consent and collected fields should survive. Changing
    `ORIA_POLICY_VERSION` and restarting should require fresh consent; an old policy's
    button should show the current disclosure without accepting it.
 6. Stop with Ctrl-C or SIGTERM. The process closes the database pool and Telegram session.
 
-Polling requires the bot token, outbound Telegram access and migrated PostgreSQL.
+Polling requires the bot token, encryption key, outbound Telegram access and migrated PostgreSQL.
 Redis, workers and model services are not used by the consent flow.
 `make api` remains a separate HTTP process. No new dependencies are introduced.
 Polling rejects production configuration and bots with an active webhook. Use a
@@ -48,9 +52,10 @@ including after handler failure. Replies remain plain text.
 
 `/start` and arbitrary text show consent when needed. After decline, text keeps
 onboarding stopped; `/start` or `/privacy` reoffers the disclosure without changing
-the decision. After acceptance, `/help` describes available commands and other text
-reports the paused profile step. No handler asks for birth data, echoes input,
-persists message text or calls a model. See [consent flow](consent-flow.md).
+the decision. After acceptance, `/help` describes commands and `/start` resumes the
+current birth-field prompt. Validated birth values enter encrypted drafts; raw
+message text is not persisted and no model is called. Confirmation summaries show
+only the allowed fields back to their owner. See [onboarding](onboarding.md).
 
 Each handled update has a fresh correlation ID and provider update ID. Normal logs
 contain only allowlisted operational events. Handler failures emit `update_failed`
@@ -58,7 +63,7 @@ without exception contents or message text. A failed send is not retried by this
 baseline; a user can send the command again. Sequential polling bounds work and
 avoids detached handler tasks during shutdown.
 
-Identity resolution and consent decisions use one database transaction per update,
+Identity resolution, consent and onboarding use one database transaction per update,
 committed before delivery. An unavailable database fails closed with `update_failed`;
 check database connectivity and migrations if the bot stops replying.
 Durable inbound deduplication and delivery recovery remain Stage 11. Consecutive

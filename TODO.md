@@ -253,8 +253,8 @@ Require explicit consent before collecting or persisting birth data.
 
 - [x] No code path creates an active birth profile for a user without current consent.
 
-Acceptance reaches `BirthDateRequired` but pauses collection until stages 6–7.
-Encrypted profile writes check current consent transactionally; activation remains
+Acceptance starts or resumes deterministic collection with encrypted drafts.
+Draft/profile writes check current consent transactionally; activation remains
 Stage 10 and must retain that check. See [consent flow](docs/consent-flow.md).
 The live consent-button smoke test in [Telegram setup](docs/telegram.md) remains
 an operator check; automated tests use synthetic updates and isolated PostgreSQL.
@@ -299,7 +299,8 @@ Persist the minimum calculation profile using application-level encryption.
 
 See [birth-profile storage](docs/birth-profiles.md) for schema, key handling and
 repository boundaries. Stage 7 connects collection to this consent-checked store;
-Stage 8 supplies place normalization. Telegram collection remains paused.
+Stage 8 supplies live place normalization. Telegram collects date/time and pauses
+at place lookup until that resolver is available.
 
 ---
 
@@ -311,34 +312,39 @@ Collect only the allowed birth data through deterministic application states.
 
 ### Tasks
 
-- [ ] Implement onboarding state resolver from consent/profile completeness.
-- [ ] Add `BirthDateRequired`.
-- [ ] Parse supported birth-date formats.
-- [ ] Reject ambiguous/invalid dates with a focused retry.
-- [ ] Add `BirthTimeRequired`.
-- [ ] Support exact time.
-- [ ] Support approximate time.
-- [ ] Support unknown time.
-- [ ] Add `BirthPlaceRequired`.
-- [ ] Request city + country only.
-- [ ] Add `BirthPlaceConfirmation`.
-- [ ] Add `ProfileConfirmation` summary.
-- [ ] Add edit buttons for each field.
-- [ ] Persist profile only under the defined schema.
-- [ ] Do not route onboarding questions through the free-form LLM.
+- [x] Implement onboarding state resolver from consent/profile completeness.
+- [x] Add `BirthDateRequired`.
+- [x] Parse supported birth-date formats.
+- [x] Reject ambiguous/invalid dates with a focused retry.
+- [x] Add `BirthTimeRequired`.
+- [x] Support exact time.
+- [x] Support approximate time.
+- [x] Support unknown time.
+- [x] Add `BirthPlaceRequired`.
+- [x] Request city + country only.
+- [x] Add `BirthPlaceConfirmation`.
+- [x] Add `ProfileConfirmation` summary.
+- [x] Add edit buttons for each field.
+- [x] Persist profile only under the defined schema.
+- [x] Do not route onboarding questions through the free-form LLM.
 
 ### Tests
 
-- [ ] Happy path with exact birth time.
-- [ ] Approximate time path.
-- [ ] Unknown time path.
-- [ ] Invalid date/time paths.
-- [ ] Editing one field.
-- [ ] Attempt to submit extra profile attributes is rejected by schema.
+- [x] Happy path with exact birth time.
+- [x] Approximate time path.
+- [x] Unknown time path.
+- [x] Invalid date/time paths.
+- [x] Editing one field.
+- [x] Attempt to submit extra profile attributes is rejected by schema.
 
 ### Acceptance criteria
 
-- [ ] The only profile fields the application can solicit/store are those required by the birth-profile schema.
+- [x] The only profile fields the application can solicit/store are those required by the birth-profile schema.
+
+Encrypted drafts survive restart; final profiles require explicit confirmation.
+See [onboarding](docs/onboarding.md). Full-flow tests use deterministic place fixtures;
+live polling pauses at place lookup until Stage 8 implements the gazetteer.
+Stage 10 supplies calculation/activation; saved-profile controls remain Stage 17.
 
 ---
 
@@ -350,7 +356,7 @@ Turn city/country and local birth time into deterministic calculation inputs wit
 
 ### Tasks
 
-- [ ] Define `PlaceResolver` interface.
+- [x] Define `PlaceResolver` interface (introduced for Stage 7 candidate selection).
 - [ ] Select/import a local or controlled gazetteer dataset.
 - [ ] Implement city + country lookup.
 - [ ] Return multiple candidates when ambiguous.

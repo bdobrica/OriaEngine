@@ -1,14 +1,18 @@
-"""Deterministic consent decisions; no message/profile storage or model calls."""
+"""Deterministic consent decisions gating optional encrypted onboarding; no model calls."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from hashlib import sha256
+from typing import TYPE_CHECKING
 
 from oria_engine.db.repositories import ConsentRepository, SocialIdentityRepository
 from oria_engine.db.session import Database
 from oria_engine.domain.channel import HELP_TEXT, ChannelButton, ChannelMessage
 
-# Initial copy uses the configured policy version (default 2026-09-01).
+if TYPE_CHECKING:
+    from oria_engine.domain.onboarding import OnboardingFlow
+
+# Collection disclosure uses the configured policy version (default 2026-09-28).
 # Change the configured version whenever the disclosure/data use changes.
 DISCLAIMER = (
     "Hi — I'm Oria, an AI astrology personality. Astrology is interpretive, not a factual "
@@ -21,11 +25,14 @@ DISCLAIMER = (
     "home address, employer, passwords, government IDs or payment details.\n\n"
     "The completed service will let you inspect your profile (/profile), correct it "
     "(/edit-profile), review privacy and withdraw consent (/privacy), and delete your data "
-    "(/delete-me). In this demo, profile collection, editing and deletion are not available "
-    "yet. Please don't send birth details. We currently store only internal identity, "
-    "Telegram routing IDs and consent decisions; message text is not stored by OriaEngine. "
+    "(/delete-me). In this demo, date/time collection and editing during setup are available. "
+    "Place lookup, chart calculation, saved-profile controls and deletion are not available yet. "
+    "We store internal identity, Telegram routing IDs, consent decisions and encrypted "
+    "onboarding progress, including incomplete birth details. Confirmed profiles are encrypted. "
+    "Send only the birth field requested; raw message text is not stored by OriaEngine. "
     "Telegram retains messages under its own policies. You can use Decline below to stop "
-    "onboarding, including after accepting; this does not delete identity or consent history.\n\n"
+    "onboarding, including after accepting; this does not delete identity, consent history "
+    "or previously collected birth details.\n\n"
     "This MVP is for adults aged 18 or older. By choosing 'I'm 18+ and agree', you confirm "
     "that you are at least 18 and consent to the described birth-data use."
 )
@@ -35,8 +42,9 @@ ACCEPTED_TEXT = (
     "Use /privacy to review the policy or decline further onboarding."
 )
 DECLINED_TEXT = (
-    "Onboarding is stopped. No birth profile has been collected. "
-    "Your identity and consent decision remain stored. Use /start if you change your mind."
+    "Onboarding is stopped. Your identity, consent history and any previously collected "
+    "birth details remain stored; declining does not delete data. "
+    "Use /start if you change your mind."
 )
 
 
@@ -44,19 +52,27 @@ class OnboardingState(StrEnum):
     CONSENT_REQUIRED = "ConsentRequired"
     CLOSED = "Closed"
     BIRTH_DATE_REQUIRED = "BirthDateRequired"
+    BIRTH_TIME_REQUIRED = "BirthTimeRequired"
+    BIRTH_PLACE_REQUIRED = "BirthPlaceRequired"
+    BIRTH_PLACE_CONFIRMATION = "BirthPlaceConfirmation"
+    PROFILE_CONFIRMATION = "ProfileConfirmation"
+    COMPUTING_PROFILE = "ComputingProfile"
 
 
 @dataclass(frozen=True)
 class ConsentReply:
     state: OnboardingState
-    text: str
-    buttons: tuple[ChannelButton, ...] = ()
+    text: str = field(repr=False)
+    buttons: tuple[ChannelButton, ...] = field(default=(), repr=False)
 
 
 class ConsentFlow:
-    def __init__(self, database: Database, policy_version: str) -> None:
+    def __init__(
+        self, database: Database, policy_version: str, onboarding: "OnboardingFlow | None" = None
+    ) -> None:
         self.database = database
         self.policy_version = policy_version
+        self.onboarding = onboarding
         # Bounded even for 64-character configured versions; includes displayed copy.
         fingerprint = sha256((policy_version + "\n" + DISCLAIMER).encode()).hexdigest()[:32]
         self.buttons = (
@@ -81,7 +97,9 @@ class ConsentFlow:
                     await consents.accept(user.id, self.policy_version, message.provider)
                 elif message.callback_data == self.buttons[1].data:
                     await consents.decline(user.id, self.policy_version, message.provider)
-                else:
+                elif not (
+                    self.onboarding is not None and message.callback_data.startswith("onboard:")
+                ):
                     # Old policy/unknown button: never convert it into a current decision.
                     stale_button = True
             latest = await consents.latest(user.id)
@@ -106,4 +124,6 @@ class ConsentFlow:
                 return self.disclosure()
             if state == OnboardingState.CLOSED:
                 return ConsentReply(state, DECLINED_TEXT)
+            if self.onboarding is not None and command != "help":
+                return await self.onboarding.handle(session, user.id, message, command=command)
             return ConsentReply(state, HELP_TEXT if command == "help" else ACCEPTED_TEXT)
