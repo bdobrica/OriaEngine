@@ -12,7 +12,7 @@ async def test_migrations_empty_repeat_downgrade_and_metadata(database, infrastr
     migrate(url, "upgrade", "head")
     migrate(url, "upgrade", "head")
     async with database.transaction() as session:
-        assert await session.scalar(text("SELECT version_num FROM alembic_version")) == "0006"
+        assert await session.scalar(text("SELECT version_num FROM alembic_version")) == "0007"
     migrate(url, "check")
     migrate(url, "downgrade", "base")
     async with database.transaction() as session:

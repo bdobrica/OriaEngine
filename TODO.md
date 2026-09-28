@@ -520,35 +520,41 @@ SecondContext adapter. The later Stage 16 builds interpretation onto this worker
 
 Add persistent conversational memory without exposing the raw birth profile as general semantic memory.
 
+Implemented foundation: [adapter and limitations](docs/second-context.md).
+Subject-wide purge and multi-user service authentication remain upstream dependencies;
+the adapter is not yet connected to the Telegram worker.
+
 ### Tasks
 
-- [ ] Define `ContextProvider` interface.
-- [ ] Implement SecondContext HTTP adapter.
-- [ ] Configure bearer-token auth if enabled.
-- [ ] Map OriaEngine internal UUID to SecondContext external user scope.
-- [ ] Add `conversation_sessions` table.
-- [ ] Create/reuse a stable SecondContext session per Oria conversation policy.
-- [ ] Implement timeout/retry behavior.
-- [ ] Implement typed response parsing.
-- [ ] Decide which current astrology facts are injected ephemerally.
-- [ ] Ensure raw birth date/time/place are not intentionally written as SecondContext memory items.
-- [ ] Add context-memory guidance for conversational preferences and prior topics.
-- [ ] Add SecondContext mock/stub for test suites.
-- [ ] Define and test deletion adapter contract.
-- [ ] If required, implement/contribute a scoped subject purge endpoint in SecondContext.
+- [x] Define `ContextProvider` interface.
+- [x] Implement SecondContext HTTP adapter.
+- [x] Configure bearer-token auth if enabled.
+- [x] Map OriaEngine internal UUID to SecondContext external user scope.
+- [x] Add `conversation_sessions` table.
+- [x] Create/reuse a stable SecondContext session per Oria conversation policy.
+- [x] Implement timeout/retry behavior.
+- [x] Implement typed response parsing.
+- [x] Decide which current astrology facts are injected ephemerally.
+- [x] Ensure raw birth date/time/place are not intentionally written as SecondContext memory items.
+- [x] Add context-memory guidance for conversational preferences and prior topics.
+- [x] Add SecondContext mock/stub for test suites.
+- [x] Define and test deletion adapter contract.
+- [ ] Implement/contribute a scoped subject purge endpoint in SecondContext.
+- [ ] Agree and implement authenticated multi-user service delegation upstream; existing bearer tokens bind to one subject.
 
 ### Contract tests
 
-- [ ] Correct user scope.
-- [ ] Correct session reuse.
-- [ ] No cross-user context.
-- [ ] Downstream error handling.
-- [ ] Deletion/purge behavior.
+- [x] Correct user scope.
+- [x] Correct session reuse.
+- [x] No cross-user context.
+- [x] Downstream error handling.
+- [x] Unsupported purge fails explicitly without pretending memory-item deletion is complete.
+- [ ] Successful scoped purge and repeat/partial-failure recovery against the upstream implementation.
 
 ### Acceptance criteria
 
-- [ ] A user's second conversation can reference an allowed prior conversational preference/context.
-- [ ] The integration has a defined way to purge the user's SecondContext data.
+- [x] A user's second conversation can reference an allowed prior preference through the HTTP stub; live-provider validation remains unrun.
+- [ ] The integration has a working way to purge the user's SecondContext data.
 
 ---
 

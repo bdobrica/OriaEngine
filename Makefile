@@ -32,7 +32,7 @@ mcp-local: env ## Start MCP with loopback access for host-run Telegram polling
 mcp-test: ## Build and smoke-test an isolated astrology MCP container
 	$(UV) run pytest tests/contract/test_astrology_container.py
 
-test-contract: ## Verify astrology schemas, calculations, MCP transport and container
+test-contract: ## Verify astrology and SecondContext contracts, MCP transport and container
 	$(UV) run pytest tests/contract
 
 infra-up: env ## Start local PostgreSQL and Redis and wait for health checks

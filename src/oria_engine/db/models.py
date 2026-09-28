@@ -160,3 +160,14 @@ class InboundEvent(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     failure_code: Mapped[str | None] = mapped_column(String(32))
+
+
+class ConversationSession(Base):
+    """One stable external session per internal subject under the MVP policy."""
+
+    __tablename__ = "conversation_sessions"
+    __table_args__ = (UniqueConstraint("session_id"),)
+
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    session_id: Mapped[UUID]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

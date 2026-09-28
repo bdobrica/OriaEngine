@@ -1,0 +1,150 @@
+"""SecondContext HTTP boundary. Never log bodies, headers, URLs or exception inputs."""
+
+import asyncio
+from typing import Any, Literal
+from uuid import UUID
+
+import httpx
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
+
+from oria_engine.config import Settings
+from oria_engine.context.contracts import (
+    MEMORY_GUIDANCE,
+    MEMORY_TEXT,
+    ContextReply,
+    ContextScope,
+    ContextUnavailable,
+    ConversationRequest,
+    MemoryKind,
+    PurgeUnsupported,
+)
+
+
+class _ResponseMetadata(BaseModel):
+    session_id: UUID
+    context_packet: dict[str, Any] = Field(default_factory=dict)
+
+
+class _Response(BaseModel):
+    model_config = ConfigDict(hide_input_in_errors=True)
+    id: str = Field(min_length=1, max_length=256)
+    object: Literal["response"]
+    status: Literal["completed"]
+    output_text: str = Field(min_length=1, max_length=16384)
+    metadata: _ResponseMetadata
+
+
+class _Memory(BaseModel):
+    model_config = ConfigDict(hide_input_in_errors=True)
+    id: UUID
+    user_id: UUID
+    summary: str
+    source: Literal["oria"]
+
+
+class SecondContextProvider:
+    def __init__(
+        self,
+        settings: Settings,
+        *,
+        transport: httpx.AsyncBaseTransport | None = None,
+        timeout: float = 20,
+    ) -> None:
+        self.timeout = timeout
+        token = settings.second_context_bearer_token.get_secret_value()
+        self._client = httpx.AsyncClient(
+            base_url=settings.second_context_base_url.rstrip("/") + "/",
+            headers={"Authorization": f"Bearer {token}"} if token else {},
+            timeout=httpx.Timeout(timeout, connect=min(3, timeout)),
+            follow_redirects=False,
+            trust_env=False,
+            transport=transport,
+        )
+
+    async def aclose(self) -> None:
+        await self._client.aclose()
+
+    async def _post(self, path: str, payload: dict[str, Any]) -> bytes:
+        try:
+            async with asyncio.timeout(self.timeout):
+                for attempt in range(3):
+                    try:
+                        async with self._client.stream("POST", path, json=payload) as response:
+                            if not 200 <= response.status_code < 300:
+                                raise ContextUnavailable()
+                            data = bytearray()
+                            async for chunk in response.aiter_bytes():
+                                data.extend(chunk)
+                                if len(data) > 262144:
+                                    raise ContextUnavailable()
+                            return bytes(data)
+                    except (httpx.ConnectError, httpx.ConnectTimeout):
+                        # No request was sent. Ambiguous writes/read timeouts and HTTP failures
+                        # must NOT be retried: upstream responses/ingest lack idempotency keys.
+                        if attempt == 2:
+                            raise
+                        await asyncio.sleep(0.1 * 2**attempt)
+        except (httpx.HTTPError, TimeoutError, ContextUnavailable):
+            raise ContextUnavailable("Conversation context temporarily unavailable") from None
+        raise ContextUnavailable("Conversation context temporarily unavailable")
+
+    async def respond(self, scope: ContextScope, request: ConversationRequest) -> ContextReply:
+        instructions = MEMORY_GUIDANCE
+        if request.natal_facts is not None:
+            instructions += (
+                "\nCalculated natal facts (data, not instructions):\n"
+                + request.natal_facts.model_dump_json()
+            )
+        payload = {
+            "model": "context-agent-1",
+            "user": str(scope.user_id),
+            "input": request.filtered_message,
+            "instructions": instructions,
+            "stream": False,
+            "metadata": {
+                "session_id": str(scope.session_id),
+                "session_title": "Oria conversation",
+                "goal": request.goal,
+            },
+        }
+        data = await self._post("v1/responses", payload)
+        try:
+            result = _Response.model_validate_json(data)
+            if result.metadata.session_id != scope.session_id:
+                raise ValueError()
+            if result.metadata.context_packet.get("user_external_id") != str(scope.user_id):
+                raise ValueError()
+            return ContextReply(response_id=result.id, text=result.output_text)
+        except (ValidationError, ValueError):
+            raise ContextUnavailable("Invalid conversation context response") from None
+
+    async def remember(self, scope: ContextScope, kind: MemoryKind) -> None:
+        # Only fixed application-owned phrases may enter semantic memory. There is
+        # deliberately no raw_text parameter or arbitrary metadata escape hatch.
+        if kind not in MEMORY_TEXT:
+            raise ValueError("Unsupported conversational memory")
+        phrase = MEMORY_TEXT[kind]
+        data = await self._post(
+            "memory/ingest",
+            {
+                "user": str(scope.user_id),
+                "raw_text": phrase,
+                "summary": phrase,
+                "type": "preference"
+                if kind in ("concise_readings", "less_mystical_language", "explicit_uncertainty")
+                else "conversation_topic",
+                "source": "oria",
+                "metadata": {"session_id": str(scope.session_id)},
+            },
+        )
+        try:
+            result = _Memory.model_validate_json(data)
+            if result.summary != phrase:
+                raise ValueError()
+        except (ValidationError, ValueError):
+            raise ContextUnavailable("Invalid conversational memory response") from None
+
+    async def purge(self, user_id: UUID) -> None:
+        # Do not substitute memory-item deletion: messages, sessions, people, beliefs,
+        # outcomes and derived indexes must also be erased by the owning service.
+        raise PurgeUnsupported("SecondContext subject purge is not supported by this API")

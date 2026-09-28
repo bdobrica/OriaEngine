@@ -43,6 +43,8 @@ Revision `0004` adds [encrypted onboarding drafts](onboarding.md).
 Revision `0005` adds [derived astrology profiles](astrology-profiles.md).
 Revision `0006` adds [durable inbound events](worker-queue.md). Its downgrade drops
 queued work and deduplication history but preserves consent, drafts and profiles.
+Revision `0007` adds [conversation session mappings](second-context.md); its
+downgrade removes only local mappings and does not purge remote SecondContext data.
 `make migrate-down` rolls back one revision and is guarded to development/test.
 It uses the configured database URL: verify that URL points to your intended
 development database before running it. Downgrading `0002` drops all identity

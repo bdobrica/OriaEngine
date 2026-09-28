@@ -939,7 +939,9 @@ Derived natal calculation data and calculation provenance.
 
 ### `conversation_sessions`
 
-Maps OriaEngine conversation state to the corresponding SecondContext session identifier.
+One row per internal user maps to a unique, stable SecondContext session UUID.
+The MVP uses one session per user across conversations. The mapping stores no message
+or profile content; see [session policy](docs/second-context.md).
 
 ### `inbound_events`
 
@@ -1147,7 +1149,10 @@ Confirmed profiles now calculate through MCP and retain a versioned derived cach
 Failed calculations are recoverable with /retry_profile. Polling now persists and
 enqueues events; `make worker` owns consent, onboarding, calculation and delivery.
 PostgreSQL recovers work after Redis loss and anchors idempotent domain changes.
-Next is the SecondContext adapter (Stage 12); interpretation still requires later stages.
+The Stage 12 adapter foundation and stable session mapping are implemented.
+SecondContext subject purge and multi-user service authentication remain unresolved
+upstream dependencies; see [adapter status](docs/second-context.md).
+The worker does not call it yet; interpretation still requires Stages 13–16.
 See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
 Full profile display and deletion remain unavailable. The queued-processing disclosure uses
 policy version 2026-09-28.3. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),
