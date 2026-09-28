@@ -6,8 +6,9 @@ Use the existing [worker setup](worker-queue.md), rebuild with `make mcp-local`,
 and restart `make worker`. No new dependency, configuration, migration or OpenAI
 key is required. Existing natal caches remain valid.
 
-These are deterministic fact summaries. Persona, broader policy checks and LLM
-interpretation remain Stages 14–16. The worker does not call SecondContext yet.
+These are deterministic fact summaries. [Persona prompts](persona-prompts.md) are
+implemented in the adapter; broader policy checks and live LLM interpretation remain
+Stages 15–16. The worker does not call SecondContext yet.
 The English rule router needs no LLM classifier for this baseline. Unrecognized
 questions take the `follow_up` path and ask the user to restate a supported topic;
 there is no guessed previous transit date or implicit tool authorization.
@@ -91,7 +92,7 @@ The SecondContext adapter includes them in instructions only, with existing
 untrusted-data guidance, never explicit memory ingestion or identity metadata.
 No raw birth inputs are added. A transit target timestamp is not a birth timestamp.
 Transcript/provider retention caveats in the [consumer contract](../contracts/second-context/v1.md)
-still apply. Filtering, persona, output policy validation, contextual follow-ups
-and worker activation of that adapter remain later stages.
+still apply. Persona assembly is implemented; filtering, output policy validation,
+contextual follow-ups and worker activation of that adapter remain later stages.
 
 See [Stage 13 verification](evidence/stage-13.md).

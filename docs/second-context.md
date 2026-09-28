@@ -57,8 +57,9 @@ lifecycles; deletion does not magically erase those copies.
 
 Stage 12 is implemented, including the upstream service-auth/purge contract and
 real PostgreSQL/Qdrant tests with synthetic LLM responses. Stage 13 adds
-[active routing and transit facts](transits-and-routing.md). Stages 14–16 still add
-filtering, prompt/persona assembly, output validation and context worker wiring.
+[active routing and transit facts](transits-and-routing.md). Stage 14 adds
+[policy, methodology and persona assembly](persona-prompts.md) to the adapter.
+Stages 15–16 still add filtering, output validation and context worker wiring.
 The polling/worker demo does not call this adapter yet. Stage 18 owns
 confirmed, durable application-wide deletion across Oria and SecondContext.
 

@@ -565,7 +565,7 @@ Stage 16 connects the adapter to the Telegram worker after persona and policy wo
 Support useful personalized astrology conversations after onboarding.
 
 Implemented: [transit tool and deterministic fact replies](docs/transits-and-routing.md).
-Next: Stage 14. LLM interpretation and contextual follow-ups remain Stages 14–16;
+LLM interpretation and contextual follow-ups remain Stage 16;
 this baseline asks users to restate follow-up topics and requires no classifier call.
 
 ### Tasks
@@ -606,24 +606,29 @@ this baseline asks users to restate follow-up topics and requires no classifier 
 
 Create a stable, recognizable personality while keeping facts and policy separate.
 
+Implemented: [prompt layers and tone baseline](docs/persona-prompts.md).
+Next: Stage 15 enforcement, then Stage 16 live generation and tone evaluation.
+Reference conversations are authored examples; CI tests assembly and boundaries,
+not live-model stylistic consistency or resistance to prompt injection.
+
 ### Tasks
 
-- [ ] Create immutable product-policy prompt/module.
-- [ ] Create astrology-methodology prompt/module.
-- [ ] Create Oria persona prompt/module.
-- [ ] Define prompt assembly order.
-- [ ] Mark user text, retrieved memory, and tool output as untrusted/contextual data.
-- [ ] Instruct model never to invent chart facts.
-- [ ] Instruct model to distinguish calculation from interpretation.
-- [ ] Instruct model to explain uncertainty from missing/approximate birth time.
-- [ ] Instruct model not to claim human identity.
-- [ ] Add representative conversation fixtures for Oria's tone.
-- [ ] Keep persona text replaceable without changing policy logic.
+- [x] Create immutable product-policy prompt/module.
+- [x] Create astrology-methodology prompt/module.
+- [x] Create Oria persona prompt/module.
+- [x] Define prompt assembly order.
+- [x] Mark user text, retrieved memory, and tool output as untrusted/contextual data.
+- [x] Instruct model never to invent chart facts.
+- [x] Instruct model to distinguish calculation from interpretation.
+- [x] Instruct model to explain uncertainty from missing/approximate birth time.
+- [x] Instruct model not to claim human identity.
+- [x] Add representative conversation fixtures for Oria's tone.
+- [x] Keep persona text replaceable without changing policy logic.
 
 ### Acceptance criteria
 
-- [ ] Oria sounds consistent across test conversations.
-- [ ] Removing/changing persona wording does not remove policy constraints.
+- [x] Oria's authored reference conversations establish a consistent tone baseline.
+- [x] Removing/changing persona wording does not remove policy constraints.
 
 ---
 
@@ -693,6 +698,8 @@ Wire the full production-like message loop.
 ### Tests
 
 - [ ] Full mocked worker pipeline.
+- [ ] Evaluate generated Oria replies against the Stage 14 tone fixtures; record
+      live-model tone/compliance evidence separately from deterministic CI checks.
 - [ ] MCP unavailable retry.
 - [ ] SecondContext unavailable retry.
 - [ ] Telegram send failure.

@@ -863,6 +863,16 @@ Oria's persona can define:
 
 Persona iteration should not require changes to safety policy or domain code.
 
+Implemented prompt layers and assembly are documented in
+[Oria prompts](docs/persona-prompts.md). Policy and methodology are fixed application
+copy independent of replaceable voice text. The SecondContext adapter supplies all
+three plus contextual-data guidance and typed current facts in `instructions`, with
+filtered user text separately in `input`. The diagram specifies logical priority:
+SecondContext owns retrieval and the final model layout, so physical insertion of
+retrieved memory between persona and facts is not guaranteed by this wire contract.
+Authored conversation fixtures define the tone baseline; live-model consistency is
+not yet evaluated. Prompt wording does not replace Stage 15 enforcement.
+
 ---
 
 ## 21. PII minimization
@@ -1163,8 +1173,9 @@ PostgreSQL recovers work after Redis loss and anchors idempotent domain changes.
 The Stage 12 adapter, stable session mapping, scoped service authentication and
 SecondContext subject purge are implemented; see [adapter setup](docs/second-context.md).
 Transit calculations and active-message routing now provide deterministic natal
-and target/current transit fact summaries. Next is Stage 14: persona/methodology
-prompts, followed by Stage 15 policy and Stage 16 SecondContext worker integration.
+and target/current transit fact summaries. Stage 14 policy, methodology and persona
+assembly is implemented in the adapter. Next is Stage 15 policy enforcement,
+followed by Stage 16 SecondContext worker integration and live tone evaluation.
 The worker does not call SecondContext yet.
 See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
 Full profile display and deletion remain unavailable. The queued-processing disclosure uses
