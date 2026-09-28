@@ -27,7 +27,8 @@ class UserRepository:
     async def get(self, user_id: UUID, *, for_update: bool = False) -> User | None:
         query = select(User).where(User.id == user_id, User.deleted_at.is_(None))
         if for_update:
-            query = query.with_for_update()
+            # FOR NO KEY UPDATE still serializes writers, but permits inbound FK inserts.
+            query = query.with_for_update(key_share=True)
         return (await self.session.scalars(query)).one_or_none()
 
 
@@ -58,7 +59,7 @@ class SocialIdentityRepository:
         return result.one_or_none()
 
     async def get_or_create_user_for_social_identity(
-        self, *, provider: str, provider_user_id: str, provider_chat_id: str
+        self, *, provider: str, provider_user_id: str, provider_chat_id: str, lock_user: bool = True
     ) -> User:
         """Resolve trusted transport IDs atomically, including simultaneous first contact."""
         identity = await self._lookup(provider, provider_user_id)
@@ -86,7 +87,9 @@ class SocialIdentityRepository:
                 identity = await self._lookup(provider, provider_user_id)
                 if identity is None:
                     raise UserUnavailableError("User unavailable") from None
-        existing_user = await UserRepository(self.session).get(identity.user_id, for_update=True)
+        existing_user = await UserRepository(self.session).get(
+            identity.user_id, for_update=lock_user
+        )
         if existing_user is None:
             raise UserUnavailableError("User unavailable")
         identity.provider_chat_id = provider_chat_id

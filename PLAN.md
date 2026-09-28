@@ -943,7 +943,11 @@ Maps OriaEngine conversation state to the corresponding SecondContext session id
 
 ### `inbound_events`
 
-Durable Telegram update deduplication and processing status.
+Durable Telegram update deduplication and processing status. Stage 11 stores
+post-consent input and pending replies in separate authenticated encrypted envelopes,
+erases them on completion/dead-lettering, and expires unfinished payloads after 24
+hours (cleanup requires a running worker). Pre-consent free text is discarded.
+Metadata remains the deduplication anchor; Redis carries only internal event UUIDs.
 
 ### `outbound_messages`
 
@@ -1119,7 +1123,7 @@ SECOND_CONTEXT_BASE_URL=http://secondcontext:8080
 SECOND_CONTEXT_BEARER_TOKEN=
 
 ASTROLOGY_MCP_URL=http://astrology-mcp:8000/mcp
-ORIA_POLICY_VERSION=2026-09-28.2
+ORIA_POLICY_VERSION=2026-09-28.3
 ```
 
 Production secrets must come from the deployment platform's secret mechanism rather than committed files.
@@ -1136,14 +1140,17 @@ privacy, or security requirements. The MVP completion criteria remain unchanged.
 
 For the staged demo, consent acceptance starts or resumes deterministic onboarding.
 Encrypted drafts preserve date/time progress and candidate selection; confirmed
-profiles use the consent-checked storage repository. Live polling resolves local
+profiles use the consent-checked storage repository. The worker resolves local
 places through `PlaceResolver`, clarifies clock changes, and saves confirmed profiles.
 Confirmed profiles now calculate through MCP and retain a versioned derived cache.
 /profile reports cache validity; /edit_profile reuses field editors and confirmation.
-Failed calculations are recoverable with /retry_profile. The next stage moves work
-into the Redis worker queue (Stage 11); interpretation still requires later stages.
-Full profile display and deletion remain unavailable. The calculation disclosure uses
-policy version 2026-09-28.2. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),
+Failed calculations are recoverable with /retry_profile. Polling now persists and
+enqueues events; `make worker` owns consent, onboarding, calculation and delivery.
+PostgreSQL recovers work after Redis loss and anchors idempotent domain changes.
+Next is the SecondContext adapter (Stage 12); interpretation still requires later stages.
+See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
+Full profile display and deletion remain unavailable. The queued-processing disclosure uses
+policy version 2026-09-28.3. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),
 [birth-profile storage](docs/birth-profiles.md) and [consent flow](docs/consent-flow.md).
 
 The Makefile is the supported developer interface.

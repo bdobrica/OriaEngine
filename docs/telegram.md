@@ -8,9 +8,9 @@
 2. Run `make env` and put the token in `TELEGRAM_BOT_TOKEN` in your local `.env`.
    Never commit the token or paste it into logs, issues, or test fixtures.
 3. Configure `DATABASE_URL`, a stable `PROFILE_ENCRYPTION_KEY`, and
-   `ORIA_POLICY_VERSION=2026-09-28.2` (bump custom versions too). Run `make infra-up`
-   and `make migrate` to apply revision `0005`, run `make mcp-local`, then
-   `make run` with `APP_ENV=development`. Only one polling process can use
+   `ORIA_POLICY_VERSION=2026-09-28.3` (bump custom versions too). Run `make infra-up`
+   and `make migrate` to apply revision `0006`, run `make mcp-local`, then
+   `make worker` in one terminal and `make run` in another with `APP_ENV=development`. Only one polling process can use
    a bot token at a time ([aiogram polling documentation](https://docs.aiogram.dev/en/latest/dispatcher/long_polling.html)).
 4. Open your development bot's private chat and send `/start`, then `/help`.
    Expect the versioned disclosure with **I'm 18+ and agree** and **Decline** buttons.
@@ -32,7 +32,8 @@
 6. Stop with Ctrl-C or SIGTERM. The process closes the database pool and Telegram session.
 
 Polling requires the bot token, encryption key, outbound Telegram access and migrated PostgreSQL.
-Redis, workers and model services are not used by the consent flow.
+Redis and a running worker are required for replies; no model service is called.
+See [queue recovery](worker-queue.md). Use the same configuration in both processes.
 `make api` remains a separate HTTP process. No new dependencies are introduced.
 Polling rejects production configuration and bots with an active webhook. Use a
 dedicated development bot; this entrypoint never deletes webhooks or drops pending
@@ -60,23 +61,23 @@ including after handler failure. Replies remain plain text.
 `/start` and arbitrary text show consent when needed. After decline, text keeps
 onboarding stopped; `/start` or `/privacy` reoffers the disclosure without changing
 the decision. After acceptance, `/help` describes commands and `/start` resumes the
-current birth-field prompt. Validated birth values enter encrypted drafts; raw
-message text is not persisted and no model is called. Confirmation summaries show
+current birth-field prompt. Validated birth values enter encrypted drafts; pre-consent free text is discarded. After consent, input is temporarily encrypted
+until processing finishes or expires; no model is called. Confirmation summaries show
 only the allowed fields back to their owner. See [onboarding](onboarding.md).
 
 Each handled update has a fresh correlation ID and provider update ID. Normal logs
 contain only allowlisted operational events. Handler failures emit `update_failed`
-without exception contents or message text. A failed send is not retried by this
-baseline; a user can send the command again. Sequential polling bounds work and
-avoids detached handler tasks during shutdown.
+without exception contents or message text. Polling waits for durable PostgreSQL acceptance,
+then enqueues the internal UUID. Redis failure does not lose the event: worker scans
+recover it. Database failure keeps the update in flight, retrying until acceptance or
+shutdown; this avoids aiogram advancing the polling offset after a failed insert.
+Callbacks are acknowledged after persistence/enqueue, before slow computation.
 
-Identity resolution, consent and onboarding use one database transaction per update,
-committed before delivery. An unavailable database fails closed with `update_failed`;
-check database connectivity and migrations if the bot stops replying.
-Durable inbound deduplication and delivery recovery remain Stage 11. Consecutive
-identical decisions are idempotent, but an old same-policy button can still change
-a later decision and duplicate updates can repeat replies. Production webhook
-hosting remains a later stage.
+The worker commits domain changes and an encrypted pending reply together, then sends.
+Retries do not repeat consent/profile mutations. Replies can duplicate if a process dies
+after Telegram accepts a send but before PostgreSQL records it. See [worker queue](worker-queue.md)
+for ordering, bounded retries, dead-letter visibility and encrypted payload retention.
+Production webhook hosting remains a later stage.
 
 ## Verification
 

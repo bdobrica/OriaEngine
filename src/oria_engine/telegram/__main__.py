@@ -6,14 +6,12 @@ import sys
 
 from aiogram import Bot
 
-from oria_engine.astrology.client import FastMCPAstrologyClient
 from oria_engine.config import ConfigurationError, Settings, load_settings
 from oria_engine.db.session import Database
-from oria_engine.domain.consent import ConsentFlow
-from oria_engine.domain.onboarding import OnboardingFlow
-from oria_engine.domain.places import LocalPlaceResolver
 from oria_engine.observability import configure_logging
 from oria_engine.privacy.encryption import ProfileEncryption
+from oria_engine.queue.broker import Publisher
+from oria_engine.queue.events import EventIngress
 from oria_engine.telegram.adapter import TelegramChannelClient, create_dispatcher
 
 logger = logging.getLogger(__name__)
@@ -25,11 +23,11 @@ async def run_polling(settings: Settings) -> None:
     if not settings.telegram_bot_token.get_secret_value():
         raise ConfigurationError("Local polling requires TELEGRAM_BOT_TOKEN; see docs/telegram.md")
     encryption = ProfileEncryption(settings)
-    if settings.oria_policy_version in {"2026-09-01", "2026-09-28", "2026-09-28.1"}:
+    if settings.oria_policy_version in {"2026-09-01", "2026-09-28", "2026-09-28.1", "2026-09-28.2"}:
         raise ConfigurationError(
-            "Set ORIA_POLICY_VERSION=2026-09-28.2 for the calculation disclosure"
+            "Set ORIA_POLICY_VERSION=2026-09-28.3 for the queued processing disclosure"
         )
-    resolver = LocalPlaceResolver()
+    publisher = Publisher(settings)
     bot = Bot(token=settings.telegram_bot_token.get_secret_value())
     database: Database | None = None
     try:
@@ -41,16 +39,8 @@ async def run_polling(settings: Settings) -> None:
         database = Database(settings)
         dispatcher = create_dispatcher(
             TelegramChannelClient(bot),
-            ConsentFlow(
-                database,
-                settings.oria_policy_version,
-                OnboardingFlow(
-                    encryption,
-                    settings.oria_policy_version,
-                    resolver,
-                    FastMCPAstrologyClient(settings.astrology_mcp_url),
-                ),
-            ),
+            ingress=EventIngress(database, encryption, settings.oria_policy_version),
+            publisher=publisher,
         )
         logger.info("application_started")
         await dispatcher.start_polling(
@@ -65,6 +55,7 @@ async def run_polling(settings: Settings) -> None:
                 await database.close()
         finally:
             await bot.session.close()
+        publisher.close()
         logger.info("application_stopped")
 
 

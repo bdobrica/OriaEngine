@@ -50,8 +50,8 @@ timestamp combinations. Each decision records its channel without storing UI tex
 Consent changes append history; earlier rows remain unchanged. Each write locks
 the active user row until the caller commits, then allocates the next per-user
 revision. Revisions order decisions independently of clock precision. Consecutive
-identical accept/decline decisions for the same policy are idempotent. Durable
-inbound-event deduplication, including delayed replay handling, belongs to stage 11.
+identical accept/decline decisions for the same policy are idempotent. The [worker queue](worker-queue.md) anchors durable inbound-event deduplication,
+including delayed replay handling.
 
 - Accept records `accepted_at`.
 - Decline records `declined_at` and immediately makes current consent absent.

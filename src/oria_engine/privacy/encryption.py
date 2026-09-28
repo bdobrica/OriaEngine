@@ -113,3 +113,25 @@ class ProfileEncryption:
             return payload
         except (InvalidTag, ValueError):
             raise ProfileEncryptionError("Birth profile could not be decrypted") from None
+
+    def encrypt_event(self, value: str, *, user_id: UUID, event_id: UUID, kind: str) -> bytes:
+        nonce = os.urandom(12)
+        aad = self._event_aad(user_id, event_id, kind)
+        return nonce + self._cipher.encrypt(nonce, value.encode(), aad)
+
+    def decrypt_event(
+        self, value: bytes, *, user_id: UUID, event_id: UUID, kind: str, key_version: str
+    ) -> str:
+        try:
+            if key_version != self.key_version or len(value) < 29:
+                raise ValueError()
+            return self._cipher.decrypt(
+                value[:12], value[12:], self._event_aad(user_id, event_id, kind)
+            ).decode()
+        except (InvalidTag, ValueError):
+            raise ProfileEncryptionError("Queued payload could not be decrypted") from None
+
+    def _event_aad(self, user_id: UUID, event_id: UUID, kind: str) -> bytes:
+        return json.dumps(
+            ["oria:event:v1", str(user_id), str(event_id), kind, self.key_version]
+        ).encode()

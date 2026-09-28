@@ -30,25 +30,25 @@ draft writes also invalidate the cache. Telegram command names use underscores;
 full user-facing field display and deletion remain later stages.
 
 Calculation is bounded to 20 seconds and runs under the existing per-user database
-lock for this polling baseline. Consent withdrawal and profile edits serialize with
+lock inside the conversation worker. Consent withdrawal and profile edits serialize with
 activation; unrelated users have independent locks. A failed tool call, invalid
 response or timeout leaves the confirmed profile recoverable, with a generic retry
 message and no partial result. A failed refresh preserves the older cache row but
 its stale versions prevent use. Process cancellation rolls the transaction back;
-previously committed encrypted progress remains recoverable. Worker queuing is
-Stage 11; this implementation does not claim exactly-once update processing.
+previously committed encrypted progress remains recoverable. The [worker queue](worker-queue.md) commits domain changes with an encrypted reply
+and deduplicates update processing; Telegram delivery can still duplicate after a crash.
 
 ## Local demo
 
-1. Apply `make migrate` (revision `0005`).
+1. Apply `make migrate` (current head `0006`).
 2. Run `make mcp-local` to opt into a loopback-only port for host polling. The default
    `make mcp` retains the private-network deployment with no published port. The
    polling override adds a bridge network because Docker cannot publish ports on
    an internal-only network; this local mode therefore also permits outbound traffic.
 3. Use `ASTROLOGY_MCP_URL=http://localhost:8000/mcp` and
-   `ORIA_POLICY_VERSION=2026-09-28.2` in your local configuration. Bump custom policy
-   versions too: the disclosure now describes calculation and stored derived facts.
-4. Run `make run`, accept the current disclosure, and confirm the profile. Previously
+   `ORIA_POLICY_VERSION=2026-09-28.3` in your local configuration. Bump custom policy
+   versions too: the disclosure now includes temporary encrypted queue payloads.
+4. Run `make worker` and `make run` in separate terminals, accept the current disclosure, and confirm the profile. Previously
    confirmed profiles use /retry_profile after consent. /profile reports validity.
 
 `ASTROLOGY_MCP_PORT` overrides the local published port; update the URL to match.

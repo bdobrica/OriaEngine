@@ -23,7 +23,8 @@ dataset if demo users need smaller towns; do not select a different birthplace.
 Latitude, longitude and IANA timezone are taken together from the selected
 GeoNames record. Its timezone column is the dataset's assignment for that location;
 there is no separate polygon lookup or timezone inference from the country.
-The selected values stay inside the encrypted profile. Queries are not persisted.
+The selected values stay inside the encrypted profile. Queries are not persisted in drafts/profiles. Post-consent inbound text uses
+the temporary encrypted [queue retention](worker-queue.md) rules.
 
 ## Historical conversion and clarification
 

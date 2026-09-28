@@ -1,5 +1,6 @@
 """Private text ingress and plain-text egress; Telegram objects stay here."""
 
+import asyncio
 import logging
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
@@ -17,9 +18,12 @@ from aiogram.types import (
     Update,
 )
 
+from oria_engine.db.repositories import UserUnavailableError
 from oria_engine.domain.channel import ChannelButton, ChannelClient, ChannelMessage
 from oria_engine.domain.consent import ConsentFlow
 from oria_engine.observability import correlation_scope
+from oria_engine.queue.broker import Publisher
+from oria_engine.queue.events import EventIngress
 
 logger = logging.getLogger(__name__)
 
@@ -121,12 +125,39 @@ class PrivateMessageMiddleware(BaseMiddleware):
             return result
 
 
-def create_dispatcher(client: ChannelClient, flow: ConsentFlow) -> Dispatcher:
+def create_dispatcher(
+    client: ChannelClient,
+    flow: ConsentFlow | None = None,
+    *,
+    ingress: EventIngress | None = None,
+    publisher: Publisher | None = None,
+) -> Dispatcher:
     dispatcher = Dispatcher(disable_fsm=True)
     dispatcher.update.outer_middleware(PrivateMessageMiddleware())
     router = Router(name="private_messages")
 
     async def respond(channel_message: ChannelMessage, command: str | None = None) -> None:
+        if ingress is not None:
+            # aiogram acknowledges offsets even when a handler raises. Keep this update
+            # in flight until PostgreSQL accepts it; shutdown cancellation still propagates.
+            while True:
+                try:
+                    identifier = await ingress.accept(channel_message, command=command)
+                    break
+                except UserUnavailableError:
+                    # A deleted account is a permanent rejection, not a database outage.
+                    logger.info("update_completed")
+                    return
+                except Exception:
+                    logger.error("update_failed")
+                    await asyncio.sleep(1)
+            if publisher is not None:
+                try:
+                    await asyncio.to_thread(publisher.send, str(identifier))
+                except Exception:
+                    logger.warning("queue_unavailable")  # Durable worker scan closes enqueue gap.
+            return
+        assert flow is not None
         reply = await flow.handle(channel_message, command=command)
         # handle() commits before network I/O; failed delivery cannot undo consent.
         await client.send_text(channel_message.provider_chat_id, reply.text, buttons=reply.buttons)

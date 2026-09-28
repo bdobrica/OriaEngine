@@ -62,3 +62,7 @@ files = ["src", "services"]
 [[tool.mypy.overrides]]
 module = "swisseph"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["dramatiq", "dramatiq.*"]
+ignore_missing_imports = true

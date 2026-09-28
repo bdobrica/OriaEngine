@@ -199,7 +199,7 @@ SECOND_CONTEXT_BASE_URL=http://localhost:8080
 SECOND_CONTEXT_BEARER_TOKEN=
 
 ASTROLOGY_MCP_URL=http://localhost:8000/mcp
-ORIA_POLICY_VERSION=2026-09-28.2
+ORIA_POLICY_VERSION=2026-09-28.3
 ```
 
 Use a generated development key for `PROFILE_ENCRYPTION_KEY`. Production deployments must provide secrets through the deployment platform rather than a committed environment file.
@@ -247,9 +247,9 @@ make run
 ```
 
 See [Telegram setup and smoke test](docs/telegram.md). `/start`, `/help`, `/privacy`
-and versioned consent buttons are available now; encrypted profile setup comes next.
-Consent uses PostgreSQL and needs no worker. See [consent behavior](docs/consent-flow.md).
-The commands below are planned for later stages.
+and versioned consent buttons, encrypted profile setup, and natal calculations are available.
+Run `make worker` in another terminal: polling now queues all conversation work.
+See [worker queue and recovery](docs/worker-queue.md) and [consent behavior](docs/consent-flow.md).
 
 Run the worker in another terminal when it is not already running through Docker Compose:
 
@@ -257,10 +257,10 @@ Run the worker in another terminal when it is not already running through Docker
 make worker
 ```
 
-Run the astrology MCP service separately when needed:
+For host-run workers, start the astrology MCP service with loopback access:
 
 ```bash
-make mcp
+make mcp-local
 ```
 
 The astrology service exposes deterministic natal calculations on a private

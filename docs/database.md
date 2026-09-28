@@ -41,6 +41,8 @@ Revision `0002` adds the identity and consent tables described in
 Revision `0003` adds [encrypted birth profiles](birth-profiles.md).
 Revision `0004` adds [encrypted onboarding drafts](onboarding.md).
 Revision `0005` adds [derived astrology profiles](astrology-profiles.md).
+Revision `0006` adds [durable inbound events](worker-queue.md). Its downgrade drops
+queued work and deduplication history but preserves consent, drafts and profiles.
 `make migrate-down` rolls back one revision and is guarded to development/test.
 It uses the configured database URL: verify that URL points to your intended
 development database before running it. Downgrading `0002` drops all identity

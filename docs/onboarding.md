@@ -24,7 +24,8 @@ write drafts or profiles.
 Numeric slash dates, impossible/future dates, offsets, informal time phrases and
 extra text are rejected with a focused retry. Unknown time stores no invented
 time. Place queries accept two bounded name components; addresses, numbers and
-additional comma-separated fields are rejected. Queries are not stored. Only
+additional comma-separated fields are rejected. Queries are not stored in profiles or drafts; queued input follows the temporary
+encryption and expiry rules in [worker queue](worker-queue.md). Only
 normalized resolver candidates can become a selected place. The parser is not a
 general detector of unsolicited PII: it accepts constrained names, never arbitrary
 profile attributes. Both draft and final schemas forbid extra keys.
@@ -47,7 +48,7 @@ schema/key versions and an update timestamp. The encrypted version 1 draft holds
 only the permitted birth fields, up to eight normalized candidates, consent UUID
 and a random callback revision token, plus an optional time-occurrence selection.
 Older drafts without the optional field still load. No raw message or unresolved
-query is saved.
+query is saved in a draft. The encrypted inbound envelope is erased on processing.
 Progress survives process/Redis loss; no process-local state is authoritative.
 Downgrading `0004` removes drafts while retaining confirmed profiles and consent.
 
@@ -62,21 +63,21 @@ Buttons contain only a random token and bounded action/index, not birth values
 or owner IDs. Every mutation rotates the token. Re-consent also rotates it;
 callbacks from earlier revisions/users cannot select or confirm another draft.
 Decline retains encrypted progress and stops processing; this is not deletion.
-Same-policy consent-button replay and durable text-update deduplication remain
-Stage 11. No exactly-once Telegram delivery is claimed.
+The worker deduplicates provider updates and commits each transition with its reply.
+No exactly-once Telegram delivery is claimed; see [worker queue](worker-queue.md).
 
 ## Local demo
 
 `domain.places.PlaceResolver` is the local async interface for city/country lookup.
-Polling uses `LocalPlaceResolver` with bundled GeoNames data and historical
+The worker uses `LocalPlaceResolver` with bundled GeoNames data and historical
 timezone rules. See [place resolution](place-resolution.md) for coverage, time
 clarification and dataset generation. Confirmed profiles calculate through MCP.
-Start `make mcp-local` for host polling.
+Start `make mcp-local` and `make worker` for host polling.
 
 Before `make run`, apply `make migrate`, retain a stable `PROFILE_ENCRYPTION_KEY`,
-and set `ORIA_POLICY_VERSION=2026-09-28.2` in the ignored local `.env`. Polling rejects
-the previous defaults `2026-09-01`, `2026-09-28` and `2026-09-28.1`. Operators using
-custom policy versions must also bump their version for the calculation disclosure. No local secrets
+and set `ORIA_POLICY_VERSION=2026-09-28.3` in the ignored local `.env`. Polling rejects
+the previous defaults `2026-09-01`, `2026-09-28`, `2026-09-28.1` and `2026-09-28.2`. Operators using
+custom policy versions must also bump their version for the queued-processing disclosure. No local secrets
 or developer database are modified by implementation tests.
 
 `make verify` tests date/time modes and rejection, schema restrictions, encryption

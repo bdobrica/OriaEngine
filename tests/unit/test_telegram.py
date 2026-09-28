@@ -283,3 +283,50 @@ def test_entrypoint_suppresses_sensitive_startup_exception(capsys):
         main()
     assert exc.value.code == 1
     assert TOKEN not in capsys.readouterr().err
+
+
+async def test_queue_ingress_does_not_run_flow_and_enqueue_failure_is_recoverable():
+    from unittest.mock import Mock
+    from uuid import uuid4
+
+    ingress = AsyncMock()
+    identifier = uuid4()
+    ingress.accept.return_value = identifier
+    publisher = Mock()
+    publisher.send.side_effect = RuntimeError("Redis unavailable")
+    flow = AsyncMock()
+    client = AsyncMock()
+    await create_dispatcher(client, flow, ingress=ingress, publisher=publisher).feed_update(
+        Bot(TOKEN), update("/profile")
+    )
+    ingress.accept.assert_awaited_once()
+    assert ingress.accept.call_args.kwargs == {"command": "profile"}
+    publisher.send.assert_called_once_with(str(identifier))
+    flow.handle.assert_not_called()
+    client.send_text.assert_not_called()
+
+
+async def test_queue_ingress_retries_durability_before_callback_ack():
+    from uuid import uuid4
+
+    ingress = AsyncMock()
+    ingress.accept.side_effect = [RuntimeError("database down"), uuid4()]
+    session = AsyncMock()
+    await create_dispatcher(AsyncMock(), ingress=ingress).feed_update(
+        Bot(TOKEN, session=session), callback_update()
+    )
+    assert ingress.accept.await_count == 2
+    assert session.call_args.args[1].callback_query_id == "synthetic-callback"
+
+
+async def test_unavailable_user_does_not_block_polling_with_endless_retries():
+    from oria_engine.db.repositories import UserUnavailableError
+
+    ingress = AsyncMock()
+    ingress.accept.side_effect = UserUnavailableError("User unavailable")
+    client = AsyncMock()
+    await asyncio.wait_for(
+        create_dispatcher(client, ingress=ingress).feed_update(Bot(TOKEN), update()), 1
+    )
+    ingress.accept.assert_awaited_once()
+    client.send_text.assert_not_called()

@@ -21,6 +21,10 @@ EVENTS = frozenset(
         "request_failed",
         "update_completed",
         "update_failed",
+        "queue_unavailable",
+        "worker_retry",
+        "worker_dead",
+        "worker_lock_lost",
     }
 )
 

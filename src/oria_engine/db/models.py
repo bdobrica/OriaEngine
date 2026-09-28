@@ -4,7 +4,16 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, UniqueConstraint, func
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Identity,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -123,3 +132,31 @@ class AstrologyProfile(Base):
     calculated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class InboundEvent(Base):
+    """Canonical idempotency anchor; sensitive transient fields are encrypted."""
+
+    __tablename__ = "inbound_events"
+    __table_args__ = (
+        UniqueConstraint("provider", "provider_update_id"),
+        CheckConstraint(
+            "status IN ('pending', 'processing', 'ready', 'sent', 'dead')", name="status"
+        ),
+        CheckConstraint("attempts >= 0 AND attempts <= 5", name="attempts"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    sequence: Mapped[int] = mapped_column(BigInteger, Identity(), unique=True)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    provider: Mapped[str] = mapped_column(String(32))
+    provider_update_id: Mapped[str] = mapped_column(String(128))
+    status: Mapped[str] = mapped_column(String(16), default="pending")
+    attempts: Mapped[int] = mapped_column(default=0)
+    encrypted_input: Mapped[bytes | None]
+    encrypted_reply: Mapped[bytes | None]
+    encryption_key_version: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    failure_code: Mapped[str | None] = mapped_column(String(32))

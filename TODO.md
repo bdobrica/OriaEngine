@@ -480,34 +480,37 @@ Compute and cache the user's natal chart after profile confirmation.
 
 Move slow conversation work off the Telegram ingress path and make concurrent messages safe.
 
+Implemented baseline: [worker queue](docs/worker-queue.md). Next: Stage 12,
+SecondContext adapter. The later Stage 16 builds interpretation onto this worker.
+
 ### Tasks
 
-- [ ] Configure Dramatiq Redis broker.
-- [ ] Add worker entrypoint.
-- [ ] Add `make worker`.
-- [ ] Add `inbound_events` table.
-- [ ] Persist Telegram provider update ID with unique constraint.
-- [ ] Enqueue internal inbound-event ID, not decrypted profile data.
-- [ ] Implement job retry policy.
-- [ ] Implement maximum attempts/dead-letter visibility.
-- [ ] Implement per-user Redis lock.
-- [ ] Add bounded lock TTL.
-- [ ] Ensure lock is released safely.
-- [ ] Add processing status to inbound events.
-- [ ] Make state transitions idempotent.
-- [ ] Update local polling path to enqueue instead of doing slow work inline.
+- [x] Configure Dramatiq Redis broker.
+- [x] Add worker entrypoint.
+- [x] Add `make worker`.
+- [x] Add `inbound_events` table.
+- [x] Persist Telegram provider update ID with unique constraint.
+- [x] Enqueue internal inbound-event ID, not decrypted profile data.
+- [x] Implement job retry policy.
+- [x] Implement maximum attempts/dead-letter visibility.
+- [x] Implement per-user Redis lock.
+- [x] Add bounded lock TTL.
+- [x] Ensure lock is released safely.
+- [x] Add processing status to inbound events.
+- [x] Make state transitions idempotent.
+- [x] Update local polling path to enqueue instead of doing slow work inline.
 
 ### Tests
 
-- [ ] Duplicate Telegram update inserts one inbound event.
-- [ ] Duplicate job execution does not repeat consent/profile mutation.
-- [ ] Two jobs for one user are serialized.
-- [ ] Two different users can process concurrently.
-- [ ] Worker crash/retry leaves canonical state recoverable.
+- [x] Duplicate Telegram update inserts one inbound event.
+- [x] Duplicate job execution does not repeat consent/profile mutation.
+- [x] Two jobs for one user are serialized.
+- [x] Two different users can process concurrently.
+- [x] Worker crash/retry leaves canonical state recoverable.
 
 ### Acceptance criteria
 
-- [ ] Redis can be flushed and restarted without losing consent/profile data.
+- [x] Redis can be flushed and restarted without losing consent/profile data.
 
 ---
 
