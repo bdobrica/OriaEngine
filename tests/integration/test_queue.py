@@ -10,7 +10,14 @@ from redis.exceptions import LockNotOwnedError
 from sqlalchemy import delete, select
 
 from oria_engine.config import Settings
-from oria_engine.db.models import Consent, InboundEvent, OnboardingProgress, SocialIdentity, User
+from oria_engine.db.models import (
+    BirthProfile,
+    Consent,
+    InboundEvent,
+    OnboardingProgress,
+    SocialIdentity,
+    User,
+)
 from oria_engine.db.repositories import ConsentRepository
 from oria_engine.domain.channel import ChannelMessage
 from oria_engine.domain.consent import ConsentFlow
@@ -41,7 +48,14 @@ async def queue(database, infrastructure):
     finally:
         await redis.aclose()
         async with database.transaction() as session:
-            for model in (InboundEvent, OnboardingProgress, Consent, SocialIdentity, User):
+            for model in (
+                InboundEvent,
+                OnboardingProgress,
+                BirthProfile,
+                Consent,
+                SocialIdentity,
+                User,
+            ):
                 await session.execute(delete(model))
 
 
@@ -112,6 +126,42 @@ async def test_send_failure_retries_reply_without_repeating_domain_action(queue)
     assert (await row(worker, identifier)).status == "sent"
     assert len(await consent_rows(worker)) == 1
     worker.flow.handle_in_session.assert_awaited_once()
+
+
+async def test_transit_snapshot_survives_delivery_retry(queue, birth_payload):
+    from astrology_mcp.engine import calculate, calculate_transits
+
+    from oria_engine.domain.onboarding import OnboardingFlow
+
+    from .test_astrology_profiles import confirm
+
+    ingress, worker = queue
+    astrology = AsyncMock()
+    astrology.calculate_natal_chart.side_effect = calculate
+    astrology.calculate_transits.side_effect = calculate_transits
+    resolver = AsyncMock()
+    resolver.resolve.return_value = (birth_payload.birth_place,)
+    worker.flow.onboarding = OnboardingFlow(
+        worker.encryption, worker.flow.policy_version, resolver, astrology
+    )
+    await confirm(worker.flow)
+    inbound = message(text="today")
+    identifier = await ingress.accept(inbound)
+    worker.client.send_text.side_effect = RuntimeError("synthetic send failure")
+    await worker.process(identifier)
+    assert (await row(worker, identifier)).status == "ready"
+    astrology.calculate_transits.assert_awaited_once()
+    assert (
+        astrology.calculate_transits.call_args.args[0].target_timestamp_utc == inbound.received_at
+    )
+    original_reply = worker.client.send_text.call_args
+    worker.client.send_text.side_effect = None
+    await due(worker, identifier)
+    await worker.process(identifier)
+    await worker.process(identifier)
+    assert (await row(worker, identifier)).status == "sent"
+    assert worker.client.send_text.call_args == original_reply
+    astrology.calculate_transits.assert_awaited_once()
 
 
 async def test_rollback_and_crashed_claim_recover(queue):

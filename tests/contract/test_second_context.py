@@ -273,3 +273,32 @@ async def test_calculated_facts_are_instructions_only():
         assert "Hello" not in repr(ConversationRequest(filtered_message="Hello"))
     finally:
         await client.aclose()
+
+
+async def test_transit_facts_are_instructions_only():
+    from astrology_mcp.engine import calculate_transits
+
+    from tests.contract.test_transits import request
+
+    facts = calculate_transits(request())
+    stub = SecondContextStub()
+    client = provider(stub)
+    try:
+        await client.respond(
+            scope(),
+            ConversationRequest(
+                filtered_message="Explain today's transits",
+                goal="current_transits",
+                transit_facts=facts,
+            ),
+        )
+        assert len(stub.requests) == 1
+        body = json.loads(stub.requests[0].content)
+        assert facts.model_dump_json() in body["instructions"]
+        assert "Calculated natal facts" not in body["instructions"]
+        assert body["input"] == "Explain today's transits"
+        assert "planets" not in json.dumps(body["metadata"])
+        assert "birth_date" not in body["instructions"]
+        assert "latitude" not in body["instructions"]
+    finally:
+        await client.aclose()

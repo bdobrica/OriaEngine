@@ -40,7 +40,7 @@ and deduplicates update processing; Telegram delivery can still duplicate after 
 
 ## Local demo
 
-1. Apply `make migrate` (current head `0006`).
+1. Apply `make migrate` (current head `0007`).
 2. Run `make mcp-local` to opt into a loopback-only port for host polling. The default
    `make mcp` retains the private-network deployment with no published port. The
    polling override adds a bridge network because Docker cannot publish ports on
@@ -54,4 +54,5 @@ and deduplicates update processing; Telegram delivery can still duplicate after 
 `ASTROLOGY_MCP_PORT` overrides the local published port; update the URL to match.
 Do not expose this unauthenticated service publicly. Downgrading `0005` removes only
 derived caches, retaining encrypted birth profiles and drafts. Re-upgrading allows
-recomputation. Interpretation, transits and deletion are not introduced here.
+recomputation. Active profiles now support [transit fact replies](transits-and-routing.md).
+LLM interpretation and deletion remain later stages.

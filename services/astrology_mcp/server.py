@@ -12,9 +12,10 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from oria_engine.astrology.contracts import NatalRequest, NatalResult
+from oria_engine.astrology.transits import TransitRequest, TransitResult
 from oria_engine.observability import JsonFormatter
 
-from .engine import calculate, metadata
+from .engine import calculate, calculate_transits, metadata
 
 
 class PrivateErrors(Middleware):
@@ -50,6 +51,19 @@ def create_server() -> FastMCP:
     def calculate_natal_chart(request: NatalRequest) -> NatalResult:
         """Calculate a tropical natal chart; unknown time returns explicit unavailability."""
         return calculate(request)
+
+    @server.tool(
+        name="calculate_transits",
+        annotations={
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
+    )
+    def transits(request: TransitRequest) -> TransitResult:
+        """Calculate positions and aspects to fixed natal longitudes at an explicit UTC target."""
+        return calculate_transits(request)
 
     @server.custom_route("/healthz", methods=["GET"])
     async def health(request: Request) -> JSONResponse:

@@ -22,7 +22,8 @@ The adapter owns an async HTTP client; call `aclose()` on shutdown.
 
 `ConversationRequest.filtered_message` is an explicitly application-filtered active
 message, **not** a PII detector. Onboarding and raw profile inspection must never be
-routed here. The typed facts slot accepts only the derived natal result. Semantic
+routed here. Typed facts slots accept derived natal and transit results, including
+the transit target timestamp but no raw birth fields. Semantic
 memory accepts fixed phrases for concise readings, less mystical language, explicit
 uncertainty and selected prior topics; it cannot accept arbitrary birth details.
 Current facts are supplied in instructions only. Upstream transcripts still persist
@@ -55,9 +56,10 @@ lifecycles; deletion does not magically erase those copies.
 ## Runtime status
 
 Stage 12 is implemented, including the upstream service-auth/purge contract and
-real PostgreSQL/Qdrant tests with synthetic LLM responses. Stages 13–16 still add
-active routing, filtering, prompt/persona assembly, output validation and worker
-wiring. The polling/worker demo does not call this adapter yet. Stage 18 owns
+real PostgreSQL/Qdrant tests with synthetic LLM responses. Stage 13 adds
+[active routing and transit facts](transits-and-routing.md). Stages 14–16 still add
+filtering, prompt/persona assembly, output validation and context worker wiring.
+The polling/worker demo does not call this adapter yet. Stage 18 owns
 confirmed, durable application-wide deletion across Oria and SecondContext.
 
 Before enabling external conversation storage, update the consent/privacy disclosure

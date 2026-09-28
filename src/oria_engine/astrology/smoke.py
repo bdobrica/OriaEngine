@@ -4,6 +4,7 @@ import asyncio
 
 from oria_engine.astrology.client import FastMCPAstrologyClient
 from oria_engine.astrology.contracts import NatalRequest
+from oria_engine.astrology.transits import TransitRequest
 
 
 async def smoke() -> None:
@@ -19,6 +20,10 @@ async def smoke() -> None:
     chart = await client.calculate_natal_chart(request)
     assert len(chart.planets) == 10 and chart.availability.houses
     assert request.timestamp_utc is not None
+    transits = await client.calculate_transits(
+        TransitRequest.from_natal(chart, request.timestamp_utc)
+    )
+    assert len(transits.planets) == 10 and transits.availability.natal_aspects
     unknown = NatalRequest(
         birth_time_accuracy="unknown",
         local_birth_date=request.timestamp_utc.date(),
@@ -27,7 +32,12 @@ async def smoke() -> None:
     )
     chart = await client.calculate_natal_chart(unknown)
     assert not chart.planets and chart.angles is None
-    print("Typed natal MCP checks passed")
+    transits = await client.calculate_transits(
+        TransitRequest.from_natal(chart, request.timestamp_utc)
+    )
+    assert len(transits.planets) == 10 and not transits.aspects
+    assert not transits.availability.natal_aspects
+    print("Typed natal and transit MCP checks passed")
 
 
 if __name__ == "__main__":

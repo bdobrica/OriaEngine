@@ -788,9 +788,20 @@ A small router can classify each active message into categories such as:
 - privacy/help;
 - unsupported/high-stakes request.
 
-The router can initially be rule-assisted plus a structured LLM classification call through the context/LLM layer. Tool execution remains application-controlled.
+The implemented English demo router is deterministic, with typed intents and
+no LLM classifier. Unrecognized follow-ups request a supported topic instead of
+guessing facts or authorizing tools. Structured LLM classification can be added
+later if necessary; tool execution remains application-controlled.
 
 If a date is ambiguous, Oria asks the user to clarify rather than guessing.
+
+Stage 13 uses the persisted inbound timestamp for current snapshots and one ISO
+date at explicitly displayed 12:00 UTC for date-specific snapshots. Transit
+requests use only cached natal longitudes and accuracy, never raw birth fields.
+Unknown birth time permits general transit positions but no natal relationships.
+The additive tool returns motion/orbs with time-to-exact explicitly unavailable.
+The worker renders calculated facts directly; contextual follow-ups and LLM
+interpretation await Stages 14–16. See [transit/routing conventions](docs/transits-and-routing.md).
 
 ---
 
@@ -1151,8 +1162,10 @@ enqueues events; `make worker` owns consent, onboarding, calculation and deliver
 PostgreSQL recovers work after Redis loss and anchors idempotent domain changes.
 The Stage 12 adapter, stable session mapping, scoped service authentication and
 SecondContext subject purge are implemented; see [adapter setup](docs/second-context.md).
-Next is Stage 13: transit calculations and active-message routing.
-The worker does not call it yet; interpretation still requires Stages 13–16.
+Transit calculations and active-message routing now provide deterministic natal
+and target/current transit fact summaries. Next is Stage 14: persona/methodology
+prompts, followed by Stage 15 policy and Stage 16 SecondContext worker integration.
+The worker does not call SecondContext yet.
 See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
 Full profile display and deletion remain unavailable. The queued-processing disclosure uses
 policy version 2026-09-28.3. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),

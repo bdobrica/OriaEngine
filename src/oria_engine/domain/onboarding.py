@@ -10,6 +10,7 @@ from oria_engine.db.astrology_profiles import AstrologyProfileRepository
 from oria_engine.db.birth_profiles import BirthProfileRepository, ConsentRequiredError
 from oria_engine.db.onboarding import OnboardingRepository
 from oria_engine.db.repositories import ConsentRepository, UserRepository, UserUnavailableError
+from oria_engine.domain.active import prepare_active, render_active
 from oria_engine.domain.birth_profile import BirthPlace
 from oria_engine.domain.birth_time import birth_zone, utc_candidates
 from oria_engine.domain.channel import ChannelButton, ChannelMessage
@@ -166,6 +167,33 @@ class OnboardingFlow:
         )
         draft = await drafts.get(user_id)
         if draft is None:
+            # Active questions need only a valid derived cache, never decrypted birth inputs.
+            if (
+                self.astrology is not None
+                and command is None
+                and message.callback_data is None
+                and message.text.strip()
+                and not message.text.startswith("/")
+            ):
+                natal = await AstrologyProfileRepository(
+                    session, policy_version=self.policy_version
+                ).get(user_id)
+                if natal is not None:
+                    try:
+                        facts = await prepare_active(
+                            message.text,
+                            received_at=message.received_at,
+                            natal=natal,
+                            client=self.astrology,
+                        )
+                        return ConsentReply(State.ACTIVE, render_active(facts))
+                    except AstrologyUnavailable:
+                        return ConsentReply(
+                            State.ACTIVE,
+                            "Transit calculation is temporarily unavailable. "
+                            "Please resend your question to retry. "
+                            "Your natal chart is still saved.",
+                        )
             profile = await profiles.get(user_id)
             if profile is not None:
                 needs_clarification = False

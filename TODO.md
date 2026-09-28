@@ -522,7 +522,7 @@ Add persistent conversational memory without exposing the raw birth profile as g
 
 Implemented: [adapter, service setup and deletion contract](docs/second-context.md).
 SecondContext now supplies scoped service authentication and durable subject purge.
-Next: Stage 13; Stage 16 connects the adapter to the Telegram worker.
+Stage 16 connects the adapter to the Telegram worker after persona and policy work.
 
 ### Tasks
 
@@ -564,35 +564,39 @@ Next: Stage 13; Stage 16 connects the adapter to the Telegram worker.
 
 Support useful personalized astrology conversations after onboarding.
 
+Implemented: [transit tool and deterministic fact replies](docs/transits-and-routing.md).
+Next: Stage 14. LLM interpretation and contextual follow-ups remain Stages 14–16;
+this baseline asks users to restate follow-up topics and requires no classifier call.
+
 ### Tasks
 
-- [ ] Add `calculate_transits` MCP tool.
-- [ ] Return structured transiting positions/aspects/orbs.
-- [ ] Include applying/separating state where the calculation engine supports it.
-- [ ] Include time-to-exact where validated; label linear estimates and return unavailable otherwise.
-- [ ] Define active-message intent schema.
-- [ ] Support `natal_explanation`.
-- [ ] Support `current_transits`.
-- [ ] Support `transits_for_date`.
-- [ ] Support `follow_up`.
-- [ ] Support `unsupported_high_stakes`.
-- [ ] Implement deterministic/rule-assisted routing where possible.
-- [ ] Use structured LLM classification only where necessary.
-- [ ] Ask for date clarification when ambiguous.
-- [ ] Fetch only the astrology facts necessary for the selected path.
-- [ ] Do not expose raw profile fields to the LLM when derived facts are sufficient.
+- [x] Add `calculate_transits` MCP tool.
+- [x] Return structured transiting positions/aspects/orbs.
+- [x] Include applying/separating state where the calculation engine supports it.
+- [x] Include time-to-exact where validated; label linear estimates and return unavailable otherwise.
+- [x] Define active-message intent schema.
+- [x] Support `natal_explanation`.
+- [x] Support `current_transits`.
+- [x] Support `transits_for_date`.
+- [x] Support `follow_up` with deterministic topic clarification in this baseline.
+- [x] Support `unsupported_high_stakes`.
+- [x] Implement deterministic/rule-assisted routing where possible.
+- [x] Use structured LLM classification only where necessary (not needed for the demo grammar).
+- [x] Ask for date clarification when ambiguous.
+- [x] Fetch only the astrology facts necessary for the selected path.
+- [x] Do not expose raw profile fields to the LLM when derived facts are sufficient.
 
 ### Tests
 
-- [ ] Natal question routes without unnecessary transit calculation.
-- [ ] “today” routes to current transit calculation.
-- [ ] Explicit date routes to target date.
-- [ ] Ambiguous date asks for clarification.
-- [ ] Unknown birth time produces constrained facts.
+- [x] Natal question routes without unnecessary transit calculation.
+- [x] “today” routes to current transit calculation.
+- [x] Explicit date routes to target date.
+- [x] Ambiguous date asks for clarification.
+- [x] Unknown birth time produces constrained facts.
 
 ### Acceptance criteria
 
-- [ ] Oria can answer both natal and current/date-specific transit questions using MCP-provided facts.
+- [x] Oria can answer both natal and current/date-specific transit questions using MCP-provided facts.
 
 ---
 

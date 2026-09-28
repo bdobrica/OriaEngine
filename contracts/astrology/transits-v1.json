@@ -1,0 +1,469 @@
+{
+  "request": {
+    "$defs": {
+      "NatalPosition": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body",
+            "type": "string"
+          },
+          "longitude": {
+            "exclusiveMaximum": 360,
+            "minimum": 0,
+            "title": "Longitude",
+            "type": "number"
+          }
+        },
+        "required": [
+          "body",
+          "longitude"
+        ],
+        "title": "NatalPosition",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "birth_time_accuracy": {
+        "enum": [
+          "exact",
+          "approximate",
+          "unknown"
+        ],
+        "title": "Birth Time Accuracy",
+        "type": "string"
+      },
+      "contract_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Contract Version",
+        "type": "integer"
+      },
+      "natal_positions": {
+        "items": {
+          "$ref": "#/$defs/NatalPosition"
+        },
+        "title": "Natal Positions",
+        "type": "array"
+      },
+      "target_timestamp_utc": {
+        "format": "date-time",
+        "title": "Target Timestamp Utc",
+        "type": "string"
+      }
+    },
+    "required": [
+      "target_timestamp_utc",
+      "birth_time_accuracy",
+      "natal_positions"
+    ],
+    "title": "TransitRequest",
+    "type": "object"
+  },
+  "response": {
+    "$defs": {
+      "Aspect": {
+        "additionalProperties": false,
+        "properties": {
+          "angular_separation": {
+            "maximum": 180,
+            "minimum": 0,
+            "title": "Angular Separation",
+            "type": "number"
+          },
+          "applying": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applying"
+          },
+          "body_a": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body A",
+            "type": "string"
+          },
+          "body_b": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body B",
+            "type": "string"
+          },
+          "name": {
+            "enum": [
+              "conjunction",
+              "sextile",
+              "square",
+              "trine",
+              "opposition"
+            ],
+            "title": "Name",
+            "type": "string"
+          },
+          "orb": {
+            "maximum": 6,
+            "minimum": 0,
+            "title": "Orb",
+            "type": "number"
+          },
+          "relative_velocity_deg_day": {
+            "title": "Relative Velocity Deg Day",
+            "type": "number"
+          },
+          "target_angle": {
+            "enum": [
+              0,
+              60,
+              90,
+              120,
+              180
+            ],
+            "title": "Target Angle",
+            "type": "integer"
+          },
+          "time_to_exact_hours": {
+            "default": null,
+            "title": "Time To Exact Hours",
+            "type": "null"
+          }
+        },
+        "required": [
+          "body_a",
+          "body_b",
+          "name",
+          "target_angle",
+          "angular_separation",
+          "orb",
+          "relative_velocity_deg_day",
+          "applying"
+        ],
+        "title": "Aspect",
+        "type": "object"
+      },
+      "CalculationMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "aspect_orb_degrees": {
+            "const": 6,
+            "default": 6,
+            "title": "Aspect Orb Degrees",
+            "type": "integer"
+          },
+          "binding_version": {
+            "const": "2.10.3.2",
+            "default": "2.10.3.2",
+            "title": "Binding Version",
+            "type": "string"
+          },
+          "engine_version": {
+            "const": "oria-natal-1",
+            "default": "oria-natal-1",
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "ephemeris": {
+            "const": "moshier",
+            "default": "moshier",
+            "title": "Ephemeris",
+            "type": "string"
+          },
+          "ephemeris_data_version": {
+            "const": "bundled-with-swisseph-2.10.03",
+            "default": "bundled-with-swisseph-2.10.03",
+            "title": "Ephemeris Data Version",
+            "type": "string"
+          },
+          "house_system": {
+            "const": "P",
+            "default": "P",
+            "title": "House System",
+            "type": "string"
+          },
+          "reference_frame": {
+            "const": "apparent-geocentric-ecliptic-of-date",
+            "default": "apparent-geocentric-ecliptic-of-date",
+            "title": "Reference Frame",
+            "type": "string"
+          },
+          "swiss_ephemeris_version": {
+            "const": "2.10.03",
+            "default": "2.10.03",
+            "title": "Swiss Ephemeris Version",
+            "type": "string"
+          },
+          "zodiac": {
+            "const": "tropical",
+            "default": "tropical",
+            "title": "Zodiac",
+            "type": "string"
+          }
+        },
+        "title": "CalculationMetadata",
+        "type": "object"
+      },
+      "Planet": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body",
+            "type": "string"
+          },
+          "degree_in_sign": {
+            "exclusiveMaximum": 30,
+            "minimum": 0,
+            "title": "Degree In Sign",
+            "type": "number"
+          },
+          "house": {
+            "anyOf": [
+              {
+                "maximum": 12,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "House"
+          },
+          "longitude": {
+            "exclusiveMaximum": 360,
+            "minimum": 0,
+            "title": "Longitude",
+            "type": "number"
+          },
+          "longitude_velocity_deg_day": {
+            "title": "Longitude Velocity Deg Day",
+            "type": "number"
+          },
+          "retrograde": {
+            "title": "Retrograde",
+            "type": "boolean"
+          },
+          "sign": {
+            "enum": [
+              "Aries",
+              "Taurus",
+              "Gemini",
+              "Cancer",
+              "Leo",
+              "Virgo",
+              "Libra",
+              "Scorpio",
+              "Sagittarius",
+              "Capricorn",
+              "Aquarius",
+              "Pisces"
+            ],
+            "title": "Sign",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body",
+          "longitude",
+          "sign",
+          "degree_in_sign",
+          "longitude_velocity_deg_day",
+          "retrograde"
+        ],
+        "title": "Planet",
+        "type": "object"
+      },
+      "TransitAvailability": {
+        "additionalProperties": false,
+        "properties": {
+          "angles": {
+            "const": false,
+            "default": false,
+            "title": "Angles",
+            "type": "boolean"
+          },
+          "houses": {
+            "const": false,
+            "default": false,
+            "title": "Houses",
+            "type": "boolean"
+          },
+          "natal_aspects": {
+            "title": "Natal Aspects",
+            "type": "boolean"
+          },
+          "positions": {
+            "const": true,
+            "default": true,
+            "title": "Positions",
+            "type": "boolean"
+          },
+          "reasons": {
+            "default": [],
+            "items": {
+              "enum": [
+                "unknown_birth_time",
+                "approximate_birth_time"
+              ],
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "time_to_exact": {
+            "const": false,
+            "default": false,
+            "title": "Time To Exact",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "natal_aspects"
+        ],
+        "title": "TransitAvailability",
+        "type": "object"
+      },
+      "TransitMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "aspect_reference": {
+            "const": "body_a_fixed_natal_body_b_transiting",
+            "default": "body_a_fixed_natal_body_b_transiting",
+            "title": "Aspect Reference",
+            "type": "string"
+          },
+          "astronomy": {
+            "$ref": "#/$defs/CalculationMetadata",
+            "default": {
+              "aspect_orb_degrees": 6,
+              "binding_version": "2.10.3.2",
+              "engine_version": "oria-natal-1",
+              "ephemeris": "moshier",
+              "ephemeris_data_version": "bundled-with-swisseph-2.10.03",
+              "house_system": "P",
+              "reference_frame": "apparent-geocentric-ecliptic-of-date",
+              "swiss_ephemeris_version": "2.10.03",
+              "zodiac": "tropical"
+            }
+          },
+          "engine_version": {
+            "const": "oria-transits-1",
+            "default": "oria-transits-1",
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "time_to_exact_method": {
+            "const": "unavailable",
+            "default": "unavailable",
+            "title": "Time To Exact Method",
+            "type": "string"
+          }
+        },
+        "title": "TransitMetadata",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "aspects": {
+        "items": {
+          "$ref": "#/$defs/Aspect"
+        },
+        "title": "Aspects",
+        "type": "array"
+      },
+      "availability": {
+        "$ref": "#/$defs/TransitAvailability"
+      },
+      "birth_time_accuracy": {
+        "enum": [
+          "exact",
+          "approximate",
+          "unknown"
+        ],
+        "title": "Birth Time Accuracy",
+        "type": "string"
+      },
+      "contract_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Contract Version",
+        "type": "integer"
+      },
+      "metadata": {
+        "$ref": "#/$defs/TransitMetadata"
+      },
+      "planets": {
+        "items": {
+          "$ref": "#/$defs/Planet"
+        },
+        "title": "Planets",
+        "type": "array"
+      },
+      "target_timestamp_utc": {
+        "format": "date-time",
+        "title": "Target Timestamp Utc",
+        "type": "string"
+      }
+    },
+    "required": [
+      "target_timestamp_utc",
+      "birth_time_accuracy",
+      "planets",
+      "aspects",
+      "availability",
+      "metadata"
+    ],
+    "title": "TransitResult",
+    "type": "object"
+  }
+}

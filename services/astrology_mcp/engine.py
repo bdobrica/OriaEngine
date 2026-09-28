@@ -1,6 +1,7 @@
 """Single-process deterministic Swiss Ephemeris adapter; no persistence or network."""
 
 import os
+from datetime import datetime
 from importlib.metadata import version
 from itertools import combinations
 from threading import Lock
@@ -16,6 +17,12 @@ from oria_engine.astrology.contracts import (
     NatalRequest,
     NatalResult,
     Planet,
+)
+from oria_engine.astrology.transits import (
+    TransitAvailability,
+    TransitMetadata,
+    TransitRequest,
+    TransitResult,
 )
 
 LOCK = Lock()
@@ -102,6 +109,80 @@ def house_for(longitude: float, cusps: tuple[float, ...]) -> int | None:
     return None
 
 
+def positions(instant: datetime) -> tuple[float, tuple[Planet, ...]]:
+    """Caller holds LOCK. Reset globals and calculate pinned geocentric positions."""
+    swe.set_ephe_path("/nonexistent/oria-ephemeris")
+    swe.set_tid_acc(swe.TIDAL_MOSEPH)
+    swe.set_delta_t_userdef(swe.DELTAT_AUTOMATIC)
+    tt, ut = swe.utc_to_jd(
+        instant.year,
+        instant.month,
+        instant.day,
+        instant.hour,
+        instant.minute,
+        instant.second + instant.microsecond / 1e6,
+        swe.GREG_CAL,
+    )
+    result = []
+    for index, body in enumerate(BODIES):
+        values, flags = swe.calc(tt, index, FLAGS)
+        if flags & (swe.FLG_MOSEPH | swe.FLG_SWIEPH | swe.FLG_JPLEPH) != swe.FLG_MOSEPH:
+            raise CalculationUnavailable("Unexpected ephemeris backend")
+        result.append(
+            Planet.model_validate(
+                dict(
+                    body=body,
+                    longitude=values[0] % 360,
+                    sign=SIGNS[int(values[0] % 360 // 30)],
+                    degree_in_sign=values[0] % 30,
+                    longitude_velocity_deg_day=values[3],
+                    retrograde=values[3] < 0,
+                )
+            )
+        )
+    return ut, tuple(result)
+
+
+def calculate_transits(request: TransitRequest) -> TransitResult:
+    request = TransitRequest.model_validate(request)
+    meta = metadata()
+    try:
+        with LOCK:
+            _, transiting = positions(request.target_timestamp_utc)
+        relationships: list[Aspect] = []
+        for natal in request.natal_positions:
+            fixed = Planet.model_validate(
+                dict(
+                    body=natal.body,
+                    longitude=natal.longitude,
+                    sign=SIGNS[int(natal.longitude // 30)],
+                    degree_in_sign=natal.longitude % 30,
+                    longitude_velocity_deg_day=0,
+                    retrograde=False,
+                )
+            )
+            for moving in transiting:
+                # The natal reference is fixed, including same-body relationships.
+                relationships.extend(aspects((fixed, moving)))
+        return TransitResult(
+            target_timestamp_utc=request.target_timestamp_utc,
+            birth_time_accuracy=request.birth_time_accuracy,
+            planets=transiting,
+            aspects=tuple(relationships),
+            availability=TransitAvailability.model_validate(
+                dict(
+                    natal_aspects=request.birth_time_accuracy != "unknown",
+                    reasons=()
+                    if request.birth_time_accuracy == "exact"
+                    else (f"{request.birth_time_accuracy}_birth_time",),
+                )
+            ),
+            metadata=TransitMetadata(astronomy=meta),
+        )
+    except Exception:
+        raise CalculationUnavailable("Transit calculation unavailable") from None
+
+
 def calculate(request: NatalRequest) -> NatalResult:
     request = NatalRequest.model_validate(request)
     meta = metadata()
@@ -125,25 +206,7 @@ def calculate(request: NatalRequest) -> NatalResult:
     instant = request.timestamp_utc
     try:
         with LOCK:
-            # No external files; reset process-global ephemeris settings before each request.
-            swe.set_ephe_path("/nonexistent/oria-ephemeris")
-            swe.set_tid_acc(swe.TIDAL_MOSEPH)
-            swe.set_delta_t_userdef(swe.DELTAT_AUTOMATIC)
-            tt, ut = swe.utc_to_jd(
-                instant.year,
-                instant.month,
-                instant.day,
-                instant.hour,
-                instant.minute,
-                instant.second + instant.microsecond / 1e6,
-                swe.GREG_CAL,
-            )
-            raw = []
-            for index, body in enumerate(BODIES):
-                values, flags = swe.calc(tt, index, FLAGS)
-                if flags & (swe.FLG_MOSEPH | swe.FLG_SWIEPH | swe.FLG_JPLEPH) != swe.FLG_MOSEPH:
-                    raise CalculationUnavailable("Unexpected ephemeris backend")
-                raw.append((body, values))
+            ut, raw = positions(instant)
             cusps: tuple[float, ...] = ()
             angles = None
             # Placidus is intentionally unsupported at/above 66 degrees in v1.
@@ -157,18 +220,8 @@ def calculate(request: NatalRequest) -> NatalResult:
                 except swe.Error:
                     pass
             planets = tuple(
-                Planet.model_validate(
-                    dict(
-                        body=body,
-                        longitude=values[0] % 360,
-                        sign=SIGNS[int(values[0] % 360 // 30)],
-                        degree_in_sign=values[0] % 30,
-                        longitude_velocity_deg_day=values[3],
-                        retrograde=values[3] < 0,
-                        house=house_for(values[0], cusps),
-                    )
-                )
-                for body, values in raw
+                planet.model_copy(update={"house": house_for(planet.longitude, cusps)})
+                for planet in raw
             )
         reasons = []
         if request.birth_time_accuracy == "approximate":

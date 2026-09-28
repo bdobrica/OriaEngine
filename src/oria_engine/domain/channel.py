@@ -35,5 +35,7 @@ HELP_TEXT = (
     "After accepting, /start resumes birth-profile setup. Send only the requested birth field. "
     "Use /profile for chart status, /retry_profile to retry calculation, "
     "and /edit_profile to edit. "
+    "With an active profile, ask about your natal chart, transits today, "
+    "or transits on YYYY-MM-DD for calculated facts. "
     "Use /privacy to review the policy or stop onboarding."
 )

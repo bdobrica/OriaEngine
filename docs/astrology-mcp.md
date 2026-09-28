@@ -1,7 +1,8 @@
 # Astrology calculation service
 
-Stage 9 provides a stateless FastMCP HTTP service at `/mcp`. It exposes only
-`calculate_natal_chart(request)`, returning a structured `NatalResult`. It has no
+The stateless FastMCP HTTP service at `/mcp` exposes
+`calculate_natal_chart(request)` and the additive Stage 13
+[`calculate_transits(request)`](transits-and-routing.md), returning typed facts. It has no
 database, user identity, LLM, geocoder or outbound service dependency. The [derived-profile flow](astrology-profiles.md) calls it after explicit profile
 confirmation and activates profiles only after successful typed calculation.
 
@@ -30,8 +31,8 @@ The image health check calls readiness. Logs use the existing payload-free JSON
 formatter, and validation/calculation errors returned over MCP are also generic.
 Raw arguments, numerical chart results and library diagnostics are never logged.
 
-`make mcp-test` builds a separate Compose project, waits for readiness, calls both
-known- and unknown-time requests over real HTTP MCP, validates the typed results,
+`make mcp-test` builds a separate Compose project, waits for readiness, calls
+known- and unknown-time natal and transit requests over real HTTP MCP, validates the typed results,
 checks container isolation and removes that project's containers/network. It never
 touches developer database volumes. Docker, build-network access and a C compiler
 in the build image are required; the final image has no compiler. The first build
@@ -91,7 +92,7 @@ reason; its angles/houses are approximate too, not authoritative exact facts.
   the instantaneous derivative of absolute orb is negative. It is null within
   `1e-8` degrees of exactness/separation cusps or `1e-8` degrees/day of zero relative
   motion. This describes local motion, not a prediction of a future crossing.
-  `time_to_exact_hours` is always null and its availability flag false in v1.
+  `time_to_exact_hours` is always null and its availability flag false in natal v1.
 
 Library calls are serialized by a process lock and relevant global settings reset
 per calculation. Numerical/platform differences are tested with a `1e-6` degree

@@ -8,7 +8,9 @@ OriaEngine is designed to build on [SecondContext](https://github.com/bdobrica/S
 
 > **Project status:** design / early MVP implementation.
 > The [SecondContext adapter](docs/second-context.md) supports scoped sessions,
-> service authentication and purge. Active conversation worker wiring remains.
+> service authentication and purge. The worker now provides deterministic
+> [natal/transit fact summaries](docs/transits-and-routing.md).
+> Persona, safety-policy completion and LLM interpretation remain next.
 >
 > Astrology is used here as an interpretive framework. Oria should not be treated as a source of scientific prediction, medical advice, legal advice, financial advice, or other high-stakes professional guidance.
 

@@ -120,7 +120,7 @@ async def test_mcp_contract_and_private_errors(capsys):
     server = create_server()
     async with Client(server) as client:
         tools = await client.list_tools()
-        assert [tool.name for tool in tools] == ["calculate_natal_chart"]
+        assert [tool.name for tool in tools] == ["calculate_natal_chart", "calculate_transits"]
         result = await client.call_tool("calculate_natal_chart", {"request": KNOWN})
         chart = NatalResult.model_validate(result.structured_content)
         assert chart.availability.positions and len(chart.planets) == 10

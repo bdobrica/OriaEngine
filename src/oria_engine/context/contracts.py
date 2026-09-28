@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import Field
 
 from oria_engine.astrology.contracts import NatalResult, WireModel
+from oria_engine.astrology.transits import TransitResult
 
 MemoryKind = Literal[
     "concise_readings",
@@ -49,6 +50,7 @@ class ConversationRequest(WireModel):
         "follow_up"
     )
     natal_facts: NatalResult | None = None
+    transit_facts: TransitResult | None = None
 
 
 class ContextReply(WireModel):
