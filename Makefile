@@ -3,7 +3,7 @@ COMPOSE = docker compose --env-file .env -p oria-local -f deploy/compose.yaml
 
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap env api run format lint typecheck test-unit test-integration verify clean infra-up infra-down infra-reset migrate migrate-down
+.PHONY: help bootstrap env api run format lint typecheck test-unit test-integration verify clean infra-up infra-down infra-reset migrate migrate-down mcp mcp-test test-contract
 
 help: ## Show available development commands
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -20,15 +20,24 @@ api: ## Run the local HTTP gateway on http://127.0.0.1:8001
 run: ## Run the development Telegram bot using long polling
 	$(UV) run python -m oria_engine.telegram
 
+mcp: env ## Build and run the astrology MCP container on its private network
+	$(COMPOSE) --profile astrology up --build -d --wait astrology-mcp
+
+mcp-test: ## Build and smoke-test an isolated astrology MCP container
+	$(UV) run pytest tests/contract/test_astrology_container.py
+
+test-contract: ## Verify astrology schemas, calculations, MCP transport and container
+	$(UV) run pytest tests/contract
+
 infra-up: env ## Start local PostgreSQL and Redis and wait for health checks
 	$(COMPOSE) up -d --wait --wait-timeout 90
 
 infra-down: env ## Stop local infrastructure, preserving PostgreSQL data
-	$(COMPOSE) down
+	$(COMPOSE) --profile astrology down
 
 infra-reset: env ## Delete local PostgreSQL data and stop infrastructure (dev/test only)
 	$(UV) run python -m oria_engine.db.local
-	$(COMPOSE) down --volumes
+	$(COMPOSE) --profile astrology down --volumes
 
 migrate: ## Apply all pending database migrations
 	$(UV) run alembic upgrade head
@@ -54,7 +63,7 @@ test-unit: ## Run the fast unit-test suite
 test-integration: ## Test migrations and transactions using isolated Docker services
 	$(UV) run pytest tests/integration
 
-verify: lint typecheck test-unit test-integration ## Run the required CI verification gate
+verify: lint typecheck test-unit test-integration test-contract ## Run the required CI verification gate
 
 clean: ## Remove generated caches, coverage, and build artifacts
 	find . -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +

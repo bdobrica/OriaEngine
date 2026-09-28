@@ -1,5 +1,14 @@
 # Local development only. No application secrets are passed to these services.
 services:
+  astrology-mcp:
+    profiles: ["astrology"]
+    build:
+      context: ..
+      dockerfile: services/astrology_mcp/Dockerfile
+    networks: [astrology]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
   postgres:
     image: postgres:16-alpine
     environment:
@@ -29,3 +38,6 @@ services:
       start_period: 5s
 volumes:
   postgres_data:
+networks:
+  astrology:
+    internal: true

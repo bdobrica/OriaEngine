@@ -259,6 +259,10 @@ Run the astrology MCP service separately when needed:
 make mcp
 ```
 
+The astrology service exposes deterministic natal calculations on a private
+Compose network. See [Astrology MCP](docs/astrology-mcp.md) for its versioned
+contract, calculation limits, container smoke test and licensing prerequisites.
+
 Production deployments use Telegram webhooks instead of polling.
 
 ## Makefile workflows

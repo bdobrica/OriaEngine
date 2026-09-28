@@ -1,0 +1,27 @@
+{
+  "contract_version": 1,
+  "birth_time_accuracy": "unknown",
+  "planets": [],
+  "angles": null,
+  "house_cusps": [],
+  "aspects": [],
+  "availability": {
+    "positions": false,
+    "houses": false,
+    "angles": false,
+    "aspects": false,
+    "time_to_exact": false,
+    "reasons": ["unknown_birth_time"]
+  },
+  "metadata": {
+    "engine_version": "oria-natal-1",
+    "binding_version": "2.10.3.2",
+    "swiss_ephemeris_version": "2.10.03",
+    "ephemeris": "moshier",
+    "ephemeris_data_version": "bundled-with-swisseph-2.10.03",
+    "zodiac": "tropical",
+    "reference_frame": "apparent-geocentric-ecliptic-of-date",
+    "house_system": "P",
+    "aspect_orb_degrees": 6
+  }
+}

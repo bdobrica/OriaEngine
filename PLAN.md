@@ -551,8 +551,11 @@ profile and timezone snapshot, and clarify unresolved legacy times before use.
 The **astrology calculation engine** runs in a separate Docker container and is
 exposed through FastMCP over the private application network. For the MVP, build
 this engine using **Swiss Ephemeris plus a thin Oria-owned Python calculation
-layer**. No pre-existing calculation implementation or trained ML artifact is
-required from the operator.
+layer**. The Stage 9 implementation uses the pinned built-in Moshier backend,
+explicitly selected with no external ephemeris files or fallback. See
+[Astrology MCP](docs/astrology-mcp.md) for the v1 contract, supported ranges,
+calculation conventions and reference fixtures. No pre-existing calculation
+implementation or trained ML artifact is required from the operator.
 
 The component responsibilities are:
 
@@ -624,8 +627,10 @@ different house system.
 
 ### Initial MCP tools
 
-Stage 9 implements the natal tool below. Stage 13 adds transits using the same
-calculation engine and versioned contract conventions.
+Stage 9 supplies the natal tool below. Stage 10 still owns application invocation,
+derived-profile persistence and activation; Stage 13 adds transits using the same
+calculation engine and versioned contract conventions. Unknown-time v1 results
+contain explicit unavailability rather than a chart at an invented time.
 
 #### `calculate_natal_chart`
 

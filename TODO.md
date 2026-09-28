@@ -393,45 +393,51 @@ calculation conventions. Learned predictive models remain outside the MVP.
 
 ### Tasks
 
-- [ ] Create FastMCP server in `services/astrology_mcp/`.
-- [ ] Add Dockerfile for astrology MCP service.
-- [ ] Add service to Docker Compose private network.
-- [ ] Integrate Swiss Ephemeris through Python bindings and a thin Oria calculation layer.
-- [ ] Pin binding/engine versions and ephemeris backend/data; prevent silent backend fallback.
-- [ ] Document library/binding/data licensing before distribution or public service activation.
-- [ ] Define typed input/output schemas.
-- [ ] Publish supported bodies/dates, zodiac/reference frame, house system, orb rules, units and numerical tolerances.
-- [ ] Implement `calculate_natal_chart`.
-- [ ] Return longitude, zodiac sign/degree, longitude velocity and retrograde state.
-- [ ] Return Ascendant/MC, house cusps and placements only when valid; flag unsupported houses without silently changing systems.
-- [ ] Compute conjunction/opposition/square/trine/sextile with continuous separation, target angle and orb values.
-- [ ] Preserve relative angular velocity and supported applying/separating state with documented conventions.
-- [ ] Include calculation engine, binding, ephemeris/data and contract versions in output.
-- [ ] Include availability/uncertainty flags.
-- [ ] Define explicit approximate/unknown-time behavior without inventing an exact birth instant.
-- [ ] Do not accept Telegram/user identifiers.
-- [ ] Add health/readiness strategy for container orchestration.
-- [ ] Add `make mcp`.
-- [ ] Add `make mcp-test` or include in contract tests.
+- [x] Create FastMCP server in `services/astrology_mcp/`.
+- [x] Add Dockerfile for astrology MCP service.
+- [x] Add service to Docker Compose private network.
+- [x] Integrate Swiss Ephemeris through Python bindings and a thin Oria calculation layer.
+- [x] Pin binding/engine versions and ephemeris backend/data; prevent silent backend fallback.
+- [x] Document library/binding/data licensing before distribution or public service activation.
+- [x] Define typed input/output schemas.
+- [x] Publish supported bodies/dates, zodiac/reference frame, house system, orb rules, units and numerical tolerances.
+- [x] Implement `calculate_natal_chart`.
+- [x] Return longitude, zodiac sign/degree, longitude velocity and retrograde state.
+- [x] Return Ascendant/MC, house cusps and placements only when valid; flag unsupported houses without silently changing systems.
+- [x] Compute conjunction/opposition/square/trine/sextile with continuous separation, target angle and orb values.
+- [x] Preserve relative angular velocity and supported applying/separating state with documented conventions.
+- [x] Include calculation engine, binding, ephemeris/data and contract versions in output.
+- [x] Include availability/uncertainty flags.
+- [x] Define explicit approximate/unknown-time behavior without inventing an exact birth instant.
+- [x] Do not accept Telegram/user identifiers.
+- [x] Add health/readiness strategy for container orchestration.
+- [x] Add `make mcp`.
+- [x] Add `make mcp-test` or include in contract tests.
 
 ### Contract tests
 
-- [ ] Golden natal fixture with known exact-time chart.
-- [ ] Golden fixture with unknown birth time.
-- [ ] Document independent reference values, calculation options and tolerances for golden fixtures; do not use illustrative example JSON as a reference chart.
-- [ ] Cover angle wraparound, orb boundaries, retrograde/stationary motion and unavailable house calculations.
-- [ ] Verify no houses/ascendant are returned as authoritative when time is unknown.
-- [ ] Validate schema stability.
+- [x] Golden natal fixture with known exact-time chart.
+- [x] Golden fixture with unknown birth time.
+- [x] Document independent reference values, calculation options and tolerances for golden fixtures; do not use illustrative example JSON as a reference chart.
+- [x] Cover angle wraparound, orb boundaries, retrograde/stationary motion and unavailable house calculations.
+- [x] Verify no houses/ascendant are returned as authoritative when time is unknown.
+- [x] Validate schema stability.
 
 ### Acceptance criteria
 
-- [ ] OriaEngine can call the container over MCP and receive a typed natal result.
+- [x] OriaEngine can call the container over MCP and receive a typed natal result.
 
 Stage 9 remains focused on natal calculation. Stage 13 adds natal-to-transit
 relationships. Time-to-exact may be unavailable until a validated method exists;
 linear extrapolations must be marked as estimates. Declination parallels and
 contra-parallels are later extensions. No outcome collection or predictive-model
 training is part of this stage.
+
+The v1 service uses the explicit built-in Moshier backend and returns unavailability
+for date-only requests. See [Astrology MCP](docs/astrology-mcp.md) for the contract,
+container workflow and licensing prerequisites. Stage 10 still connects confirmed
+profiles to calculations; public distribution/activation still requires resolving
+the engine and binding license choices.
 
 ---
 
