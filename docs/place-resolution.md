@@ -54,7 +54,7 @@ conversion before encryption. Original local date/time, accuracy and place remai
 unchanged. `utc_instant()` derives UTC for the future calculation boundary; UTC is
 not stored as independent authoritative state. Version 1 ciphertext stays readable;
 its unresolved gap/overlap fails conversion rather than choosing implicitly.
-Stage 10 must route such legacy profiles through clarification before calculation.
+The derived-profile flow routes such legacy profiles through clarification before calculation.
 No PostgreSQL migration is needed: the existing final-profile version constraint
 permits version 2. The internal draft gains an optional occurrence field; older
 drafts without it still load. Older application releases cannot read the new
@@ -83,8 +83,7 @@ This writes `src/oria_engine/data/places.json.gz`, `timezones.zip`, and
 `manifest.json`. Do not hand-edit these generated artifacts. Archive entries and
 gzip timestamps are fixed; matching source files and toolchain reproduce the
 outputs. Review data/version changes with the tests before committing. A timezone
-refresh may change derived instants; Stage 10 must include dataset/rule versions
-when versioning calculations and invalidating derived results.
+refresh may change derived instants; Derived cache validity includes dataset/rule versions and invalidates stale results.
 
 Tests cover country scoping, aliases, candidate bounds, multiple countries, known
 UTC fixtures, northern/southern hemisphere overlaps and gaps, a half-hour clock

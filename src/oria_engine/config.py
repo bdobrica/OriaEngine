@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     second_context_base_url: str = "http://localhost:8080"
     second_context_bearer_token: SecretStr = SecretStr("")
     astrology_mcp_url: str = "http://localhost:8000/mcp"
-    oria_policy_version: str = "2026-09-28.1"
+    oria_policy_version: str = "2026-09-28.2"
 
     @model_validator(mode="after")
     def validate_configuration(self) -> Self:

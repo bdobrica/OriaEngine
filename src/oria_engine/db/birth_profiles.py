@@ -2,10 +2,10 @@
 
 from uuid import UUID, uuid4
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from oria_engine.db.models import BirthProfile, User
+from oria_engine.db.models import AstrologyProfile, BirthProfile, User
 from oria_engine.db.repositories import ConsentRepository, UserRepository, UserUnavailableError
 from oria_engine.domain.birth_profile import BirthProfilePayload
 from oria_engine.privacy.encryption import ProfileEncryption
@@ -57,6 +57,9 @@ class BirthProfileRepository:
         row = await self._row(user_id)
         profile_id = row.id if row is not None else uuid4()
         encrypted = self.encryption.encrypt(payload, user_id=user_id, profile_id=profile_id)
+        await self.session.execute(
+            delete(AstrologyProfile).where(AstrologyProfile.user_id == user_id)
+        )
         if row is None:
             row = BirthProfile(id=profile_id, user_id=user_id)
             self.session.add(row)

@@ -541,8 +541,8 @@ IANA timezone assignments, and a fixed TZif snapshot. Repeated local times requi
 an explicit occurrence choice; gaps require correction or unknown time. Original
 local values are preserved in encrypted profile schema 2; schema 1 remains readable.
 See [place resolution](docs/place-resolution.md) for coverage, compatibility and
-dataset generation. Stage 10 must version derived calculations against the source
-profile and timezone snapshot, and clarify unresolved legacy times before use.
+dataset generation. Derived calculations are versioned against the source profile
+and timezone snapshot; unresolved legacy times require clarification before use.
 
 ---
 
@@ -627,8 +627,8 @@ different house system.
 
 ### Initial MCP tools
 
-Stage 9 supplies the natal tool below. Stage 10 still owns application invocation,
-derived-profile persistence and activation; Stage 13 adds transits using the same
+The natal tool below is connected to confirmed profiles through the
+[derived-profile flow](docs/astrology-profiles.md), including persistence and activation; Stage 13 adds transits using the same
 calculation engine and versioned contract conventions. Unknown-time v1 results
 contain explicit unavailability rather than a chart at an invented time.
 
@@ -1119,7 +1119,7 @@ SECOND_CONTEXT_BASE_URL=http://secondcontext:8080
 SECOND_CONTEXT_BEARER_TOKEN=
 
 ASTROLOGY_MCP_URL=http://astrology-mcp:8000/mcp
-ORIA_POLICY_VERSION=2026-09-28.1
+ORIA_POLICY_VERSION=2026-09-28.2
 ```
 
 Production secrets must come from the deployment platform's secret mechanism rather than committed files.
@@ -1138,11 +1138,12 @@ For the staged demo, consent acceptance starts or resumes deterministic onboardi
 Encrypted drafts preserve date/time progress and candidate selection; confirmed
 profiles use the consent-checked storage repository. Live polling resolves local
 places through `PlaceResolver`, clarifies clock changes, and saves confirmed profiles.
-Calculation remains the next demo boundary (Stages 9–10).
-Keep disclosure honest about unavailable saved-profile and
-deletion controls, and bump the policy version for the collection disclosure.
-All draft/profile writes check current consent under the user lock. Stage 10
-activation must retain that check. See [onboarding](docs/onboarding.md),
+Confirmed profiles now calculate through MCP and retain a versioned derived cache.
+/profile reports cache validity; /edit_profile reuses field editors and confirmation.
+Failed calculations are recoverable with /retry_profile. The next stage moves work
+into the Redis worker queue (Stage 11); interpretation still requires later stages.
+Full profile display and deletion remain unavailable. The calculation disclosure uses
+policy version 2026-09-28.2. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),
 [birth-profile storage](docs/birth-profiles.md) and [consent flow](docs/consent-flow.md).
 
 The Makefile is the supported developer interface.

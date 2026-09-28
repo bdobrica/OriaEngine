@@ -1,0 +1,9 @@
+# Explicit local-only access for the host-run polling process.
+services:
+  astrology-mcp:
+    networks: [polling]
+    ports:
+      - "127.0.0.1:${ASTROLOGY_MCP_PORT:-8000}:8000"
+networks:
+  # Docker cannot publish ports when a container has only internal networks.
+  polling: {}

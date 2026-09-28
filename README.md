@@ -199,12 +199,16 @@ SECOND_CONTEXT_BASE_URL=http://localhost:8080
 SECOND_CONTEXT_BEARER_TOKEN=
 
 ASTROLOGY_MCP_URL=http://localhost:8000/mcp
-ORIA_POLICY_VERSION=2026-09-28.1
+ORIA_POLICY_VERSION=2026-09-28.2
 ```
 
 Use a generated development key for `PROFILE_ENCRYPTION_KEY`. Production deployments must provide secrets through the deployment platform rather than a committed environment file.
 
 ## Run locally
+
+Confirmed birth profiles now calculate and cache a natal result. See
+[derived profiles](docs/astrology-profiles.md) for `make mcp-local`, migration and
+policy setup, chart status, retry and editing commands.
 
 The HTTP skeleton is available now with `make api` at
 `http://127.0.0.1:8001/healthz`; it needs no running dependencies or secrets in

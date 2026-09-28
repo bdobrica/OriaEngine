@@ -18,7 +18,8 @@ write drafts or profiles.
 | `BirthPlaceConfirmation` | Select a candidate, or request another city |
 | `BirthTimeClarification` | Select an occurrence of a repeated time, correct a gap, or choose unknown |
 | `ProfileConfirmation` | Review summary; confirm or edit date, time or place |
-| `ComputingProfile` | Confirmed encrypted profile awaits the later calculation stage |
+| `ComputingProfile` | Confirmed encrypted profile awaits successful calculation |
+| `Active` | Valid derived result cached; interpretation arrives in later stages |
 
 Numeric slash dates, impossible/future dates, offsets, informal time phrases and
 extra text are rejected with a focused retry. Unknown time stores no invented
@@ -34,8 +35,10 @@ and stale callbacks do not become birth input. Editing clears only the selected
 field and invalidates any time-occurrence selection. Confirmation creates the strict
 `BirthProfilePayload` through the existing
 consent-checked repository and removes the draft atomically. A confirmed profile
-is not marked active and does not trigger an unavailable calculation service.
-Saved-profile inspection/editing and deletion remain later stages.
+calls MCP and becomes active only on success. Failed calculation
+retains the encrypted profile for retry. Saved-profile editing reuses these editors;
+/profile reports calculation status. Full profile display and deletion remain later
+stages. See [derived profiles](astrology-profiles.md).
 
 ## Durable progress and privacy
 
@@ -67,13 +70,13 @@ Stage 11. No exactly-once Telegram delivery is claimed.
 `domain.places.PlaceResolver` is the local async interface for city/country lookup.
 Polling uses `LocalPlaceResolver` with bundled GeoNames data and historical
 timezone rules. See [place resolution](place-resolution.md) for coverage, time
-clarification and dataset generation. Confirmed profiles await Stage 10 calculation.
+clarification and dataset generation. Confirmed profiles calculate through MCP.
+Start `make mcp-local` for host polling.
 
 Before `make run`, apply `make migrate`, retain a stable `PROFILE_ENCRYPTION_KEY`,
-and set `ORIA_POLICY_VERSION=2026-09-28.1` in the ignored local `.env`. Polling rejects
-the previous defaults `2026-09-01` and `2026-09-28`. Operators using custom policy
-versions must also bump
-their version when deploying the updated collection disclosure. No local secrets
+and set `ORIA_POLICY_VERSION=2026-09-28.2` in the ignored local `.env`. Polling rejects
+the previous defaults `2026-09-01`, `2026-09-28` and `2026-09-28.1`. Operators using
+custom policy versions must also bump their version for the calculation disclosure. No local secrets
 or developer database are modified by implementation tests.
 
 `make verify` tests date/time modes and rejection, schema restrictions, encryption

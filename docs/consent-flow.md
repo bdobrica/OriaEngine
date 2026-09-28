@@ -9,7 +9,7 @@ transaction. Replies are sent after commit so delivery failure cannot undo a dec
 ## Disclosure and decisions
 
 The initial copy is `DISCLAIMER` in `domain/consent.py`, using
-`ORIA_POLICY_VERSION` (default `2026-09-28.1`). It covers AI identity, interpretive
+`ORIA_POLICY_VERSION` (default `2026-09-28.2`). It covers AI identity, interpretive
 astrology, high-stakes limitations, birth date/time/place, chart purpose and future
 storage, prohibited unrelated PII, planned profile/edit/delete controls, and adult
 use. **I'm 18+ and agree** confirms adulthood and acceptance together; it is a
@@ -45,9 +45,9 @@ requires a fresh acceptance even after a previous decline or acceptance.
 
 The Telegram flow persists no raw messages. After consent, [onboarding](onboarding.md)
 stores strict encrypted drafts and confirmed [birth profiles](birth-profiles.md),
-with current-consent checks under the user lock for every write. Stage 10 adds
-activation with the same transactional consent check. Saved-profile/privacy/deletion
-workflows remain stages 17–18. `ConsentFlow` without an injected onboarding handler
+with current-consent checks under the user lock for every write.
+[Derived-profile activation](astrology-profiles.md) retains that check. Full profile
+display, expanded privacy controls and deletion remain stages 17–18. `ConsentFlow` without an injected onboarding handler
 retains the consent-only paused response for isolated use/tests; polling wires the
 onboarding handler and requires encryption configuration.
 

@@ -2,9 +2,8 @@
 
 Stage 9 provides a stateless FastMCP HTTP service at `/mcp`. It exposes only
 `calculate_natal_chart(request)`, returning a structured `NatalResult`. It has no
-database, user identity, LLM, geocoder or outbound service dependency. Stage 10
-will add the application client and profile activation; this stage does not change
-Telegram onboarding or send stored profiles to the calculator.
+database, user identity, LLM, geocoder or outbound service dependency. The [derived-profile flow](astrology-profiles.md) calls it after explicit profile
+confirmation and activates profiles only after successful typed calculation.
 
 ## Run and verify
 
@@ -21,7 +20,9 @@ their existing behavior. The container runs as UID/GID 65532 with a read-only
 filesystem, no application secrets, no volumes, no published ports and a private
 internal network. An application container must join the same `astrology` network
 and use `http://astrology-mcp:8000/mcp`. Do not expose this unauthenticated endpoint
-publicly. `make infra-down` removes the local project's containers.
+publicly. For host-run polling, `make mcp-local` explicitly adds loopback port
+8000 through `deploy/compose.polling.yaml`; set `ASTROLOGY_MCP_URL` accordingly.
+`make infra-down` removes the local project's containers.
 
 Liveness is `/healthz`. Readiness at `/readyz` verifies pinned dependency versions
 and executes a synthetic known-time calculation; failures return a generic 503.

@@ -8,8 +8,8 @@
 2. Run `make env` and put the token in `TELEGRAM_BOT_TOKEN` in your local `.env`.
    Never commit the token or paste it into logs, issues, or test fixtures.
 3. Configure `DATABASE_URL`, a stable `PROFILE_ENCRYPTION_KEY`, and
-   `ORIA_POLICY_VERSION=2026-09-28.1` (bump custom versions too). Run `make infra-up`
-   and `make migrate` to apply revision `0004`, then
+   `ORIA_POLICY_VERSION=2026-09-28.2` (bump custom versions too). Run `make infra-up`
+   and `make migrate` to apply revision `0005`, run `make mcp-local`, then
    `make run` with `APP_ENV=development`. Only one polling process can use
    a bot token at a time ([aiogram polling documentation](https://docs.aiogram.dev/en/latest/dispatcher/long_polling.html)).
 4. Open your development bot's private chat and send `/start`, then `/help`.
@@ -18,7 +18,10 @@
    and asks for a birth date. Use synthetic `1990-04-13`, then `approximate 03:42`
    (or `unknown`). Enter `Cluj-Napoca, RO`, select the candidate, and review the
    profile summary and UTC conversion. Try editing a field before confirming.
-   Confirmation saves the encrypted profile; calculation is still pending.
+   Confirmation saves the encrypted profile and calculates the chart. `/profile` reports
+   cached chart status; `/edit_profile` starts corrections and `/retry_profile` retries
+   a failed or outdated calculation. Set `ASTROLOGY_MCP_URL=http://localhost:8000/mcp`
+   for the default loopback port.
    For a separate synthetic user, try `2020-11-01`, `01:30`, `New York City, US`:
    selecting the city should ask for the first/second occurrence or unknown time.
    `/privacy` lets you decline even after acceptance.

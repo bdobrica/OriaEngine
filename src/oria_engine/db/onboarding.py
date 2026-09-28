@@ -6,7 +6,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from oria_engine.db.birth_profiles import ConsentRequiredError
-from oria_engine.db.models import OnboardingProgress, User
+from oria_engine.db.models import AstrologyProfile, OnboardingProgress, User
 from oria_engine.db.repositories import ConsentRepository, UserRepository, UserUnavailableError
 from oria_engine.domain.onboarding_data import OnboardingDraft
 from oria_engine.privacy.encryption import ProfileEncryption
@@ -40,6 +40,9 @@ class OnboardingRepository:
         consent = await ConsentRepository(self.session).current(user_id, self.policy_version)
         if consent is None or consent.id != draft.consent_id:
             raise ConsentRequiredError("Current consent required")
+        await self.session.execute(
+            delete(AstrologyProfile).where(AstrologyProfile.user_id == user_id)
+        )
         row = await self.session.get(OnboardingProgress, user_id)
         if row is None:
             row = OnboardingProgress(user_id=user_id)

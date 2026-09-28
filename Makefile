@@ -3,7 +3,7 @@ COMPOSE = docker compose --env-file .env -p oria-local -f deploy/compose.yaml
 
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap env api run format lint typecheck test-unit test-integration verify clean infra-up infra-down infra-reset migrate migrate-down mcp mcp-test test-contract
+.PHONY: help bootstrap env api run format lint typecheck test-unit test-integration verify clean infra-up infra-down infra-reset migrate migrate-down mcp mcp-local mcp-test test-contract
 
 help: ## Show available development commands
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -23,6 +23,9 @@ run: ## Run the development Telegram bot using long polling
 mcp: env ## Build and run the astrology MCP container on its private network
 	$(COMPOSE) --profile astrology up --build -d --wait astrology-mcp
 
+mcp-local: env ## Start MCP with loopback access for host-run Telegram polling
+	$(COMPOSE) -f deploy/compose.polling.yaml --profile astrology up --build -d --wait astrology-mcp
+
 mcp-test: ## Build and smoke-test an isolated astrology MCP container
 	$(UV) run pytest tests/contract/test_astrology_container.py
 
@@ -33,11 +36,11 @@ infra-up: env ## Start local PostgreSQL and Redis and wait for health checks
 	$(COMPOSE) up -d --wait --wait-timeout 90
 
 infra-down: env ## Stop local infrastructure, preserving PostgreSQL data
-	$(COMPOSE) --profile astrology down
+	$(COMPOSE) -f deploy/compose.polling.yaml --profile astrology down
 
 infra-reset: env ## Delete local PostgreSQL data and stop infrastructure (dev/test only)
 	$(UV) run python -m oria_engine.db.local
-	$(COMPOSE) --profile astrology down --volumes
+	$(COMPOSE) -f deploy/compose.polling.yaml --profile astrology down --volumes
 
 migrate: ## Apply all pending database migrations
 	$(UV) run alembic upgrade head

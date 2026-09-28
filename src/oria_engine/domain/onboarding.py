@@ -5,6 +5,8 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from oria_engine.astrology.client import AstrologyClient, AstrologyUnavailable
+from oria_engine.db.astrology_profiles import AstrologyProfileRepository
 from oria_engine.db.birth_profiles import BirthProfileRepository, ConsentRequiredError
 from oria_engine.db.onboarding import OnboardingRepository
 from oria_engine.db.repositories import ConsentRepository, UserRepository, UserUnavailableError
@@ -118,7 +120,7 @@ def reply_for(draft: OnboardingDraft, *, prefix: str = "") -> ConsentReply:
             f"Local time: {time_text}\nPlace: {draft.birth_place.display_name}\n"
             f"Region: {draft.birth_place.region or draft.birth_place.city}, "
             f"{draft.birth_place.country_code}\nTimezone: {draft.birth_place.timezone}\n"
-            "Chart calculation will follow when available."
+            "Confirm to calculate your chart. Unknown time limits the available facts."
         )
         instant = draft.profile().utc_instant()
         if instant is not None:
@@ -134,11 +136,16 @@ def reply_for(draft: OnboardingDraft, *, prefix: str = "") -> ConsentReply:
 
 class OnboardingFlow:
     def __init__(
-        self, encryption: ProfileEncryption, policy_version: str, resolver: PlaceResolver
+        self,
+        encryption: ProfileEncryption,
+        policy_version: str,
+        resolver: PlaceResolver,
+        astrology: AstrologyClient | None = None,
     ) -> None:
         self.encryption = encryption
         self.policy_version = policy_version
         self.resolver = resolver
+        self.astrology = astrology
 
     async def handle(
         self,
@@ -159,8 +166,25 @@ class OnboardingFlow:
         )
         draft = await drafts.get(user_id)
         if draft is None:
-            if await profiles.get(user_id) is not None:
-                return ConsentReply(State.COMPUTING_PROFILE, SAVED_TEXT)
+            profile = await profiles.get(user_id)
+            if profile is not None:
+                needs_clarification = False
+                try:
+                    profile.utc_instant()
+                except ValueError:
+                    needs_clarification = True
+                if command in {"edit_profile", "edit-profile"} or needs_clarification:
+                    draft = OnboardingDraft.model_validate(
+                        {
+                            **profile.model_dump(exclude={"schema_version"}),
+                            "consent_id": consent.id,
+                        }
+                    )
+                    await drafts.save(user_id, draft)
+                    return reply_for(draft)
+                return await self.saved_reply(
+                    session, user_id, profiles, calculate=command == "retry_profile"
+                )
             draft = OnboardingDraft(consent_id=consent.id)
             await drafts.save(user_id, draft)
         elif draft.consent_id != consent.id:
@@ -179,7 +203,7 @@ class OnboardingFlow:
             if state == State.PROFILE_CONFIRMATION and action == "confirm":
                 await profiles.save(user_id, draft.profile())
                 await drafts.clear(user_id)
-                return ConsentReply(State.COMPUTING_PROFILE, SAVED_TEXT)
+                return await self.saved_reply(session, user_id, profiles, calculate=True)
             editable = state in {State.PROFILE_CONFIRMATION, State.BIRTH_TIME_CLARIFICATION}
             if editable and action == "edit-date":
                 draft = draft.model_copy(update={"birth_date": None})
@@ -280,3 +304,44 @@ class OnboardingFlow:
             draft = draft.model_copy(update={"birth_time_occurrence": None})
         await drafts.save(user_id, draft)
         return reply_for(draft)
+
+    async def saved_reply(
+        self,
+        session: AsyncSession,
+        user_id: UUID,
+        profiles: BirthProfileRepository,
+        *,
+        calculate: bool,
+    ) -> ConsentReply:
+        if self.astrology is None:
+            return ConsentReply(State.COMPUTING_PROFILE, SAVED_TEXT)
+        derived = AstrologyProfileRepository(session, policy_version=self.policy_version)
+        result = await derived.get(user_id)
+        if result is None and calculate:
+            try:
+                result = await derived.calculate(user_id, profiles, self.astrology)
+            except AstrologyUnavailable:
+                return ConsentReply(
+                    State.COMPUTING_PROFILE,
+                    "Your encrypted birth profile is saved. Chart calculation failed. "
+                    "Use /retry_profile to try again, or /edit_profile to correct the details. "
+                    "Supported birth years are 1800–2399.",
+                )
+        if result is None:
+            return ConsentReply(
+                State.COMPUTING_PROFILE,
+                "Your birth profile is saved; a current derived chart is not available. "
+                "Use /retry_profile to calculate it or /edit_profile to correct your details.",
+            )
+        if result.birth_time_accuracy == "unknown":
+            text = (
+                "Your profile is active. The saved calculation records unknown time; "
+                "planetary positions, houses, angles and aspects are unavailable."
+            )
+        else:
+            text = "Your profile is active. A valid derived natal chart is saved."
+            if result.birth_time_accuracy == "approximate":
+                text += " Chart facts use your approximate birth time."
+            if not result.availability.houses:
+                text += " Houses and angles are unavailable for this calculation."
+        return ConsentReply(State.ACTIVE, text + " Use /edit_profile to change birth details.")

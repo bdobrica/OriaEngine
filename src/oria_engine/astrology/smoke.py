@@ -2,9 +2,8 @@
 
 import asyncio
 
-from fastmcp import Client
-
-from oria_engine.astrology.contracts import NatalRequest, NatalResult
+from oria_engine.astrology.client import FastMCPAstrologyClient
+from oria_engine.astrology.contracts import NatalRequest
 
 
 async def smoke() -> None:
@@ -16,24 +15,18 @@ async def smoke() -> None:
             longitude=0,
         )
     )
-    async with Client("http://astrology-mcp:8000/mcp", timeout=20) as client:
-        result = await client.call_tool(
-            "calculate_natal_chart", {"request": request.model_dump(mode="json")}
-        )
-        chart = NatalResult.model_validate(result.structured_content)
-        assert len(chart.planets) == 10 and chart.availability.houses
-        assert request.timestamp_utc is not None
-        unknown = NatalRequest(
-            birth_time_accuracy="unknown",
-            local_birth_date=request.timestamp_utc.date(),
-            latitude=51.5,
-            longitude=0,
-        )
-        result = await client.call_tool(
-            "calculate_natal_chart", {"request": unknown.model_dump(mode="json")}
-        )
-        chart = NatalResult.model_validate(result.structured_content)
-        assert not chart.planets and chart.angles is None
+    client = FastMCPAstrologyClient("http://astrology-mcp:8000/mcp")
+    chart = await client.calculate_natal_chart(request)
+    assert len(chart.planets) == 10 and chart.availability.houses
+    assert request.timestamp_utc is not None
+    unknown = NatalRequest(
+        birth_time_accuracy="unknown",
+        local_birth_date=request.timestamp_utc.date(),
+        latitude=51.5,
+        longitude=0,
+    )
+    chart = await client.calculate_natal_chart(unknown)
+    assert not chart.planets and chart.angles is None
     print("Typed natal MCP checks passed")
 
 

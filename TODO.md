@@ -254,8 +254,7 @@ Require explicit consent before collecting or persisting birth data.
 - [x] No code path creates an active birth profile for a user without current consent.
 
 Acceptance starts or resumes deterministic collection with encrypted drafts.
-Draft/profile writes check current consent transactionally; activation remains
-Stage 10 and must retain that check. See [consent flow](docs/consent-flow.md).
+Draft/profile writes and chart activation check current consent transactionally. See [consent flow](docs/consent-flow.md).
 The live consent-button smoke test in [Telegram setup](docs/telegram.md) remains
 an operator check; automated tests use synthetic updates and isolated PostgreSQL.
 
@@ -343,7 +342,7 @@ Collect only the allowed birth data through deterministic application states.
 Encrypted drafts survive restart; final profiles require explicit confirmation.
 See [onboarding](docs/onboarding.md). Live polling now uses the bundled gazetteer
 and historical timezone rules; tests also retain isolated deterministic fixtures.
-Stage 10 supplies calculation/activation; saved-profile controls remain Stage 17.
+Calculation and saved-profile editing are available; full display/privacy controls remain Stage 17.
 
 ---
 
@@ -374,9 +373,9 @@ Turn city/country and local birth time into deterministic calculation inputs wit
 
 See [place resolution](docs/place-resolution.md) for dataset coverage and refresh,
 time clarification, and profile schema compatibility. Live polling can now save a
-confirmed profile; Stages 9–10 remain the calculation boundary. Before calculation,
-Stage 10 must clarify unresolved legacy profile times and version derived data
-against the bundled timezone rules. Live Telegram smoke testing remains an operator check.
+confirmed profile. The derived-profile flow clarifies unresolved legacy times before
+calculation and versions cached results against the bundled timezone rules.
+Live Telegram smoke testing remains an operator check.
 
 ---
 
@@ -435,8 +434,9 @@ training is part of this stage.
 
 The v1 service uses the explicit built-in Moshier backend and returns unavailability
 for date-only requests. See [Astrology MCP](docs/astrology-mcp.md) for the contract,
-container workflow and licensing prerequisites. Stage 10 still connects confirmed
-profiles to calculations; public distribution/activation still requires resolving
+container workflow and licensing prerequisites. Confirmed profiles now use the
+[derived-profile flow](docs/astrology-profiles.md); public distribution/activation
+still requires resolving
 the engine and binding license choices.
 
 ---
@@ -449,28 +449,28 @@ Compute and cache the user's natal chart after profile confirmation.
 
 ### Tasks
 
-- [ ] Add `astrology_profiles` table.
-- [ ] Store calculation engine and ephemeris/data versions.
-- [ ] Store source profile version/hash.
-- [ ] Store derived structured result in JSONB or defined relational form.
-- [ ] Implement `AstrologyClient` interface.
-- [ ] Implement FastMCP client adapter.
-- [ ] On profile confirmation, invoke `calculate_natal_chart`.
-- [ ] Mark profile active only after successful calculation.
-- [ ] If calculation fails, keep birth profile recoverable and report a retryable error.
-- [ ] Invalidate derived profile after any birth-profile edit.
-- [ ] Recompute after edits.
+- [x] Add `astrology_profiles` table.
+- [x] Store calculation engine and ephemeris/data versions.
+- [x] Store source profile version/hash.
+- [x] Store derived structured result in JSONB or defined relational form.
+- [x] Implement `AstrologyClient` interface.
+- [x] Implement FastMCP client adapter.
+- [x] On profile confirmation, invoke `calculate_natal_chart`.
+- [x] Mark profile active only after successful calculation.
+- [x] If calculation fails, keep birth profile recoverable and report a retryable error.
+- [x] Invalidate derived profile after any birth-profile edit.
+- [x] Recompute after edits.
 
 ### Tests
 
-- [ ] Successful calculation persistence.
-- [ ] Failed calculation does not corrupt previous state.
-- [ ] Profile edit invalidates result.
-- [ ] Engine-version mismatch can trigger recomputation.
+- [x] Successful calculation persistence.
+- [x] Failed calculation does not corrupt previous state.
+- [x] Profile edit invalidates result.
+- [x] Engine-version mismatch can trigger recomputation.
 
 ### Acceptance criteria
 
-- [ ] `/profile` can report that a valid derived natal chart exists without recalculating it on every request.
+- [x] `/profile` can report that a valid derived natal chart exists without recalculating it on every request.
 
 ---
 
@@ -702,9 +702,9 @@ Give users direct control over stored information.
 - [ ] Implement `/profile`.
 - [ ] Show date/time accuracy/place in a concise summary.
 - [ ] Do not show internal Telegram or DB identifiers.
-- [ ] Implement `/edit-profile`.
-- [ ] Reuse deterministic onboarding field editors.
-- [ ] Recompute chart after confirmed changes.
+- [x] Implement saved-profile editing (`/edit_profile` in Telegram).
+- [x] Reuse deterministic onboarding field editors.
+- [x] Recompute chart after confirmed changes.
 - [ ] Implement `/privacy`.
 - [ ] Ensure `/privacy` describes actual behavior, not intended behavior.
 - [ ] Add `/help` final content.

@@ -6,6 +6,7 @@ import sys
 
 from aiogram import Bot
 
+from oria_engine.astrology.client import FastMCPAstrologyClient
 from oria_engine.config import ConfigurationError, Settings, load_settings
 from oria_engine.db.session import Database
 from oria_engine.domain.consent import ConsentFlow
@@ -24,9 +25,9 @@ async def run_polling(settings: Settings) -> None:
     if not settings.telegram_bot_token.get_secret_value():
         raise ConfigurationError("Local polling requires TELEGRAM_BOT_TOKEN; see docs/telegram.md")
     encryption = ProfileEncryption(settings)
-    if settings.oria_policy_version in {"2026-09-01", "2026-09-28"}:
+    if settings.oria_policy_version in {"2026-09-01", "2026-09-28", "2026-09-28.1"}:
         raise ConfigurationError(
-            "Set ORIA_POLICY_VERSION=2026-09-28.1 for the collection disclosure"
+            "Set ORIA_POLICY_VERSION=2026-09-28.2 for the calculation disclosure"
         )
     resolver = LocalPlaceResolver()
     bot = Bot(token=settings.telegram_bot_token.get_secret_value())
@@ -43,7 +44,12 @@ async def run_polling(settings: Settings) -> None:
             ConsentFlow(
                 database,
                 settings.oria_policy_version,
-                OnboardingFlow(encryption, settings.oria_policy_version, resolver),
+                OnboardingFlow(
+                    encryption,
+                    settings.oria_policy_version,
+                    resolver,
+                    FastMCPAstrologyClient(settings.astrology_mcp_url),
+                ),
             ),
         )
         logger.info("application_started")

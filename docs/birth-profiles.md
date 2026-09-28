@@ -51,7 +51,8 @@ policy_version=settings.oria_policy_version)` inside the caller's transaction.
 UUID. It locks the active user row and checks current consent before encryption
 and persistence, serializing with consent withdrawal and other profile writes.
 The same UUID and creation timestamp survive updates; ciphertext and update
-timestamp change. It flushes but never commits. No profile is marked active yet.
+timestamp change. It invalidates any derived result, flushes, and never commits. Activation requires
+a current [derived result](astrology-profiles.md) after successful calculation.
 
 `get(user_id, profile_id=None)` always scopes reads to an active owner; a supplied
 profile UUID is an additional filter. It returns the validated decrypted payload
@@ -76,5 +77,5 @@ Tests use synthetic profiles and newly generated keys in isolated infrastructure
 
 Deterministic [onboarding](onboarding.md) now connects collection to this repository.
 The local resolver supplies normalized places and asks for clock-change clarification.
-Stage 10 must check consent and confirmation before
-activation and invalidate derived results on edits.
+The derived-profile flow checks consent and confirmation before activation and
+invalidates cached results on edits.

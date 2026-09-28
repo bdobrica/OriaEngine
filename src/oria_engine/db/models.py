@@ -1,9 +1,11 @@
 """Canonical identity and consent state; no Telegram profile metadata."""
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, UniqueConstraint, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from oria_engine.db.session import Base
@@ -103,3 +105,21 @@ class OnboardingProgress(Base):
     encryption_key_version: Mapped[str] = mapped_column(String(64))
     schema_version: Mapped[int]
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AstrologyProfile(Base):
+    """Disposable user-scoped cache; validity is checked against source and versions."""
+
+    __tablename__ = "astrology_profiles"
+
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    source_profile_id: Mapped[UUID] = mapped_column(
+        ForeignKey("birth_profiles.id", ondelete="CASCADE")
+    )
+    source_updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    source_schema_version: Mapped[int]
+    calculation_versions: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    result: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    calculated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

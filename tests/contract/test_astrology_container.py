@@ -1,10 +1,14 @@
 """Real private-network HTTP MCP smoke test; isolated from developer services."""
 
+import asyncio
 import json
 import os
 import subprocess
 from pathlib import Path
 from uuid import uuid4
+
+from oria_engine.astrology.client import FastMCPAstrologyClient
+from oria_engine.astrology.contracts import NatalRequest
 
 
 def test_astrology_container():
@@ -42,6 +46,29 @@ def test_astrology_container():
         assert details["HostConfig"]["ReadonlyRootfs"]
         assert details["Config"]["User"] == "65532:65532"
         compose("exec", "-T", "astrology-mcp", "python", "-m", "oria_engine.astrology.smoke")
+        # The explicit polling override remains loopback-only and is reachable from the host.
+        command[command.index("--profile") : command.index("--profile")] = [
+            "-f",
+            str(root / "deploy/compose.polling.yaml"),
+        ]
+        env["ASTROLOGY_MCP_PORT"] = "0"
+        compose("up", "-d", "--wait", "--wait-timeout", "90", "astrology-mcp")
+        address = compose("port", "astrology-mcp", "8000").strip()
+        assert address.startswith("127.0.0.1:")
+        client = FastMCPAstrologyClient(f"http://{address}/mcp")
+        result = asyncio.run(
+            client.calculate_natal_chart(
+                NatalRequest.model_validate(
+                    {
+                        "birth_time_accuracy": "unknown",
+                        "local_birth_date": "2000-01-01",
+                        "latitude": 51.5,
+                        "longitude": 0,
+                    }
+                )
+            )
+        )
+        assert not result.planets
         logs = compose("logs", "astrology-mcp")
         assert "2000-01-01" not in logs and "51.5" not in logs
     finally:

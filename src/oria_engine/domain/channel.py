@@ -33,6 +33,7 @@ class ChannelClient(Protocol):
 HELP_TEXT = (
     "Available commands: /start, /help and /privacy. Use /start to review consent. "
     "After accepting, /start resumes birth-profile setup. Send only the requested birth field. "
-    "Local place lookup is available; chart calculation is coming next. "
+    "Use /profile for chart status, /retry_profile to retry calculation, "
+    "and /edit_profile to edit. "
     "Use /privacy to review the policy or stop onboarding."
 )

@@ -131,7 +131,7 @@ def create_dispatcher(client: ChannelClient, flow: ConsentFlow) -> Dispatcher:
         # handle() commits before network I/O; failed delivery cannot undo consent.
         await client.send_text(channel_message.provider_chat_id, reply.text, buttons=reply.buttons)
 
-    @router.message(Command("start", "help", "privacy"))
+    @router.message(Command("start", "help", "privacy", "profile", "edit_profile", "retry_profile"))
     async def command_handler(
         message: Message, channel_message: ChannelMessage, command: CommandObject
     ) -> None:
