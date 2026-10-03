@@ -23,9 +23,15 @@ async def run_polling(settings: Settings) -> None:
     if not settings.telegram_bot_token.get_secret_value():
         raise ConfigurationError("Local polling requires TELEGRAM_BOT_TOKEN; see docs/telegram.md")
     encryption = ProfileEncryption(settings)
-    if settings.oria_policy_version in {"2026-09-01", "2026-09-28", "2026-09-28.1", "2026-09-28.2"}:
+    if settings.oria_policy_version in {
+        "2026-09-01",
+        "2026-09-28",
+        "2026-09-28.1",
+        "2026-09-28.2",
+        "2026-09-28.3",
+    }:
         raise ConfigurationError(
-            "Set ORIA_POLICY_VERSION=2026-09-28.3 for the queued processing disclosure"
+            "Set ORIA_POLICY_VERSION=2026-10-03 for the conversation storage disclosure"
         )
     publisher = Publisher(settings)
     bot = Bot(token=settings.telegram_bot_token.get_secret_value())

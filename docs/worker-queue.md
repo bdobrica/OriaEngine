@@ -20,7 +20,7 @@ flowchart LR
 ## Run the demo
 
 Use identical `.env` configuration for polling and workers. Set
-`ORIA_POLICY_VERSION=2026-09-28.3` (bump custom versions too), retain the encryption
+`ORIA_POLICY_VERSION=2026-10-03` (bump custom versions too), retain the encryption
 key, and configure `DATABASE_URL`, `REDIS_URL`, `TELEGRAM_BOT_TOKEN` and
 `ASTROLOGY_MCP_URL=http://localhost:8000/mcp`.
 
@@ -125,8 +125,9 @@ Do not export encrypted envelopes or routing IDs when investigating errors.
 
 The baseline keeps bounded external calls under the owner database lock, and stores
 short-lived encrypted replies in the inbound row rather than a separate outbox table.
-Rate limits, fair scheduling at large queue depth, production containers, metrics,
-SecondContext and LLM interpretation remain later stages. This stage introduces no
+Rate limits, fair scheduling at large queue depth, production containers and metrics
+remain later stages. [Stage 16](conversation-worker.md) adds guarded SecondContext
+interpretation and documents at-least-once remote effects. This stage introduces no
 new published wire contract and does not change astrology MCP v1.
 
 Automated checks use isolated PostgreSQL/Redis, synthetic identities and mocked

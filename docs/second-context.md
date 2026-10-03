@@ -59,15 +59,14 @@ Stage 12 is implemented, including the upstream service-auth/purge contract and
 real PostgreSQL/Qdrant tests with synthetic LLM responses. Stage 13 adds
 [active routing and transit facts](transits-and-routing.md). Stage 14 adds
 [policy, methodology and persona assembly](persona-prompts.md) to the adapter.
-Stage 15 adds [application output validation](response-policy.md). Stage 16 still
-adds inbound filtering and context worker wiring through the guarded service.
-The polling/worker demo does not call this adapter yet. Stage 18 owns
+Stage 15 adds [application output validation](response-policy.md). Stage 16 adds
+[input filtering and context worker wiring](conversation-worker.md) through the guarded service.
+The polling/worker demo now calls this adapter for eligible active chat. Stage 18 owns
 confirmed, durable application-wide deletion across Oria and SecondContext.
 
-Before enabling external conversation storage, update the consent/privacy disclosure
-to describe actual SecondContext retention and deletion controls, including the
-minimal deletion marker. The current policy version remains unchanged because
-the live flow sends no new data.
+The updated disclosure uses policy version `2026-10-03`; deploy it consistently and
+bump custom versions before enabling conversation storage. It describes actual
+SecondContext retention and deletion controls, including the minimal deletion marker.
 
 The reusable HTTP stub in `tests/support/second_context.py` exercises consumer-side
 scope, continuity and strict purge parsing. Upstream tests exercise the actual API,

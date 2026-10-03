@@ -870,8 +870,9 @@ three plus contextual-data guidance and typed current facts in `instructions`, w
 filtered user text separately in `input`. The diagram specifies logical priority:
 SecondContext owns retrieval and the final model layout, so physical insertion of
 retrieved memory between persona and facts is not guaranteed by this wire contract.
-Authored conversation fixtures define the tone baseline; live-model consistency is
-not yet evaluated. The [response guard](docs/response-policy.md) now enforces the
+Authored conversation fixtures define the tone baseline; a small live-model review
+is recorded in [Stage 16 evidence](docs/evidence/stage-16.md).
+The [response guard](docs/response-policy.md) enforces the
 common English PII and high-stakes baseline at the application service boundary.
 
 ---
@@ -1147,7 +1148,7 @@ SECOND_CONTEXT_BASE_URL=http://secondcontext:8080
 SECOND_CONTEXT_BEARER_TOKEN=
 
 ASTROLOGY_MCP_URL=http://astrology-mcp:8000/mcp
-ORIA_POLICY_VERSION=2026-09-28.3
+ORIA_POLICY_VERSION=2026-10-03
 ```
 
 Production secrets must come from the deployment platform's secret mechanism rather than committed files.
@@ -1177,12 +1178,14 @@ Transit calculations and active-message routing now provide deterministic natal
 and target/current transit fact summaries. Stage 14 policy, methodology and persona
 assembly is implemented in the adapter. Stage 15 adds the deterministic
 [response guard](docs/response-policy.md) and shared high-stakes routing.
-Next is Stage 16 SecondContext worker integration, inbound filtering, consent
-disclosure and live tone evaluation.
-The worker does not call SecondContext yet.
+The [complete conversation worker](docs/conversation-worker.md) now connects
+SecondContext through the guarded service, with conservative inbound filtering,
+updated consent disclosure and a synthetic live tone review. External transcript
+effects are at least once across ambiguous failures; committed replies are reused.
+Next are Stage 17 profile/privacy controls and Stage 18 complete deletion.
 See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
-Full profile display and deletion remain unavailable. The queued-processing disclosure uses
-policy version 2026-09-28.3. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),
+Full profile display and deletion remain unavailable. The conversation-storage disclosure uses
+policy version 2026-10-03. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),
 [birth-profile storage](docs/birth-profiles.md) and [consent flow](docs/consent-flow.md).
 
 The Makefile is the supported developer interface.

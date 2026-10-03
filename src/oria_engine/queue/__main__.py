@@ -14,6 +14,8 @@ from redis.asyncio import Redis
 
 from oria_engine.astrology.client import FastMCPAstrologyClient
 from oria_engine.config import ConfigurationError, Settings, load_settings
+from oria_engine.context.second_context import SecondContextProvider
+from oria_engine.context.service import ConversationContext
 from oria_engine.db.session import Database
 from oria_engine.domain.consent import ConsentFlow
 from oria_engine.domain.onboarding import OnboardingFlow
@@ -33,6 +35,7 @@ async def process(settings: Settings, resolver: LocalPlaceResolver, event_id: st
     redis = Redis.from_url(
         settings.redis_url.get_secret_value(), socket_timeout=3, socket_connect_timeout=3
     )
+    context = SecondContextProvider(settings)
     try:
         encryption = ProfileEncryption(settings)
         flow = ConsentFlow(
@@ -43,12 +46,14 @@ async def process(settings: Settings, resolver: LocalPlaceResolver, event_id: st
                 settings.oria_policy_version,
                 resolver,
                 FastMCPAstrologyClient(settings.astrology_mcp_url),
+                ConversationContext(context, settings.oria_policy_version),
             ),
         )
         await EventWorker(database, redis, encryption, flow, TelegramChannelClient(bot)).process(
             UUID(event_id)
         )
     finally:
+        await context.aclose()
         await redis.aclose()
         await bot.session.close()
         await database.close()
@@ -67,8 +72,14 @@ def run(settings: Settings) -> None:
     ProfileEncryption(settings)
     if not settings.telegram_bot_token.get_secret_value():
         raise ConfigurationError("Worker requires TELEGRAM_BOT_TOKEN")
-    if settings.oria_policy_version in {"2026-09-01", "2026-09-28", "2026-09-28.1", "2026-09-28.2"}:
-        raise ConfigurationError("Set ORIA_POLICY_VERSION=2026-09-28.3 for queued processing")
+    if settings.oria_policy_version in {
+        "2026-09-01",
+        "2026-09-28",
+        "2026-09-28.1",
+        "2026-09-28.2",
+        "2026-09-28.3",
+    }:
+        raise ConfigurationError("Set ORIA_POLICY_VERSION=2026-10-03 for conversation storage")
     resolver = LocalPlaceResolver()
     publisher = Publisher(settings)
     stop = Event()

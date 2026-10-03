@@ -6,6 +6,8 @@ from uuid import UUID, uuid4
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from oria_engine.astrology.client import AstrologyClient, AstrologyUnavailable
+from oria_engine.context.contracts import ConversationRequest
+from oria_engine.context.service import ConversationContext
 from oria_engine.db.astrology_profiles import AstrologyProfileRepository
 from oria_engine.db.birth_profiles import BirthProfileRepository, ConsentRequiredError
 from oria_engine.db.onboarding import OnboardingRepository
@@ -18,7 +20,9 @@ from oria_engine.domain.consent import ConsentReply
 from oria_engine.domain.consent import OnboardingState as State
 from oria_engine.domain.onboarding_data import OnboardingDraft, parse_birth_date, parse_birth_time
 from oria_engine.domain.places import PlaceResolutionUnavailable, PlaceResolver, TooManyPlaces
+from oria_engine.domain.policy import PRIVACY_REPLY
 from oria_engine.privacy.encryption import ProfileEncryption
+from oria_engine.privacy.messages import private_active_input
 
 DATE_PROMPT = "What is your birth date? Use YYYY-MM-DD or DD Mon YYYY (for example, 13 Apr 1990)."
 TIME_PROMPT = (
@@ -142,11 +146,13 @@ class OnboardingFlow:
         policy_version: str,
         resolver: PlaceResolver,
         astrology: AstrologyClient | None = None,
+        context: ConversationContext | None = None,
     ) -> None:
         self.encryption = encryption
         self.policy_version = policy_version
         self.resolver = resolver
         self.astrology = astrology
+        self.context = context
 
     async def handle(
         self,
@@ -179,6 +185,8 @@ class OnboardingFlow:
                     session, policy_version=self.policy_version
                 ).get(user_id)
                 if natal is not None:
+                    if self.context is not None and private_active_input(message.text):
+                        return ConsentReply(State.ACTIVE, PRIVACY_REPLY)
                     try:
                         facts = await prepare_active(
                             message.text,
@@ -186,8 +194,26 @@ class OnboardingFlow:
                             natal=natal,
                             client=self.astrology,
                         )
+                        if (
+                            self.context is not None
+                            and facts.intent.kind != "unsupported_high_stakes"
+                            and facts.intent.kind != "clarify_date"
+                        ):
+                            response = await self.context.respond(
+                                session,
+                                user_id,
+                                ConversationRequest(
+                                    filtered_message=message.text,
+                                    goal=facts.intent.kind,
+                                    natal_facts=natal,
+                                    transit_facts=facts.transits,
+                                ),
+                            )
+                            return ConsentReply(State.ACTIVE, response.text)
                         return ConsentReply(State.ACTIVE, render_active(facts))
                     except AstrologyUnavailable:
+                        if self.context is not None:
+                            raise  # The durable worker owns bounded retries.
                         return ConsentReply(
                             State.ACTIVE,
                             "Transit calculation is temporarily unavailable. "

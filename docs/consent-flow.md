@@ -1,15 +1,15 @@
 # Deterministic consent flow
 
 `domain.consent.ConsentFlow` implements PLAN sections 5.1–5.2 and 13 using the
-existing [identity and consent repositories](identity-consent.md). The domain flow
-uses no LLM; the [worker](worker-queue.md) supplies its transaction and Redis coordination. Each update resolves trusted
+existing [identity and consent repositories](identity-consent.md). Consent decisions
+use no LLM; the [worker](worker-queue.md) supplies its transaction and Redis coordination. Each update resolves trusted
 channel identifiers to the internal user UUID and reads/writes consent inside one
 transaction. Replies are sent after commit so delivery failure cannot undo a decision.
 
 ## Disclosure and decisions
 
 The initial copy is `DISCLAIMER` in `domain/consent.py`, using
-`ORIA_POLICY_VERSION` (default `2026-09-28.3`). It covers AI identity, interpretive
+`ORIA_POLICY_VERSION` (default `2026-10-03`). It covers AI identity, interpretive
 astrology, high-stakes limitations, birth date/time/place, chart purpose and future
 storage, prohibited unrelated PII, planned profile/edit/delete controls, and adult
 use. **I'm 18+ and agree** confirms adulthood and acceptance together; it is a
@@ -17,7 +17,10 @@ self-attestation, not age verification. The copy explicitly describes this demo'
 limits: encrypted birth profiles and drafts are collected, local place lookup and
 time clarification and calculation are available, deletion remains unavailable,
 and prior data remains after decline. `/privacy` shows the
-disclosure and the same decision buttons.
+disclosure and the same decision buttons. The Stage 16 disclosure also covers
+SecondContext and AI-provider processing, retained filtered messages/replies/context,
+facts quoted in replies, limited filtering, blocked drafts and deletion limitations.
+See [conversation worker](conversation-worker.md).
 
 Keep each deployed version associated with its disclosure in source history. Bump
 `ORIA_POLICY_VERSION` when the copy/data use changes and deploy consistently to all

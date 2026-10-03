@@ -46,8 +46,8 @@ and deduplicates update processing; Telegram delivery can still duplicate after 
    polling override adds a bridge network because Docker cannot publish ports on
    an internal-only network; this local mode therefore also permits outbound traffic.
 3. Use `ASTROLOGY_MCP_URL=http://localhost:8000/mcp` and
-   `ORIA_POLICY_VERSION=2026-09-28.3` in your local configuration. Bump custom policy
-   versions too: the disclosure now includes temporary encrypted queue payloads.
+   `ORIA_POLICY_VERSION=2026-10-03` in your local configuration. Bump custom policy
+   versions too: the disclosure now includes conversation processing and storage.
 4. Run `make worker` and `make run` in separate terminals, accept the current disclosure, and confirm the profile. Previously
    confirmed profiles use /retry_profile after consent. /profile reports validity.
 
@@ -55,4 +55,5 @@ and deduplicates update processing; Telegram delivery can still duplicate after 
 Do not expose this unauthenticated service publicly. Downgrading `0005` removes only
 derived caches, retaining encrypted birth profiles and drafts. Re-upgrading allows
 recomputation. Active profiles now support [transit fact replies](transits-and-routing.md).
-LLM interpretation and deletion remain later stages.
+The [conversation worker](conversation-worker.md) connects LLM interpretation;
+complete deletion remains Stage 18.

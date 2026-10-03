@@ -13,6 +13,7 @@ from oria_engine.config import Settings
 from oria_engine.db.models import (
     BirthProfile,
     Consent,
+    ConversationSession,
     InboundEvent,
     OnboardingProgress,
     SocialIdentity,
@@ -50,6 +51,7 @@ async def queue(database, infrastructure):
         async with database.transaction() as session:
             for model in (
                 InboundEvent,
+                ConversationSession,
                 OnboardingProgress,
                 BirthProfile,
                 Consent,

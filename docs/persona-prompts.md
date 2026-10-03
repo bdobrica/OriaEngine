@@ -67,12 +67,11 @@ returns an untrusted draft. It does not prove a model resisted the injection.
 
 Run `uv run pytest tests/unit/test_persona.py tests/contract/test_second_context.py`,
 then `make verify`. No OpenAI key is needed. Live-model tone/compliance evaluation
-has not been performed; authored examples define the intended voice, not measured
-generation quality. See [verification evidence](evidence/stage-14.md).
+is recorded separately in [Stage 16 evidence](evidence/stage-16.md); authored examples
+define the intended voice. See also [Stage 14 evidence](evidence/stage-14.md).
 
 ## Runtime sequencing
 
-The Telegram worker still sends deterministic chart summaries. Stage 15 adds
-[application output policy checks](response-policy.md); Stage 16 connects filtering, consent disclosure,
-SecondContext generation and validation to the worker. Prompts alone do not provide
-those controls. No new external data flow or consent version is activated here.
+The [conversation worker](conversation-worker.md) connects input filtering, updated
+consent disclosure, SecondContext generation and application output policy checks.
+Prompts alone do not provide those controls.

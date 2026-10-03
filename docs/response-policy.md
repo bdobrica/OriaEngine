@@ -42,9 +42,9 @@ truth, scrub volunteered PII from incoming messages or remove downstream history
 SecondContext may already have persisted a blocked draft before returning it;
 local replacement only controls the response returned by Oria's service.
 
-The worker still sends deterministic replies and does not call SecondContext.
-Stage 16 must use this guarded service, implement inbound filtering and update
-consent disclosure before enabling external transcript storage. Output policy
+The [conversation worker](conversation-worker.md) uses this guarded service,
+adds a separate conservative inbound filter and requires the updated conversation
+storage consent disclosure. Output policy
 does not grant consent, mutate profiles, ingest memories or authorize tools.
 
 The synthetic [adversarial corpus](../tests/unit/fixtures/policy-adversarial.json)
@@ -52,4 +52,5 @@ simulates a model following hostile user/retrieval instructions; tests check
 application replacement, not model resistance to injection. Focused tests also
 check ordinary reflection, unknown/approximate-time explanations, Unicode forms,
 closed profile fields, the HTTP surface and consent fencing. Live-model evaluation
-remains Stage 16. See [Stage 15 evidence](evidence/stage-15.md).
+is recorded in [Stage 16 evidence](evidence/stage-16.md). See also
+[Stage 15 evidence](evidence/stage-15.md).

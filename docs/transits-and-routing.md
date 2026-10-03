@@ -2,16 +2,14 @@
 
 After onboarding, the Telegram worker can answer `Explain my natal chart`,
 `transits today`, and `transits on 2026-10-02` with readable calculated facts.
-Use the existing [worker setup](worker-queue.md), rebuild with `make mcp-local`,
-and restart `make worker`. No new dependency, configuration, migration or OpenAI
-key is required. Existing natal caches remain valid.
+Use the [conversation worker setup](conversation-worker.md) to connect these facts
+to SecondContext interpretation, with updated consent and privacy guards.
+Existing natal caches remain valid; no new migration is required.
 
-These are deterministic fact summaries. [Persona prompts](persona-prompts.md) are
-implemented in the adapter, and the [response guard](response-policy.md) is available
-in the application conversation service. Live LLM interpretation remains Stage 16.
-The worker does not call SecondContext yet.
-The English rule router needs no LLM classifier for this baseline. Unrecognized
-questions take the `follow_up` path and ask the user to restate a supported topic;
+The context-free flow retains deterministic fact summaries. The production worker
+uses persona prompts and output policy validation through the guarded service.
+The English rule router needs no LLM classifier. Unrecognized
+questions take the `follow_up` path with current natal facts and conversation context;
 there is no guessed previous transit date or implicit tool authorization.
 
 ## Routing and date conventions
@@ -23,7 +21,7 @@ there is no guessed previous transit date or implicit tool authorization.
 | `natal_explanation` | Reuse the valid derived natal cache; no MCP call |
 | `current_transits` | Calculate a snapshot at the inbound message's UTC timestamp |
 | `transits_for_date` | One explicit `YYYY-MM-DD`, at 12:00 UTC |
-| `follow_up` | Ask for the topic; no new calculation |
+| `follow_up` | Current natal facts and context; no new calculation |
 | `unsupported_high_stakes` | Fixed bounded response; no calculation or model call |
 | `clarify_date` | Request one ISO date or “today”; no calculation |
 
@@ -44,7 +42,8 @@ Stage 15 policy vocabulary and fixed boundary reply.
 Consent, the user lock, completed onboarding and cache validity gate active work.
 Active questions load only derived facts, without decrypting the birth profile.
 Edits/stale caches return through the existing profile recovery path. Transit
-failure returns a generic retry message without replacing the natal cache.
+failure enters bounded worker retries without replacing the natal cache (the
+context-free flow retains its local retry message).
 Calls are bounded to 20 seconds inside the existing worker deadline. The queue
 commits the encrypted reply before delivery and resends it after a send failure
 without recalculation. There is no persistent transit cache or new database state.

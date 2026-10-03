@@ -480,8 +480,8 @@ Compute and cache the user's natal chart after profile confirmation.
 
 Move slow conversation work off the Telegram ingress path and make concurrent messages safe.
 
-Implemented baseline: [worker queue](docs/worker-queue.md). Next: Stage 12,
-SecondContext adapter. The later Stage 16 builds interpretation onto this worker.
+Implemented baseline: [worker queue](docs/worker-queue.md). The Stage 12 adapter and
+Stage 16 conversation pipeline now connect interpretation to this worker.
 
 ### Tasks
 
@@ -522,7 +522,7 @@ Add persistent conversational memory without exposing the raw birth profile as g
 
 Implemented: [adapter, service setup and deletion contract](docs/second-context.md).
 SecondContext now supplies scoped service authentication and durable subject purge.
-Stage 16 connects the adapter to the Telegram worker after persona and policy work.
+Stage 16 connects the adapter to the Telegram worker through persona and policy checks.
 
 ### Tasks
 
@@ -565,8 +565,8 @@ Stage 16 connects the adapter to the Telegram worker after persona and policy wo
 Support useful personalized astrology conversations after onboarding.
 
 Implemented: [transit tool and deterministic fact replies](docs/transits-and-routing.md).
-LLM interpretation and contextual follow-ups remain Stage 16;
-this baseline asks users to restate follow-up topics and requires no classifier call.
+LLM interpretation and contextual follow-ups are connected in Stage 16;
+the deterministic router still requires no classifier call.
 
 ### Tasks
 
@@ -607,7 +607,8 @@ this baseline asks users to restate follow-up topics and requires no classifier 
 Create a stable, recognizable personality while keeping facts and policy separate.
 
 Implemented: [prompt layers and tone baseline](docs/persona-prompts.md).
-Stage 15 enforcement is implemented; next is Stage 16 live generation and tone evaluation.
+Stage 15 enforcement and Stage 16 live generation/tone review are implemented;
+profile/privacy controls and complete deletion remain next.
 Reference conversations are authored examples; CI tests assembly and boundaries,
 not live-model stylistic consistency or resistance to prompt injection.
 
@@ -640,8 +641,8 @@ Make the “only required birth data” rule enforceable beyond prompt wording.
 
 Implemented: [response policy](docs/response-policy.md). The English lexical
 baseline conservatively replaces blocked drafts in the application conversation
-service. It is not a semantic or multilingual safety guarantee. Stage 16 connects
-the guarded service to the worker after inbound filtering and consent disclosure.
+service. It is not a semantic or multilingual safety guarantee. Stage 16 now connects
+the guarded service to the worker with inbound filtering and updated consent disclosure.
 
 ### Tasks
 
@@ -681,38 +682,42 @@ the guarded service to the worker after inbound filtering and consent disclosure
 
 Wire the full production-like message loop.
 
+Implemented: [conversation worker](docs/conversation-worker.md). Synthetic live-model
+review and deterministic verification are recorded in [Stage 16 evidence](docs/evidence/stage-16.md).
+Next are Stage 17 profile/privacy controls and Stage 18 complete deletion.
+
 ### Tasks
 
-- [ ] Load inbound event.
-- [ ] Resolve internal user.
-- [ ] Acquire per-user lock.
-- [ ] Load consent state.
-- [ ] Route to consent/onboarding/profile/active path.
-- [ ] Load/decrypt profile only when required.
-- [ ] Load derived natal profile.
-- [ ] Calculate current/target astrology facts if required.
-- [ ] Retrieve/use SecondContext conversation context.
-- [ ] Assemble product policy + methodology + persona + calculated facts + user message.
-- [ ] Generate response through SecondContext/LLM path.
-- [ ] Validate response policy.
-- [ ] Send Telegram reply.
-- [ ] Mark event processed.
-- [ ] Record bounded error information on failure.
-- [ ] Release lock.
+- [x] Load inbound event.
+- [x] Resolve internal user.
+- [x] Acquire per-user lock.
+- [x] Load consent state.
+- [x] Route to consent/onboarding/profile/active path.
+- [x] Load/decrypt profile only when required.
+- [x] Load derived natal profile.
+- [x] Calculate current/target astrology facts if required.
+- [x] Retrieve/use SecondContext conversation context.
+- [x] Assemble product policy + methodology + persona + calculated facts + user message.
+- [x] Generate response through SecondContext/LLM path.
+- [x] Validate response policy.
+- [x] Send Telegram reply.
+- [x] Mark event processed.
+- [x] Record bounded error information on failure.
+- [x] Release lock.
 
 ### Tests
 
-- [ ] Full mocked worker pipeline.
-- [ ] Evaluate generated Oria replies against the Stage 14 tone fixtures; record
+- [x] Full mocked worker pipeline.
+- [x] Evaluate generated Oria replies against the Stage 14 tone fixtures; record
       live-model tone/compliance evidence separately from deterministic CI checks.
-- [ ] MCP unavailable retry.
-- [ ] SecondContext unavailable retry.
-- [ ] Telegram send failure.
-- [ ] User deletes profile while another message is queued.
+- [x] MCP unavailable retry.
+- [x] SecondContext unavailable retry.
+- [x] Telegram send failure.
+- [x] User deletes profile while another message is queued.
 
 ### Acceptance criteria
 
-- [ ] One worker path handles onboarding and active chat without bypassing domain policy.
+- [x] One worker path handles onboarding and active chat without bypassing domain policy.
 
 ---
 

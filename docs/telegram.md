@@ -8,8 +8,8 @@
 2. Run `make env` and put the token in `TELEGRAM_BOT_TOKEN` in your local `.env`.
    Never commit the token or paste it into logs, issues, or test fixtures.
 3. Configure `DATABASE_URL`, a stable `PROFILE_ENCRYPTION_KEY`, and
-   `ORIA_POLICY_VERSION=2026-09-28.3` (bump custom versions too). Run `make infra-up`
-   and `make migrate` to apply revision `0006`, run `make mcp-local`, then
+   `ORIA_POLICY_VERSION=2026-10-03` (bump custom versions too). Run `make infra-up`
+   and `make migrate` to apply revision `0007`, run `make mcp-local`, then
    `make worker` in one terminal and `make run` in another with `APP_ENV=development`. Only one polling process can use
    a bot token at a time ([aiogram polling documentation](https://docs.aiogram.dev/en/latest/dispatcher/long_polling.html)).
 4. Open your development bot's private chat and send `/start`, then `/help`.
@@ -22,6 +22,8 @@
    cached chart status; `/edit_profile` starts corrections and `/retry_profile` retries
    a failed or outdated calculation. Set `ASTROLOGY_MCP_URL=http://localhost:8000/mcp`
    for the default loopback port.
+   Active interpretation also needs SecondContext configured as described in
+   [conversation worker setup](conversation-worker.md).
    For a separate synthetic user, try `2020-11-01`, `01:30`, `New York City, US`:
    selecting the city should ask for the first/second occurrence or unknown time.
    `/privacy` lets you decline even after acceptance.

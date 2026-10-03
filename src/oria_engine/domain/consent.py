@@ -15,7 +15,7 @@ from oria_engine.domain.channel import HELP_TEXT, ChannelButton, ChannelMessage
 if TYPE_CHECKING:
     from oria_engine.domain.onboarding import OnboardingFlow
 
-# Collection disclosure uses the configured policy version (default 2026-09-28.3).
+# Collection disclosure uses the configured policy version (default 2026-10-03).
 # Change the configured version whenever the disclosure/data use changes.
 DISCLAIMER = (
     "Hi — I'm Oria, an AI astrology personality. Astrology is interpretive, not a factual "
@@ -38,6 +38,14 @@ DISCLAIMER = (
     "are temporarily encrypted in PostgreSQL and erased on completion or permanent failure. "
     "Unfinished payloads expire after 24 hours and are erased when the worker next runs. "
     "Before consent, free text is discarded. Queue metadata and processing status are retained. "
+    "Active chat uses SecondContext and its AI provider: filtered messages, replies and "
+    "retrieved context are retained there for conversation continuity. Filtering is limited; "
+    "do not include identifying or birth details in chat. Calculated chart facts are sent "
+    "for interpretation and may be quoted in retained replies. Raw saved birth profiles "
+    "and onboarding messages are not sent to SecondContext. A blocked AI draft may still "
+    "be retained there. Declining stops further conversation processing but does not erase "
+    "prior transcripts. Deletion is not yet available in this demo; future deletion retains "
+    "a minimal subject/timestamp marker, with backups and AI-provider retention separate. "
     "Telegram retains messages under its own policies. You can use Decline below to stop "
     "onboarding, including after accepting; this does not delete identity, consent history "
     "or previously collected birth details.\n\n"
