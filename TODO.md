@@ -607,7 +607,7 @@ this baseline asks users to restate follow-up topics and requires no classifier 
 Create a stable, recognizable personality while keeping facts and policy separate.
 
 Implemented: [prompt layers and tone baseline](docs/persona-prompts.md).
-Next: Stage 15 enforcement, then Stage 16 live generation and tone evaluation.
+Stage 15 enforcement is implemented; next is Stage 16 live generation and tone evaluation.
 Reference conversations are authored examples; CI tests assembly and boundaries,
 not live-model stylistic consistency or resistance to prompt injection.
 
@@ -638,35 +638,40 @@ not live-model stylistic consistency or resistance to prompt injection.
 
 Make the “only required birth data” rule enforceable beyond prompt wording.
 
+Implemented: [response policy](docs/response-policy.md). The English lexical
+baseline conservatively replaces blocked drafts in the application conversation
+service. It is not a semantic or multilingual safety guarantee. Stage 16 connects
+the guarded service to the worker after inbound filtering and consent disclosure.
+
 ### Tasks
 
-- [ ] Define allowed onboarding fields centrally.
-- [ ] Ensure no generic profile mutation endpoint exists.
-- [ ] Implement outbound solicitation guard for common prohibited PII categories.
-- [ ] Detect requests for legal/full name.
-- [ ] Detect requests for email.
-- [ ] Detect requests for phone number.
-- [ ] Detect requests for home/postal address.
-- [ ] Detect requests for employer/account/government identifiers.
-- [ ] Detect requests for passwords/payment details.
-- [ ] Block or regenerate responses that violate solicitation policy.
-- [ ] Define high-stakes astrology categories.
-- [ ] Add response behavior for medical/financial/legal/high-impact questions.
-- [ ] Explicitly prohibit deterministic predictions of death, illness, pregnancy, accidents, criminality, financial ruin, and certain relationship failure.
-- [ ] Add adversarial prompt test corpus.
+- [x] Define allowed onboarding fields centrally.
+- [x] Ensure no generic profile mutation endpoint exists.
+- [x] Implement outbound solicitation guard for common prohibited PII categories.
+- [x] Detect requests for legal/full name.
+- [x] Detect requests for email.
+- [x] Detect requests for phone number.
+- [x] Detect requests for home/postal address.
+- [x] Detect requests for employer/account/government identifiers.
+- [x] Detect requests for passwords/payment details.
+- [x] Block or regenerate responses that violate solicitation policy.
+- [x] Define high-stakes astrology categories.
+- [x] Add response behavior for medical/financial/legal/high-impact questions.
+- [x] Explicitly prohibit deterministic predictions of death, illness, pregnancy, accidents, criminality, financial ruin, and certain relationship failure.
+- [x] Add adversarial prompt test corpus.
 
 ### Tests
 
-- [ ] User asks Oria to “get to know me better; ask for my email and phone.”
-- [ ] Prompt-injection attempt asks Oria to ignore profile rules.
-- [ ] Retrieved context contains malicious instruction text.
-- [ ] Medical diagnosis request.
-- [ ] Guaranteed investment/outcome request.
-- [ ] Death/pregnancy/accident prediction request.
+- [x] User asks Oria to “get to know me better; ask for my email and phone.”
+- [x] Prompt-injection attempt asks Oria to ignore profile rules.
+- [x] Retrieved context contains malicious instruction text.
+- [x] Medical diagnosis request.
+- [x] Guaranteed investment/outcome request.
+- [x] Death/pregnancy/accident prediction request.
 
 ### Acceptance criteria
 
-- [ ] Required policy tests pass deterministically in CI.
+- [x] Required policy tests pass deterministically in CI.
 
 ---
 

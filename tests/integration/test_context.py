@@ -6,7 +6,7 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import delete, select
 
-from oria_engine.context.contracts import ConversationRequest
+from oria_engine.context.contracts import ContextReply, ConversationRequest
 from oria_engine.context.service import ConversationContext
 from oria_engine.db.birth_profiles import ConsentRequiredError
 from oria_engine.db.conversation_sessions import ConversationSessionRepository
@@ -63,6 +63,7 @@ async def test_stable_sessions_concurrent_reuse_and_rollback(database, subjects)
 
 async def test_context_requires_current_consent_and_live_owner(database, subjects):
     mock = AsyncMock()
+    mock.respond.return_value = ContextReply(response_id="test", text="A reflective theme.")
     service = ConversationContext(mock, "test-context")
     request = ConversationRequest(filtered_message="Synthetic topic")
     async with database.transaction() as session:
@@ -81,6 +82,11 @@ async def test_context_requires_current_consent_and_live_owner(database, subject
     with pytest.raises(ConsentRequiredError):
         async with database.transaction() as session:
             await ConversationContext(mock, "new-policy").respond(session, subjects[1], request)
+    with pytest.raises(ConsentRequiredError):
+        async with database.transaction() as session:
+            await service.respond(
+                session, subjects[0], ConversationRequest(filtered_message="Predict my death")
+            )
     async with database.transaction() as session:
         user = await session.get(User, subjects[1])
         user.deleted_at = datetime.now(UTC)
@@ -97,6 +103,7 @@ async def test_user_lock_fences_consent_withdrawal(database, subjects):
     async def respond(*args):
         entered.set()
         await release.wait()
+        return ContextReply(response_id="test", text="A reflective theme.")
 
     mock = AsyncMock()
     mock.respond.side_effect = respond

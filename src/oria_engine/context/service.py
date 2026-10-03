@@ -11,6 +11,7 @@ from oria_engine.context.contracts import (
     MemoryKind,
 )
 from oria_engine.db.conversation_sessions import ConversationSessionRepository
+from oria_engine.domain.policy import SAFETY_REPLY, guard_reply, is_high_stakes
 
 
 class ConversationContext:
@@ -24,7 +25,10 @@ class ConversationContext:
         scope = await ConversationSessionRepository(session, self.policy_version).get_or_create(
             user_id
         )
-        return await self.provider.respond(scope, request)
+        if is_high_stakes(request.filtered_message):
+            return ContextReply(response_id="oria-policy", text=SAFETY_REPLY)
+        draft = await self.provider.respond(scope, request)
+        return ContextReply(response_id=draft.response_id, text=guard_reply(draft.text))
 
     async def remember(self, session: AsyncSession, user_id: UUID, kind: MemoryKind) -> None:
         scope = await ConversationSessionRepository(session, self.policy_version).get_or_create(

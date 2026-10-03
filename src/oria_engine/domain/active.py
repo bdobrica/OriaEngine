@@ -10,6 +10,7 @@ from pydantic import model_validator
 from oria_engine.astrology.client import AstrologyClient, AstrologyUnavailable
 from oria_engine.astrology.contracts import NatalResult, WireModel
 from oria_engine.astrology.transits import TransitRequest, TransitResult, validate_target
+from oria_engine.domain.policy import SAFETY_REPLY, is_high_stakes
 
 IntentKind = Literal[
     "natal_explanation",
@@ -35,13 +36,6 @@ class ActiveIntent(WireModel):
         return self
 
 
-HIGH_STAKES = re.compile(
-    r"\b(medical|diagnos\w*|disease|illness|medication|pregnan\w*|fertil\w*|"
-    r"death|die|dying|lifespan|suicid\w*|accident\w*|disaster\w*|criminal\w*|dangerous|"
-    r"legal|lawsuit|court|invest\w*|stocks?|trading|trade|financial|bankrupt\w*|"
-    r"divorce|break\s*up)\b",
-    re.IGNORECASE,
-)
 ISO_DATE = re.compile(r"(?<![\w-])\d{4}-\d{2}-\d{2}(?![\w-])")
 DATE_HINT = re.compile(
     r"\d[\d\s./:-]*\d|\b(date|tomorrow|yesterday|tonight|week|month|year|"
@@ -61,11 +55,7 @@ NATAL = re.compile(
 
 def route_active(text: str, *, received_at: datetime) -> ActiveIntent:
     """English demo grammar. Unrecognized language never authorizes a tool call."""
-    if HIGH_STAKES.search(text) or re.search(
-        r"\b(get|have|develop|treat|cure|survive)\s+(?:\w+\s+){0,2}cancer\b",
-        text,
-        re.IGNORECASE,
-    ):
+    if is_high_stakes(text):
         return ActiveIntent(kind="unsupported_high_stakes")
     dates = ISO_DATE.findall(text)
     remainder = ISO_DATE.sub("", text)
@@ -128,11 +118,7 @@ async def prepare_active(
 def render_active(facts: ActiveFacts) -> str:
     """Bounded factual demo output until the persona/policy/LLM stages are connected."""
     if facts.intent.kind == "unsupported_high_stakes":
-        return (
-            "I can't use astrology to predict high-stakes outcomes or guide medical, legal "
-            "or financial decisions. Please use appropriate professional support for those "
-            "decisions. I can show calculated chart facts for low-stakes reflection."
-        )
+        return SAFETY_REPLY
     if facts.intent.kind == "clarify_date":
         return (
             "Please send one target date as YYYY-MM-DD (1800–2399), or ask for transits today. "

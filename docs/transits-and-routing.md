@@ -7,8 +7,9 @@ and restart `make worker`. No new dependency, configuration, migration or OpenAI
 key is required. Existing natal caches remain valid.
 
 These are deterministic fact summaries. [Persona prompts](persona-prompts.md) are
-implemented in the adapter; broader policy checks and live LLM interpretation remain
-Stages 15–16. The worker does not call SecondContext yet.
+implemented in the adapter, and the [response guard](response-policy.md) is available
+in the application conversation service. Live LLM interpretation remains Stage 16.
+The worker does not call SecondContext yet.
 The English rule router needs no LLM classifier for this baseline. Unrecognized
 questions take the `follow_up` path and ask the user to restate a supported topic;
 there is no guessed previous transit date or implicit tool authorization.
@@ -37,7 +38,8 @@ router gives recognized high-stakes requests priority over dates and chart terms
 Multiple, invalid, slash-formatted or incomplete dates and unsupported relative
 dates/times ask for clarification. The user can reply with a complete ISO date;
 no separate pending clarification state is needed. This bounded rule vocabulary
-is not a general natural-language parser or the Stage 15 safety classifier.
+is not a general natural-language parser. High-stakes detection now shares the
+Stage 15 policy vocabulary and fixed boundary reply.
 
 Consent, the user lock, completed onboarding and cache validity gate active work.
 Active questions load only derived facts, without decrypting the birth profile.

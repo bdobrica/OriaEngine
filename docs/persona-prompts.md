@@ -73,6 +73,6 @@ generation quality. See [verification evidence](evidence/stage-14.md).
 ## Runtime sequencing
 
 The Telegram worker still sends deterministic chart summaries. Stage 15 adds
-enforceable output policy checks; Stage 16 connects filtering, consent disclosure,
+[application output policy checks](response-policy.md); Stage 16 connects filtering, consent disclosure,
 SecondContext generation and validation to the worker. Prompts alone do not provide
 those controls. No new external data flow or consent version is activated here.

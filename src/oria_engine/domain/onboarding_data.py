@@ -9,6 +9,7 @@ from pydantic import Field, model_validator
 
 from oria_engine.domain.birth_profile import BirthPlace, BirthProfilePayload, PrivateModel
 from oria_engine.domain.birth_time import resolve_utc
+from oria_engine.domain.policy import ONBOARDING_FIELDS
 
 
 class OnboardingDraft(PrivateModel):
@@ -44,16 +45,7 @@ class OnboardingDraft(PrivateModel):
 
     def profile(self) -> BirthProfilePayload:
         return BirthProfilePayload.model_validate(
-            self.model_dump(
-                include={
-                    "birth_date",
-                    "birth_local_time",
-                    "birth_time_accuracy",
-                    "birth_place",
-                    "birth_time_occurrence",
-                }
-            )
-            | {"schema_version": 2}
+            self.model_dump(include=set(ONBOARDING_FIELDS)) | {"schema_version": 2}
         )
 
 

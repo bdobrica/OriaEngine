@@ -11,7 +11,8 @@ OriaEngine is designed to build on [SecondContext](https://github.com/bdobrica/S
 > service authentication and purge. The worker now provides deterministic
 > [natal/transit fact summaries](docs/transits-and-routing.md).
 > [Persona and methodology prompts](docs/persona-prompts.md) are implemented;
-> safety-policy completion and live LLM interpretation remain next.
+> the [PII and safety guard](docs/response-policy.md) is implemented. Live LLM
+> interpretation remains next.
 >
 > Astrology is used here as an interpretive framework. Oria should not be treated as a source of scientific prediction, medical advice, legal advice, financial advice, or other high-stakes professional guidance.
 
