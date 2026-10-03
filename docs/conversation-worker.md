@@ -51,7 +51,7 @@ contract extension. See the [consumer contract](../contracts/second-context/v1.m
 
 ## Demo setup
 
-Use `ORIA_POLICY_VERSION=2026-10-03` consistently in polling and workers. Bump custom
+Use `ORIA_POLICY_VERSION=2026-10-03.1` consistently in polling and workers. Bump custom
 policy versions as well. Existing users must accept the new disclosure. It describes
 SecondContext/AI processing and retention, quoted chart facts, retained blocked
 drafts, limited filtering, and the current lack of user deletion. Decline stops

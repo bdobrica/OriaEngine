@@ -207,3 +207,50 @@ async def test_worker_through_http_adapter(conversation):
         assert worker.client.send_text.call_args.args[1] == "No prior preference."
     finally:
         await provider.aclose()
+
+
+async def test_profile_reply_is_encrypted_reused_and_never_sent_to_context(conversation):
+    ingress, worker, astrology, provider = conversation
+    await confirm(worker.flow)
+    worker.client.send_text.side_effect = RuntimeError("synthetic send failure")
+    identifier = await ingress.accept(message(text="/profile"), command="profile")
+    await worker.process(identifier)
+    event = await row(worker, identifier)
+    assert event.status == "ready" and event.encrypted_reply
+    assert b"1990-04-13" not in event.encrypted_reply
+    reply = worker.client.send_text.call_args.args[1]
+    assert "1990-04-13" in reply
+    worker.client.send_text.side_effect = None
+    await due(worker, identifier)
+    with patch.object(BirthProfileRepository, "get", side_effect=AssertionError("No reread")):
+        await worker.process(identifier)
+    assert worker.client.send_text.call_args.args[1] == reply
+    assert (await row(worker, identifier)).encrypted_reply is None
+    provider.respond.assert_not_called()
+    astrology.calculate_natal_chart.assert_awaited_once()
+
+
+async def test_queued_inspection_after_withdrawal(conversation):
+    from oria_engine.db.repositories import ConsentRepository
+
+    ingress, worker, astrology, provider = conversation
+    await confirm(worker.flow)
+    await worker.flow.handle(message(callback=worker.flow.buttons[1].data))
+    identifier = await ingress.accept(message(text="/profile"), command="profile")
+    await worker.process(identifier)
+    event = await row(worker, identifier)
+    assert event.status == "sent"
+    reply = worker.client.send_text.call_args.args[1]
+    assert "1990-04-13" in reply and "declined" in reply
+    assert "not current/available" in reply
+    await worker.process(
+        await ingress.accept(message(text="/edit_profile"), command="edit_profile")
+    )
+    assert "stopped" in worker.client.send_text.call_args.args[1]
+    async with worker.database.transaction() as session:
+        assert (
+            await ConsentRepository(session).current(event.user_id, worker.flow.policy_version)
+            is None
+        )
+    provider.respond.assert_not_called()
+    astrology.calculate_natal_chart.assert_awaited_once()

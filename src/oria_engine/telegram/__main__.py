@@ -29,9 +29,10 @@ async def run_polling(settings: Settings) -> None:
         "2026-09-28.1",
         "2026-09-28.2",
         "2026-09-28.3",
+        "2026-10-03",
     }:
         raise ConfigurationError(
-            "Set ORIA_POLICY_VERSION=2026-10-03 for the conversation storage disclosure"
+            "Set ORIA_POLICY_VERSION=2026-10-03.1 for the conversation storage disclosure"
         )
     publisher = Publisher(settings)
     bot = Bot(token=settings.telegram_bot_token.get_secret_value())

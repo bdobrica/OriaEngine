@@ -154,6 +154,99 @@ class OnboardingFlow:
         self.astrology = astrology
         self.context = context
 
+    async def inspect_profile(self, session: AsyncSession, user_id: UUID) -> ConsentReply:
+        """Owner-only inspection, including after withdrawal; never calculate or mutate."""
+        if await UserRepository(session).get(user_id, for_update=True) is None:
+            raise UserUnavailableError("User unavailable")
+        consents = ConsentRepository(session)
+        current = await consents.current(user_id, self.policy_version)
+        latest = await consents.latest(user_id)
+        profile = await BirthProfileRepository(
+            session, self.encryption, policy_version=self.policy_version
+        ).get(user_id)
+        draft = await OnboardingRepository(session, self.encryption, self.policy_version).get(
+            user_id
+        )
+        result = await AstrologyProfileRepository(session, policy_version=self.policy_version).get(
+            user_id
+        )
+        state = (
+            resolve_state(draft, profile_exists=profile is not None)
+            if current
+            else State.CONSENT_REQUIRED
+        )
+        if current and result is not None:
+            state = State.ACTIVE
+        elif (
+            latest
+            and latest.policy_version == self.policy_version
+            and latest.status in {"declined", "revoked"}
+        ):
+            state = State.CLOSED
+        sections = [f"Current policy: {self.policy_version}"]
+        sections.append(
+            f"Latest consent: {latest.status} (policy {latest.policy_version})"
+            if latest
+            else "Consent: not recorded"
+        )
+        for label, data in (("Confirmed birth profile", profile), ("Unconfirmed draft", draft)):
+            if data is None:
+                continue
+            time_text = data.birth_local_time.isoformat() if data.birth_local_time else "not set"
+            if data.birth_time_accuracy == "unknown":
+                time_text = "unknown"
+            lines = [
+                label,
+                f"Date: {data.birth_date or 'not set'}",
+                f"Local time: {time_text} ({data.birth_time_accuracy or 'not set'})",
+            ]
+            place = data.birth_place
+            if place is not None:
+                lines += [
+                    f"Place: {place.display_name}",
+                    f"City: {place.city}; region: {place.region or 'not set'}; "
+                    f"country: {place.country_code}",
+                    f"Coordinates: {place.latitude}, {place.longitude}",
+                    f"Timezone: {place.timezone}",
+                ]
+            else:
+                lines.append("Place: not selected")
+            if data.birth_time_occurrence is not None:
+                lines.append(
+                    "Clock-change occurrence: "
+                    + ("first" if data.birth_time_occurrence == 0 else "second")
+                )
+            sections.append("\n".join(lines))
+        if profile is None:
+            sections.append(
+                "No confirmed birth profile saved. Use /start to begin or resume setup."
+            )
+        if result is None:
+            sections.append(
+                "Natal chart: not current/available. Consent and a confirmed profile are "
+                "required; use /retry_profile after setup."
+            )
+        elif result.birth_time_accuracy == "unknown":
+            sections.append(
+                "Natal chart: current unknown-time result; positions, houses, angles "
+                "and aspects unavailable."
+            )
+        else:
+            sections.append(
+                "Natal chart: current."
+                + (
+                    " Approximate birth time; chart facts are uncertain."
+                    if result.birth_time_accuracy == "approximate"
+                    else ""
+                )
+                + (" Houses and angles unavailable." if not result.availability.houses else "")
+            )
+        sections.append(
+            "Use /edit_profile to correct date, time or place after consent. Selecting a place "
+            "updates its coordinates and timezone. Use /privacy for storage and consent controls."
+        )
+        return ConsentReply(state, "\n\n".join(sections))
+
     async def handle(
         self,
         session: AsyncSession,

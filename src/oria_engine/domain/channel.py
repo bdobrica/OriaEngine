@@ -31,11 +31,16 @@ class ChannelClient(Protocol):
 
 
 HELP_TEXT = (
-    "Available commands: /start, /help and /privacy. Use /start to review consent. "
-    "After accepting, /start resumes birth-profile setup. Send only the requested birth field. "
-    "Use /profile for chart status, /retry_profile to retry calculation, "
-    "and /edit_profile to edit. "
-    "With an active profile, ask about your natal chart, transits today, "
-    "or transits on YYYY-MM-DD for calculated facts. "
-    "Use /privacy to review the policy or stop onboarding."
+    "I'm Oria, an AI astrology personality for adults 18+. Astrology is interpretive, "
+    "not a scientifically established forecast or professional advice.\n\n"
+    "/start — review consent or resume setup.\n"
+    "/profile — inspect saved details, unfinished edits, chart status and consent.\n"
+    "/edit_profile — correct date, time or place, then confirm to recalculate.\n"
+    "/retry_profile — retry a missing or outdated chart calculation.\n"
+    "/privacy — review storage and withdraw consent with Decline.\n"
+    "/help — show these commands.\n\n"
+    "Editing and readings require current consent. Send birth details only when setup "
+    "requests them. With an active profile, ask about your natal chart, transits today, "
+    "or transits on YYYY-MM-DD. Keep identifying and birth details out of chat. "
+    "Declining stops readings and setup but does not erase data. Deletion is not yet available."
 )

@@ -342,7 +342,7 @@ Collect only the allowed birth data through deterministic application states.
 Encrypted drafts survive restart; final profiles require explicit confirmation.
 See [onboarding](docs/onboarding.md). Live polling now uses the bundled gazetteer
 and historical timezone rules; tests also retain isolated deterministic fixtures.
-Calculation and saved-profile editing are available; full display/privacy controls remain Stage 17.
+Calculation, saved-profile editing and [profile/privacy controls](docs/profile-commands.md) are available.
 
 ---
 
@@ -608,7 +608,7 @@ Create a stable, recognizable personality while keeping facts and policy separat
 
 Implemented: [prompt layers and tone baseline](docs/persona-prompts.md).
 Stage 15 enforcement and Stage 16 live generation/tone review are implemented;
-profile/privacy controls and complete deletion remain next.
+profile/privacy controls are available; complete deletion remains next.
 Reference conversations are authored examples; CI tests assembly and boundaries,
 not live-model stylistic consistency or resistance to prompt injection.
 
@@ -684,7 +684,7 @@ Wire the full production-like message loop.
 
 Implemented: [conversation worker](docs/conversation-worker.md). Synthetic live-model
 review and deterministic verification are recorded in [Stage 16 evidence](docs/evidence/stage-16.md).
-Next are Stage 17 profile/privacy controls and Stage 18 complete deletion.
+Next is Stage 18 complete deletion; [profile/privacy controls](docs/profile-commands.md) are available.
 
 ### Tasks
 
@@ -729,20 +729,24 @@ Give users direct control over stored information.
 
 ### Tasks
 
-- [ ] Implement `/profile`.
-- [ ] Show date/time accuracy/place in a concise summary.
-- [ ] Do not show internal Telegram or DB identifiers.
+- [x] Implement `/profile`.
+- [x] Show date/time accuracy/place in a concise summary.
+- [x] Do not show internal Telegram or DB identifiers.
 - [x] Implement saved-profile editing (`/edit_profile` in Telegram).
 - [x] Reuse deterministic onboarding field editors.
 - [x] Recompute chart after confirmed changes.
-- [ ] Implement `/privacy`.
-- [ ] Ensure `/privacy` describes actual behavior, not intended behavior.
-- [ ] Add `/help` final content.
-- [ ] Consider `/about` if needed for AI/astrology disclosure.
+- [x] Implement `/privacy`.
+- [x] Ensure `/privacy` describes actual behavior, not intended behavior.
+- [x] Add `/help` final content.
+- [x] Consider `/about` if needed for AI/astrology disclosure (covered by `/help` and `/privacy`).
 
 ### Acceptance criteria
 
-- [ ] A user can inspect and correct every stored birth-profile field without administrator involvement.
+- [x] A user can inspect and correct every stored birth-profile field without administrator involvement.
+
+See [profile commands](docs/profile-commands.md). Inspection remains available after
+withdrawal; edits and calculations require current consent. Place selection determines
+coordinates/timezone. Complete deletion is the next stage.
 
 ---
 

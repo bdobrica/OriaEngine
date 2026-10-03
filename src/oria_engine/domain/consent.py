@@ -15,7 +15,7 @@ from oria_engine.domain.channel import HELP_TEXT, ChannelButton, ChannelMessage
 if TYPE_CHECKING:
     from oria_engine.domain.onboarding import OnboardingFlow
 
-# Collection disclosure uses the configured policy version (default 2026-10-03).
+# Collection disclosure uses the configured policy version (default 2026-10-03.1).
 # Change the configured version whenever the disclosure/data use changes.
 DISCLAIMER = (
     "Hi — I'm Oria, an AI astrology personality. Astrology is interpretive, not a factual "
@@ -26,12 +26,12 @@ DISCLAIMER = (
     "OriaEngine will store those details for future conversations after you agree. "
     "I won't ask for unrelated identifying information: legal name, email, phone number, "
     "home address, employer, passwords, government IDs or payment details.\n\n"
-    "The completed service will let you inspect your profile (/profile), correct it "
-    "(/edit-profile), review privacy and withdraw consent (/privacy), and delete your data "
-    "(/delete-me). In this demo, birth-profile collection, local place lookup, timezone "
-    "clarification, saved-profile editing (/edit_profile), and natal chart calculation are "
-    "available. /profile reports calculation status. Full profile display and deletion are "
-    "not available yet. Derived chart facts are stored privately in the application database. "
+    "Use /profile to inspect confirmed birth details, unfinished edits, chart status and "
+    "consent, even after declining. /edit_profile corrects birth details after consent; "
+    "selecting a birthplace determines coordinates and timezone. /privacy reviews this "
+    "policy and lets you withdraw consent with Decline. /help lists commands. "
+    "Deletion (/delete-me) is not available yet. Derived chart facts are stored privately "
+    "in the application database. "
     "We store internal identity, Telegram routing IDs, consent decisions and encrypted "
     "onboarding progress, including incomplete birth details. Confirmed profiles are encrypted. "
     "Send only the birth field requested. After consent, queued messages and pending replies "
@@ -140,6 +140,11 @@ class ConsentFlow:
             state = OnboardingState.CLOSED
         else:
             state = OnboardingState.CONSENT_REQUIRED
+
+        if command == "help":
+            return ConsentReply(state, HELP_TEXT)
+        if command == "profile" and self.onboarding is not None:
+            return await self.onboarding.inspect_profile(session, user_id)
 
         if (
             stale_button

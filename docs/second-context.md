@@ -64,7 +64,7 @@ Stage 15 adds [application output validation](response-policy.md). Stage 16 adds
 The polling/worker demo now calls this adapter for eligible active chat. Stage 18 owns
 confirmed, durable application-wide deletion across Oria and SecondContext.
 
-The updated disclosure uses policy version `2026-10-03`; deploy it consistently and
+The updated disclosure uses policy version `2026-10-03.1`; deploy it consistently and
 bump custom versions before enabling conversation storage. It describes actual
 SecondContext retention and deletion controls, including the minimal deletion marker.
 

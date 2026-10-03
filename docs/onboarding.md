@@ -38,8 +38,8 @@ field and invalidates any time-occurrence selection. Confirmation creates the st
 consent-checked repository and removes the draft atomically. A confirmed profile
 calls MCP and becomes active only on success. Failed calculation
 retains the encrypted profile for retry. Saved-profile editing reuses these editors;
-/profile reports calculation status. Full profile display and deletion remain later
-stages. See [derived profiles](astrology-profiles.md).
+/profile displays saved details and unfinished edits without changing them. Deletion
+remains Stage 18. See [profile commands](profile-commands.md) and [derived profiles](astrology-profiles.md).
 
 ## Durable progress and privacy
 
@@ -75,7 +75,7 @@ clarification and dataset generation. Confirmed profiles calculate through MCP.
 Start `make mcp-local` and `make worker` for host polling.
 
 Before `make run`, apply `make migrate`, retain a stable `PROFILE_ENCRYPTION_KEY`,
-and set `ORIA_POLICY_VERSION=2026-10-03` in the ignored local `.env`. Polling rejects
+and set `ORIA_POLICY_VERSION=2026-10-03.1` in the ignored local `.env`. Polling rejects
 the previous defaults, including `2026-09-28.3`. Operators using
 custom policy versions must also bump their version for the conversation-storage disclosure. No local secrets
 or developer database are modified by implementation tests.

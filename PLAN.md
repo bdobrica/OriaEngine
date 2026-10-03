@@ -1148,7 +1148,7 @@ SECOND_CONTEXT_BASE_URL=http://secondcontext:8080
 SECOND_CONTEXT_BEARER_TOKEN=
 
 ASTROLOGY_MCP_URL=http://astrology-mcp:8000/mcp
-ORIA_POLICY_VERSION=2026-10-03
+ORIA_POLICY_VERSION=2026-10-03.1
 ```
 
 Production secrets must come from the deployment platform's secret mechanism rather than committed files.
@@ -1168,7 +1168,8 @@ Encrypted drafts preserve date/time progress and candidate selection; confirmed
 profiles use the consent-checked storage repository. The worker resolves local
 places through `PlaceResolver`, clarifies clock changes, and saves confirmed profiles.
 Confirmed profiles now calculate through MCP and retain a versioned derived cache.
-/profile reports cache validity; /edit_profile reuses field editors and confirmation.
+/profile displays confirmed details, unfinished edits, consent and cache validity;
+/edit_profile reuses field editors and confirmation.
 Failed calculations are recoverable with /retry_profile. Polling now persists and
 enqueues events; `make worker` owns consent, onboarding, calculation and delivery.
 PostgreSQL recovers work after Redis loss and anchors idempotent domain changes.
@@ -1182,10 +1183,10 @@ The [complete conversation worker](docs/conversation-worker.md) now connects
 SecondContext through the guarded service, with conservative inbound filtering,
 updated consent disclosure and a synthetic live tone review. External transcript
 effects are at least once across ambiguous failures; committed replies are reused.
-Next are Stage 17 profile/privacy controls and Stage 18 complete deletion.
+[Profile/privacy controls](docs/profile-commands.md) are implemented. Next is Stage 18 complete deletion.
 See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
-Full profile display and deletion remain unavailable. The conversation-storage disclosure uses
-policy version 2026-10-03. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),
+Deletion remains unavailable. The profile/privacy disclosure uses
+policy version 2026-10-03.1. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),
 [birth-profile storage](docs/birth-profiles.md) and [consent flow](docs/consent-flow.md).
 
 The Makefile is the supported developer interface.

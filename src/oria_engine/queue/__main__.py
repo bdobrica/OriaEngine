@@ -78,8 +78,9 @@ def run(settings: Settings) -> None:
         "2026-09-28.1",
         "2026-09-28.2",
         "2026-09-28.3",
+        "2026-10-03",
     }:
-        raise ConfigurationError("Set ORIA_POLICY_VERSION=2026-10-03 for conversation storage")
+        raise ConfigurationError("Set ORIA_POLICY_VERSION=2026-10-03.1 for conversation storage")
     resolver = LocalPlaceResolver()
     publisher = Publisher(settings)
     stop = Event()
