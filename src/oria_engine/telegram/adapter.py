@@ -162,7 +162,18 @@ def create_dispatcher(
         # handle() commits before network I/O; failed delivery cannot undo consent.
         await client.send_text(channel_message.provider_chat_id, reply.text, buttons=reply.buttons)
 
-    @router.message(Command("start", "help", "privacy", "profile", "edit_profile", "retry_profile"))
+    @router.message(
+        Command(
+            "start",
+            "help",
+            "privacy",
+            "profile",
+            "edit_profile",
+            "retry_profile",
+            "delete_me",
+            "delete-me",
+        )
+    )
     async def command_handler(
         message: Message, channel_message: ChannelMessage, command: CommandObject
     ) -> None:

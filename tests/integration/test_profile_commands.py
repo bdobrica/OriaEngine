@@ -73,7 +73,7 @@ async def test_help_privacy_and_changed_policy_are_read_only(store, encryption, 
         user = await owner(store) if accepted else None
         assert (await flow.handle(message("/help"), command="help")).text == HELP_TEXT
         privacy = await flow.handle(message("/privacy"), command="privacy")
-        assert "SecondContext" in privacy.text and "Deletion" in privacy.text
+        assert "SecondContext" in privacy.text and "/delete_me" in privacy.text
         assert privacy.buttons == flow.buttons
         if user:
             async with store.transaction() as session:

@@ -28,7 +28,7 @@ immediately invalidates the cache, even before final confirmation. Confirming ed
 replaces the encrypted source and recomputes. Repository-level source writes and
 draft writes also invalidate the cache. Telegram command names use underscores;
 [profile inspection](profile-commands.md) also displays birth details and consent;
-deletion remains Stage 18.
+[account deletion](deletion.md) is available with explicit confirmation.
 
 Calculation is bounded to 20 seconds and runs under the existing per-user database
 lock inside the conversation worker. Consent withdrawal and profile edits serialize with
@@ -41,13 +41,13 @@ and deduplicates update processing; Telegram delivery can still duplicate after 
 
 ## Local demo
 
-1. Apply `make migrate` (current head `0007`).
+1. Apply `make migrate` (current head `0008`).
 2. Run `make mcp-local` to opt into a loopback-only port for host polling. The default
    `make mcp` retains the private-network deployment with no published port. The
    polling override adds a bridge network because Docker cannot publish ports on
    an internal-only network; this local mode therefore also permits outbound traffic.
 3. Use `ASTROLOGY_MCP_URL=http://localhost:8000/mcp` and
-   `ORIA_POLICY_VERSION=2026-10-03.1` in your local configuration. Bump custom policy
+   `ORIA_POLICY_VERSION=2026-10-03.2` in your local configuration. Bump custom policy
    versions too: the disclosure now includes conversation processing and storage.
 4. Run `make worker` and `make run` in separate terminals, accept the current disclosure, and confirm the profile. Previously
    confirmed profiles use /retry_profile after consent. /profile reports validity.
@@ -57,4 +57,4 @@ Do not expose this unauthenticated service publicly. Downgrading `0005` removes 
 derived caches, retaining encrypted birth profiles and drafts. Re-upgrading allows
 recomputation. Active profiles now support [transit fact replies](transits-and-routing.md).
 The [conversation worker](conversation-worker.md) connects LLM interpretation;
-complete deletion remains Stage 18.
+[account deletion](deletion.md) erases the source profile and derived cache.

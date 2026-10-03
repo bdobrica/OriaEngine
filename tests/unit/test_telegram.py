@@ -89,6 +89,8 @@ async def test_unsupported_updates_are_ignored(event):
         ("/start deep-link", "start"),
         ("/help", "help"),
         ("/privacy", "privacy"),
+        ("/delete-me", "delete-me"),
+        ("/delete_me", "delete_me"),
         ("private birth details", None),
         ("/unknown", None),
     ],

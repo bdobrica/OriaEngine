@@ -8,8 +8,8 @@
 2. Run `make env` and put the token in `TELEGRAM_BOT_TOKEN` in your local `.env`.
    Never commit the token or paste it into logs, issues, or test fixtures.
 3. Configure `DATABASE_URL`, a stable `PROFILE_ENCRYPTION_KEY`, and
-   `ORIA_POLICY_VERSION=2026-10-03.1` (bump custom versions too). Run `make infra-up`
-   and `make migrate` to apply revision `0007`, run `make mcp-local`, then
+   `ORIA_POLICY_VERSION=2026-10-03.2` (bump custom versions too). Run `make infra-up`
+   and `make migrate` to apply revision `0008`, run `make mcp-local`, then
    `make worker` in one terminal and `make run` in another with `APP_ENV=development`. Only one polling process can use
    a bot token at a time ([aiogram polling documentation](https://docs.aiogram.dev/en/latest/dispatcher/long_polling.html)).
 4. Open your development bot's private chat and send `/start`, then `/help`.

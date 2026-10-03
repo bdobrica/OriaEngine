@@ -37,8 +37,8 @@ of serialization failures. The savepoint pattern follows the
 `UserRepository.get`, `SocialIdentityRepository.get`, and all consent reads require
 an owner UUID. Missing/deleted users cannot gain consent or be reactivated through
 identity resolution. `UserUnavailableError` carries no identifying payload.
-The deletion workflow and retention policy remain a later stage; foreign keys
-restrict hard deletion until owned rows are explicitly removed in that workflow.
+The [deletion workflow](deletion.md) fences the user, removes owned content, and then
+removes identity and user rows after dependency acknowledgements.
 
 ## Consent lifecycle
 

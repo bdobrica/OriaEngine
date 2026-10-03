@@ -9,13 +9,13 @@ transaction. Replies are sent after commit so delivery failure cannot undo a dec
 ## Disclosure and decisions
 
 The initial copy is `DISCLAIMER` in `domain/consent.py`, using
-`ORIA_POLICY_VERSION` (default `2026-10-03.1`). It covers AI identity, interpretive
+`ORIA_POLICY_VERSION` (default `2026-10-03.2`). It covers AI identity, interpretive
 astrology, high-stakes limitations, birth date/time/place, chart purpose and future
 storage, prohibited unrelated PII, profile/edit controls, deletion limitations, and adult
 use. **I'm 18+ and agree** confirms adulthood and acceptance together; it is a
 self-attestation, not age verification. The copy explicitly describes this demo's
 limits: encrypted birth profiles and drafts are collected, local place lookup and
-time clarification and calculation are available, deletion remains unavailable,
+time clarification, calculation and confirmed account deletion are available,
 and prior data remains after decline. `/privacy` shows the
 disclosure and the same decision buttons. The Stage 16 disclosure also covers
 SecondContext and AI-provider processing, retained filtered messages/replies/context,
@@ -52,7 +52,7 @@ stores strict encrypted drafts and confirmed [birth profiles](birth-profiles.md)
 with current-consent checks under the user lock for every write.
 [Derived-profile activation](astrology-profiles.md) retains that check. [Profile inspection](profile-commands.md)
 is available even without current consent; editing and conversation remain gated.
-Deletion remains Stage 18. `ConsentFlow` without an injected onboarding handler
+Confirmed [account deletion](deletion.md) is available without current consent. `ConsentFlow` without an injected onboarding handler
 retains the consent-only paused response for isolated use/tests; the worker wires the
 onboarding handler and requires encryption configuration.
 

@@ -38,9 +38,11 @@ HELP_TEXT = (
     "/edit_profile — correct date, time or place, then confirm to recalculate.\n"
     "/retry_profile — retry a missing or outdated chart calculation.\n"
     "/privacy — review storage and withdraw consent with Decline.\n"
+    "/delete_me (or /delete-me) — request account deletion, then explicitly confirm.\n"
     "/help — show these commands.\n\n"
     "Editing and readings require current consent. Send birth details only when setup "
     "requests them. With an active profile, ask about your natal chart, transits today, "
     "or transits on YYYY-MM-DD. Keep identifying and birth details out of chat. "
-    "Declining stops readings and setup but does not erase data. Deletion is not yet available."
+    "Declining stops readings and setup but does not erase data. Confirmed deletion stops "
+    "processing and retries cleanup across Oria and SecondContext."
 )

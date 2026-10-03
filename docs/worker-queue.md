@@ -20,7 +20,7 @@ flowchart LR
 ## Run the demo
 
 Use identical `.env` configuration for polling and workers. Set
-`ORIA_POLICY_VERSION=2026-10-03.1` (bump custom versions too), retain the encryption
+`ORIA_POLICY_VERSION=2026-10-03.2` (bump custom versions too), retain the encryption
 key, and configure `DATABASE_URL`, `REDIS_URL`, `TELEGRAM_BOT_TOKEN` and
 `ASTROLOGY_MCP_URL=http://localhost:8000/mcp`.
 
@@ -34,6 +34,9 @@ make run
 ```
 
 `make worker` runs four Dramatiq threads and a recovery scan every five seconds.
+The scan also runs up to four [deletion jobs](deletion.md) directly from PostgreSQL,
+before ordinary publication, so a Redis outage cannot strand local erasure. Each
+deletion attempt is bounded to 60 seconds and can extend the scan interval.
 No dependency was added. Each job owns its event loop, database pool, Redis connection
 and Telegram session; these close after processing. SIGINT/SIGTERM stop recovery and
 drain workers. Restarting the worker recovers pending events from PostgreSQL.
@@ -47,6 +50,9 @@ and reply, and a bounded failure code. No exception strings or raw payloads ente
 status fields or logs. PostgreSQL identity sequences order admitted events per user;
 a separate short PostgreSQL advisory lock serializes admission commits per user.
 This is admission order, not reconstruction of missing or delayed provider updates.
+Ingress also takes a provider/sender admission lock shared with final identity removal
+and checks existing receipts before creating an identity. Completed deletion detaches
+receipts from the old owner; delayed accepted updates remain inert.
 
 | Status | Meaning |
 | --- | --- |
@@ -89,7 +95,7 @@ can duplicate that reply. This is not exactly-once Telegram delivery.
 ## Privacy and retention
 
 Before current consent, ingress discards all free text, including unsolicited birth
-values. Only normalized commands and known consent actions survive. Unknown callbacks
+values. Only normalized commands and bounded consent/deletion actions survive. Unknown callbacks
 become a fixed stale marker. Users should wait for the birth prompt after accepting;
 text arriving before that acceptance commits is deliberately discarded.
 
@@ -99,8 +105,8 @@ domain processing commits. Pending replies are also encrypted because they may c
 confirmation summaries. Successful delivery and permanent failure erase both envelopes.
 Unfinished envelopes expire 24 hours after admission. Cleanup runs with worker scans;
 while workers are stopped, expired ciphertext remains until they restart. Backups
-require their own retention policy. Deduplication metadata remains until a future
-account-deletion/metadata-retention workflow handles it.
+require their own retention policy. Account deletion wipes payloads and detaches the owner from terminal deduplication
+receipts; see [deletion retention](deletion.md).
 
 Both envelopes use the configured AES-256-GCM profile key with a random nonce and
 separate authenticated context: `['oria:event:v1', owner_uuid, event_uuid, kind,

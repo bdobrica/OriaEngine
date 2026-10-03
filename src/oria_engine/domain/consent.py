@@ -15,7 +15,7 @@ from oria_engine.domain.channel import HELP_TEXT, ChannelButton, ChannelMessage
 if TYPE_CHECKING:
     from oria_engine.domain.onboarding import OnboardingFlow
 
-# Collection disclosure uses the configured policy version (default 2026-10-03.1).
+# Collection disclosure uses the configured policy version (default 2026-10-03.2).
 # Change the configured version whenever the disclosure/data use changes.
 DISCLAIMER = (
     "Hi — I'm Oria, an AI astrology personality. Astrology is interpretive, not a factual "
@@ -30,7 +30,9 @@ DISCLAIMER = (
     "consent, even after declining. /edit_profile corrects birth details after consent; "
     "selecting a birthplace determines coordinates and timezone. /privacy reviews this "
     "policy and lets you withdraw consent with Decline. /help lists commands. "
-    "Deletion (/delete-me) is not available yet. Derived chart facts are stored privately "
+    "Use /delete_me (or /delete-me) and its confirmation button to delete your account. "
+    "Processing stops on confirmation; cleanup retries until services acknowledge deletion. "
+    "Derived chart facts are stored privately "
     "in the application database. "
     "We store internal identity, Telegram routing IDs, consent decisions and encrypted "
     "onboarding progress, including incomplete birth details. Confirmed profiles are encrypted. "
@@ -44,8 +46,12 @@ DISCLAIMER = (
     "for interpretation and may be quoted in retained replies. Raw saved birth profiles "
     "and onboarding messages are not sent to SecondContext. A blocked AI draft may still "
     "be retained there. Declining stops further conversation processing but does not erase "
-    "prior transcripts. Deletion is not yet available in this demo; future deletion retains "
-    "a minimal subject/timestamp marker, with backups and AI-provider retention separate. "
+    "prior transcripts. Confirmed deletion removes profiles, consent history, application "
+    "sessions, SecondContext conversations/memories and Telegram identity mapping. "
+    "Minimal subject/timestamp deletion markers and unlinked update receipts remain. "
+    "An encrypted reply address is retained for up to 24 hours after cleanup to retry "
+    "the final confirmation; workers erase it after delivery or expiry. "
+    "Backups and AI-provider retention are separate. "
     "Telegram retains messages under its own policies. You can use Decline below to stop "
     "onboarding, including after accepting; this does not delete identity, consent history "
     "or previously collected birth details.\n\n"
@@ -119,6 +125,11 @@ class ConsentFlow:
         command: str | None = None,
     ) -> ConsentReply:
         """Caller owns the transaction, including its inbound idempotency anchor."""
+        from oria_engine.privacy.deletion import deletion_command
+
+        deletion_reply = await deletion_command(session, user_id, message, command)
+        if deletion_reply is not None:
+            return deletion_reply
         consents = ConsentRepository(session)
         stale_button = False
         if message.callback_data is not None:

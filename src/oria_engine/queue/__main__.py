@@ -21,6 +21,7 @@ from oria_engine.domain.consent import ConsentFlow
 from oria_engine.domain.onboarding import OnboardingFlow
 from oria_engine.domain.places import LocalPlaceResolver
 from oria_engine.observability import configure_logging, correlation_scope
+from oria_engine.privacy.deletion import DeletionWorker
 from oria_engine.privacy.encryption import ProfileEncryption
 from oria_engine.queue.broker import Publisher
 from oria_engine.queue.events import EventWorker, recoverable
@@ -61,10 +62,22 @@ async def process(settings: Settings, resolver: LocalPlaceResolver, event_id: st
 
 async def recover(settings: Settings, publisher: Publisher) -> None:
     database = Database(settings)
+    bot = Bot(settings.telegram_bot_token.get_secret_value())
+    redis = Redis.from_url(
+        settings.redis_url.get_secret_value(), socket_timeout=3, socket_connect_timeout=3
+    )
+    context = SecondContextProvider(settings)
     try:
+        # Direct PostgreSQL recovery also works while the Redis broker is unavailable.
+        await DeletionWorker(
+            database, redis, ProfileEncryption(settings), context, TelegramChannelClient(bot)
+        ).recover()
         for identifier in await recoverable(database):
             await asyncio.to_thread(publisher.send, str(identifier))
     finally:
+        await context.aclose()
+        await redis.aclose()
+        await bot.session.close()
         await database.close()
 
 
@@ -79,8 +92,9 @@ def run(settings: Settings) -> None:
         "2026-09-28.2",
         "2026-09-28.3",
         "2026-10-03",
+        "2026-10-03.1",
     }:
-        raise ConfigurationError("Set ORIA_POLICY_VERSION=2026-10-03.1 for conversation storage")
+        raise ConfigurationError("Set ORIA_POLICY_VERSION=2026-10-03.2 for conversation storage")
     resolver = LocalPlaceResolver()
     publisher = Publisher(settings)
     stop = Event()

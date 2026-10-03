@@ -51,11 +51,11 @@ contract extension. See the [consumer contract](../contracts/second-context/v1.m
 
 ## Demo setup
 
-Use `ORIA_POLICY_VERSION=2026-10-03.1` consistently in polling and workers. Bump custom
+Use `ORIA_POLICY_VERSION=2026-10-03.2` consistently in polling and workers. Bump custom
 policy versions as well. Existing users must accept the new disclosure. It describes
 SecondContext/AI processing and retention, quoted chart facts, retained blocked
-drafts, limited filtering, and the current lack of user deletion. Decline stops
-further processing but does not purge previous data. Future deletion retains a
+drafts, limited filtering, and confirmed account deletion. Decline stops
+further processing but does not purge previous data. Confirmed deletion retains a
 minimal subject/timestamp marker; backups/provider retention remain separate.
 
 Start SecondContext using its own deployment instructions, then configure

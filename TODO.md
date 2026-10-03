@@ -608,7 +608,7 @@ Create a stable, recognizable personality while keeping facts and policy separat
 
 Implemented: [prompt layers and tone baseline](docs/persona-prompts.md).
 Stage 15 enforcement and Stage 16 live generation/tone review are implemented;
-profile/privacy controls are available; complete deletion remains next.
+profile/privacy controls and confirmed account deletion are available.
 Reference conversations are authored examples; CI tests assembly and boundaries,
 not live-model stylistic consistency or resistance to prompt injection.
 
@@ -684,7 +684,7 @@ Wire the full production-like message loop.
 
 Implemented: [conversation worker](docs/conversation-worker.md). Synthetic live-model
 review and deterministic verification are recorded in [Stage 16 evidence](docs/evidence/stage-16.md).
-Next is Stage 18 complete deletion; [profile/privacy controls](docs/profile-commands.md) are available.
+Next is Stage 19 production webhooks; [profile/privacy controls](docs/profile-commands.md) are available.
 
 ### Tasks
 
@@ -746,11 +746,13 @@ Give users direct control over stored information.
 
 See [profile commands](docs/profile-commands.md). Inspection remains available after
 withdrawal; edits and calculations require current consent. Place selection determines
-coordinates/timezone. Complete deletion is the next stage.
+coordinates/timezone. [Confirmed account deletion](docs/deletion.md) is available.
 
 ---
 
 ## Stage 18 — End-to-end deletion workflow
+
+Implemented: [deletion and retention](docs/deletion.md). Next is Stage 19 production webhooks.
 
 ### Goal
 
@@ -758,32 +760,32 @@ Make user deletion complete, durable, and retryable across services.
 
 ### Tasks
 
-- [ ] Add `deletion_jobs` table.
-- [ ] Implement `/delete-me` first confirmation.
-- [ ] Add explicit second confirmation button.
-- [ ] Block new normal processing while deletion is active.
-- [ ] Delete/invalidate encrypted birth profile.
-- [ ] Delete derived astrology profile.
-- [ ] Purge OriaEngine session/application data according to retention design.
-- [ ] Purge SecondContext subject/session/memory data.
-- [ ] Delete relevant Redis keys.
-- [ ] Remove Telegram identity mapping when deletion completes.
-- [ ] Mark deletion job complete.
-- [ ] Make every deletion step idempotent.
-- [ ] Retry incomplete deletion jobs safely.
-- [ ] Provide a final confirmation message without recreating durable user state unnecessarily.
+- [x] Add `deletion_jobs` table.
+- [x] Implement `/delete-me` first confirmation.
+- [x] Add explicit second confirmation button.
+- [x] Block new normal processing while deletion is active.
+- [x] Delete/invalidate encrypted birth profile.
+- [x] Delete derived astrology profile.
+- [x] Purge OriaEngine session/application data according to retention design.
+- [x] Purge SecondContext subject/session/memory data.
+- [x] Delete relevant Redis keys.
+- [x] Remove Telegram identity mapping when deletion completes.
+- [x] Mark deletion job complete.
+- [x] Make every deletion step idempotent.
+- [x] Retry incomplete deletion jobs safely.
+- [x] Provide a final confirmation message without recreating durable user state unnecessarily.
 
 ### Tests
 
-- [ ] Happy-path complete deletion.
-- [ ] SecondContext unavailable midway, then retry succeeds.
-- [ ] Redis unavailable does not prevent canonical deletion from completing later.
-- [ ] Repeated `/delete-me` confirmation is safe.
-- [ ] Deleted user starts again and is treated as a new profile/consent flow.
+- [x] Happy-path complete deletion.
+- [x] SecondContext unavailable midway, then retry succeeds.
+- [x] Redis unavailable does not prevent canonical deletion from completing later.
+- [x] Repeated `/delete-me` confirmation is safe.
+- [x] Deleted user starts again and is treated as a new profile/consent flow.
 
 ### Acceptance criteria
 
-- [ ] End-to-end test proves the user's stored profile and context are no longer retrievable after deletion completes.
+- [x] End-to-end test proves the user's stored profile and context are no longer retrievable after deletion completes.
 
 ---
 

@@ -61,10 +61,10 @@ real PostgreSQL/Qdrant tests with synthetic LLM responses. Stage 13 adds
 [policy, methodology and persona assembly](persona-prompts.md) to the adapter.
 Stage 15 adds [application output validation](response-policy.md). Stage 16 adds
 [input filtering and context worker wiring](conversation-worker.md) through the guarded service.
-The polling/worker demo now calls this adapter for eligible active chat. Stage 18 owns
-confirmed, durable application-wide deletion across Oria and SecondContext.
+The polling/worker demo calls this adapter for eligible active chat and
+[confirmed, durable account deletion](deletion.md) across Oria and SecondContext.
 
-The updated disclosure uses policy version `2026-10-03.1`; deploy it consistently and
+The updated disclosure uses policy version `2026-10-03.2`; deploy it consistently and
 bump custom versions before enabling conversation storage. It describes actual
 SecondContext retention and deletion controls, including the minimal deletion marker.
 

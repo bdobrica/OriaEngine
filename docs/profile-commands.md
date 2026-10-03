@@ -30,8 +30,8 @@ are not arbitrary free-text inputs. Unknown birth time can be selected explicitl
 
 `/privacy` describes actual encrypted profile/draft and queue storage, private derived
 facts, retained SecondContext/AI-provider conversations, filtering limits, Telegram
-retention, and unavailable deletion. Decline stops collection and readings; it does
-not erase prior data. Stage 18 supplies complete deletion. A separate `/about` adds
+retention, and confirmed account deletion. Decline stops collection and readings; it does
+not erase prior data. [Account deletion](deletion.md) requires a separate confirmation. A separate `/about` adds
 no necessary disclosure: `/help` and `/privacy` already identify Oria as AI and describe
 the interpretive limits of astrology.
 
@@ -40,5 +40,6 @@ consent-revision check, retry and erasure rules. Birth fields are never sent to
 SecondContext or application logs. Telegram still retains displayed messages under its
 own policies. See [worker queue](worker-queue.md) and [consent flow](consent-flow.md).
 
-Deploy polling and workers with `ORIA_POLICY_VERSION=2026-10-03.1` (bump custom versions
-too) and accept the updated disclosure. No database migration or new dependency is needed.
+Deploy polling and workers with `ORIA_POLICY_VERSION=2026-10-03.2` (bump custom versions
+too) and accept the updated disclosure. Inspection itself needs no new migration;
+the [deletion workflow](deletion.md) requires migration `0008`.

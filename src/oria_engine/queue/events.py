@@ -18,6 +18,7 @@ from oria_engine.db.repositories import ConsentRepository, SocialIdentityReposit
 from oria_engine.db.session import Database
 from oria_engine.domain.channel import ChannelButton, ChannelClient, ChannelMessage
 from oria_engine.domain.consent import ConsentFlow
+from oria_engine.privacy.deletion import admission_lock
 from oria_engine.privacy.encryption import ProfileEncryption
 
 logger = logging.getLogger(__name__)
@@ -58,6 +59,15 @@ class EventIngress:
 
     async def accept(self, message: ChannelMessage, *, command: str | None = None) -> UUID:
         async with self.database.transaction() as session:
+            await admission_lock(session, message.provider, message.provider_user_id)
+            existing_id = await session.scalar(
+                select(InboundEvent.id).where(
+                    InboundEvent.provider == message.provider,
+                    InboundEvent.provider_update_id == message.provider_update_id,
+                )
+            )
+            if existing_id is not None:
+                return existing_id
             # Resolve trusted sender identity; the provider/update unique key arbitrates retries.
             user = await SocialIdentityRepository(session).get_or_create_user_for_social_identity(
                 provider=message.provider,
@@ -85,8 +95,12 @@ class EventIngress:
             # The transport normalizes commands. Discard arbitrary callbacks.
             callback = message.callback_data
             buttons = ConsentFlow(self.database, self.policy_version).buttons
-            if callback not in {button.data for button in buttons} and not (
-                consent and callback and callback.startswith("onboard:") and len(callback) <= 64
+            if (
+                callback not in {button.data for button in buttons}
+                and not (
+                    consent and callback and callback.startswith("onboard:") and len(callback) <= 64
+                )
+                and not (callback and callback.startswith("delete:") and len(callback) <= 64)
             ):
                 callback = "stale" if callback is not None else None
             message = replace(
@@ -143,7 +157,7 @@ class EventWorker:
     async def process(self, event_id: UUID) -> None:
         async with self.database.transaction() as session:
             event = await session.get(InboundEvent, event_id)
-            if event is None or event.status in TERMINAL:
+            if event is None or event.status in TERMINAL or event.user_id is None:
                 return
             user_id = event.user_id
         lock = self.redis.lock(
@@ -171,7 +185,9 @@ class EventWorker:
             except (LockNotOwnedError, RedisError):
                 logger.warning("worker_lock_lost")
 
-    async def locked(self, session: AsyncSession, event_id: UUID, user_id: UUID) -> InboundEvent:
+    async def locked(
+        self, session: AsyncSession, event_id: UUID, user_id: UUID
+    ) -> InboundEvent | None:
         # PostgreSQL is the final serialization fence even if Redis is flushed or TTL expires.
         await session.execute(
             select(User).where(User.id == user_id).with_for_update(key_share=True)
@@ -184,14 +200,12 @@ class EventWorker:
             )
             .with_for_update()
         )
-        if event is None:
-            raise ValueError("Inbound event unavailable")
         return event
 
     async def claim(self, event_id: UUID, user_id: UUID) -> bool:
         async with self.database.transaction() as session:
             event = await self.locked(session, event_id, user_id)
-            if event.status in TERMINAL:
+            if event is None or event.status in TERMINAL:
                 return False
             now = datetime.now(UTC)
             if event.expires_at <= now or event.attempts >= MAX_ATTEMPTS:
@@ -220,6 +234,7 @@ class EventWorker:
             return True
 
     def decrypt(self, event: InboundEvent, value: bytes, kind: str) -> str:
+        assert event.user_id is not None
         return self.encryption.decrypt_event(
             value,
             user_id=event.user_id,
@@ -231,7 +246,7 @@ class EventWorker:
     async def calculate(self, event_id: UUID, user_id: UUID) -> None:
         async with self.database.transaction() as session:
             event = await self.locked(session, event_id, user_id)
-            if event.status in TERMINAL or event.encrypted_reply is not None:
+            if event is None or event.status in TERMINAL or event.encrypted_reply is not None:
                 return
             user = await session.get(User, user_id)
             if user is None or user.deleted_at is not None:
@@ -276,7 +291,7 @@ class EventWorker:
     async def deliver(self, event_id: UUID, user_id: UUID) -> None:
         async with self.database.transaction() as session:
             event = await self.locked(session, event_id, user_id)
-            if event.status in TERMINAL:
+            if event is None or event.status in TERMINAL:
                 return
             user = await session.get(User, user_id)
             if user is None or user.deleted_at is not None:
@@ -299,7 +314,7 @@ class EventWorker:
     async def failed(self, event_id: UUID, user_id: UUID) -> None:
         async with self.database.transaction() as session:
             event = await self.locked(session, event_id, user_id)
-            if event.status in TERMINAL:
+            if event is None or event.status in TERMINAL:
                 return
             if event.attempts >= MAX_ATTEMPTS:
                 terminal(event, "dead", "attempts_exhausted")

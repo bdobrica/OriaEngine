@@ -11,7 +11,7 @@ OriaEngine is designed to build on [SecondContext](https://github.com/bdobrica/S
 > service authentication and purge. The [conversation worker](docs/conversation-worker.md)
 > now connects calculated natal/transit facts to SecondContext interpretation,
 > with consent, input filtering and output policy checks. [Profile/privacy commands](docs/profile-commands.md)
-> support inspection, deterministic edits and withdrawal. Complete account deletion is next.
+> support inspection, deterministic edits and withdrawal. [Account deletion](docs/deletion.md) is implemented with durable cross-service recovery.
 >
 > Astrology is used here as an interpretive framework. Oria should not be treated as a source of scientific prediction, medical advice, legal advice, financial advice, or other high-stakes professional guidance.
 
@@ -204,7 +204,7 @@ SECOND_CONTEXT_BASE_URL=http://localhost:8080
 SECOND_CONTEXT_BEARER_TOKEN=
 
 ASTROLOGY_MCP_URL=http://localhost:8000/mcp
-ORIA_POLICY_VERSION=2026-10-03.1
+ORIA_POLICY_VERSION=2026-10-03.2
 ```
 
 Use a generated development key for `PROFILE_ENCRYPTION_KEY`. Production deployments must provide secrets through the deployment platform rather than a committed environment file.

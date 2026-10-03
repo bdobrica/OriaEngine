@@ -980,7 +980,12 @@ Optional but recommended record of attempted/sent replies for troubleshooting an
 
 ### `deletion_jobs`
 
-Tracks multi-service deletion progress so `/delete-me` can be retried safely if one dependency is unavailable.
+Tracks confirmed multi-service deletion progress so `/delete-me` (Telegram also supports
+`/delete_me`) retries safely if a dependency is unavailable. Migration `0008` records
+each cleanup step, retry deadline and an encrypted, expiring final-notification address.
+Completed jobs retain a minimal subject marker without a live user foreign key.
+Inbound receipts are detached from the deleted owner to preserve replay protection.
+See [deletion and retention](docs/deletion.md).
 
 ---
 
@@ -1148,7 +1153,7 @@ SECOND_CONTEXT_BASE_URL=http://secondcontext:8080
 SECOND_CONTEXT_BEARER_TOKEN=
 
 ASTROLOGY_MCP_URL=http://astrology-mcp:8000/mcp
-ORIA_POLICY_VERSION=2026-10-03.1
+ORIA_POLICY_VERSION=2026-10-03.2
 ```
 
 Production secrets must come from the deployment platform's secret mechanism rather than committed files.
@@ -1183,10 +1188,10 @@ The [complete conversation worker](docs/conversation-worker.md) now connects
 SecondContext through the guarded service, with conservative inbound filtering,
 updated consent disclosure and a synthetic live tone review. External transcript
 effects are at least once across ambiguous failures; committed replies are reused.
-[Profile/privacy controls](docs/profile-commands.md) are implemented. Next is Stage 18 complete deletion.
+[Profile/privacy controls](docs/profile-commands.md) and [end-to-end deletion](docs/deletion.md) are implemented. Next is Stage 19 production webhooks.
 See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
-Deletion remains unavailable. The profile/privacy disclosure uses
-policy version 2026-10-03.1. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),
+Confirmed deletion stops processing and durably retries local, SecondContext and Redis cleanup. The disclosure uses
+policy version 2026-10-03.2. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),
 [birth-profile storage](docs/birth-profiles.md) and [consent flow](docs/consent-flow.md).
 
 The Makefile is the supported developer interface.

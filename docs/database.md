@@ -45,6 +45,9 @@ Revision `0006` adds [durable inbound events](worker-queue.md). Its downgrade dr
 queued work and deduplication history but preserves consent, drafts and profiles.
 Revision `0007` adds [conversation session mappings](second-context.md); its
 downgrade removes only local mappings and does not purge remote SecondContext data.
+Revision `0008` adds [durable deletion jobs](deletion.md) and unlinked inbound receipts.
+Its development downgrade drops deletion progress and unlinked receipts; it cannot
+restore deleted users or remote context. Do not downgrade with active deletion jobs.
 `make migrate-down` rolls back one revision and is guarded to development/test.
 It uses the configured database URL: verify that URL points to your intended
 development database before running it. Downgrading `0002` drops all identity

@@ -148,7 +148,7 @@ class InboundEvent(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     sequence: Mapped[int] = mapped_column(BigInteger, Identity(), unique=True)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
     provider: Mapped[str] = mapped_column(String(32))
     provider_update_id: Mapped[str] = mapped_column(String(128))
     status: Mapped[str] = mapped_column(String(16), default="pending")
@@ -171,3 +171,32 @@ class ConversationSession(Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     session_id: Mapped[UUID]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class DeletionJob(Base):
+    """Durable purge progress; survives removal of the user and routing identity."""
+
+    __tablename__ = "deletion_jobs"
+    __table_args__ = (
+        UniqueConstraint("user_id"),
+        CheckConstraint(
+            "status IN ('confirmation', 'requested', 'local_deleted', 'context_deleted', "
+            "'redis_deleted', 'completed')",
+            name="status",
+        ),
+        CheckConstraint("attempts >= 0", name="attempts"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    user_id: Mapped[UUID]  # Deliberately not a foreign key: minimal deletion marker.
+    status: Mapped[str] = mapped_column(String(32), default="confirmation")
+    confirmation_token: Mapped[str | None] = mapped_column(String(32))
+    confirmation_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    encrypted_target: Mapped[bytes | None]
+    encryption_key_version: Mapped[str | None] = mapped_column(String(64))
+    requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    notification_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    attempts: Mapped[int] = mapped_column(default=0)
+    failure_code: Mapped[str | None] = mapped_column(String(32))
