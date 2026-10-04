@@ -6,7 +6,7 @@ import re
 from typing import Literal, Self
 from urllib.parse import unquote, urlsplit
 
-from pydantic import SecretStr, ValidationError, model_validator
+from pydantic import Field, SecretStr, ValidationError, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict, SettingsError
 
 
@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     second_context_subject_namespace: str = ""
     astrology_mcp_url: str = "http://localhost:8000/mcp"
     oria_policy_version: str = "2026-10-03.2"
+    inbound_rate_per_minute: int = Field(default=20, ge=1, le=120)
+    queued_jobs_per_user: int = Field(default=8, ge=1, le=32)
+    llm_processing_enabled: bool = True
 
     @model_validator(mode="after")
     def validate_configuration(self) -> Self:

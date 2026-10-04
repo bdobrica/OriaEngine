@@ -85,13 +85,14 @@ async def test_concurrent_webhook_replays_create_one_event_and_one_domain_action
     identifier = stored[0].id
     consumer = publisher.broker.consume("inbound", timeout=100)
     try:
-        for _ in responses:
-            job = await asyncio.to_thread(next, consumer)
-            assert job.actor_name == "process_inbound"
-            assert job.args == (str(identifier),)
-            assert job.kwargs == {}
-            await worker.process(identifier)
-            consumer.ack(job)
+        job = await asyncio.to_thread(next, consumer)
+        assert job.actor_name == "process_inbound"
+        assert job.args == (str(identifier),)
+        assert job.kwargs == {}
+        assert await asyncio.to_thread(next, consumer) is None
+        await worker.process(identifier)
+        await worker.process(identifier)
+        consumer.ack(job)
     finally:
         consumer.close()
     worker.client.send_text.assert_awaited_once()

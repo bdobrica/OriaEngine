@@ -204,7 +204,7 @@ class DeletionWorker:
                 await self.context.purge(job.user_id)
                 job.status = "context_deleted"
             elif job.status == "context_deleted":
-                # The only current per-user Redis key. Queue envelopes contain only event UUIDs;
+                # Conversation coordination key. Queue envelopes contain only event UUIDs;
                 # terminal/detached PostgreSQL receipts make delayed deliveries inert.
                 await self.redis.delete(f"oria:user:{job.user_id}:conversation-lock")
                 job.status = "redis_deleted"
@@ -218,6 +218,9 @@ class DeletionWorker:
                 )
                 for identity in identities:
                     await admission_lock(session, identity.provider, identity.provider_user_id)
+                    if identity.provider == "telegram":
+                        prefix = f"oria:abuse:telegram:{identity.provider_user_id}"
+                        await self.redis.delete(prefix + ":rate", prefix + ":notice")
                 await session.execute(select(User).where(User.id == job.user_id).with_for_update())
                 target = next(
                     (i.provider_chat_id for i in identities if i.provider == "telegram"), None

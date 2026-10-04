@@ -24,16 +24,27 @@ existing durable admission policy. Only normalized application input is encrypte
 no complete Telegram Update is persisted.
 
 Admission commits/deduplicates the PostgreSQL event before publishing its UUID to
-Redis. Duplicate requests can publish duplicate jobs; workers make them inert after
-processing. A 5-second deadline bounds body read, dispatch, admission and publication.
+Redis. Only the earliest due event per user is published; completed receipts are
+inert. Disposable publication reservations suppress repeated UUID jobs. A 5-second
+deadline bounds body read, dispatch, admission and publication.
 No conversation, astrology or context generation occurs in the request.
+
+New updates are subject to [admission limits](../../docs/abuse-controls.md): a default
+20 updates per sender per 60-second Redis window, eight nonterminal events per user
+in PostgreSQL, and 4096 UTF-16 units of text. Accepted duplicate receipts bypass
+these budgets. Excess/malformed text and rate/backlog excess are acknowledged with
+HTTP 200 without storing the rejected payload, creating a receipt or enqueueing work.
+This avoids provider retry amplification. At most one fixed notice per sender/minute
+may accompany rejection. Transient Redis/database failures still return 503.
 
 ## Responses
 
 | Status | Body / meaning |
 | --- | --- |
-| 200 | `{"ok":true}` after admission/publication, or for unsupported events/deleting users |
+| 200 | `{"ok":true}` after admission and eligible publication, or for unsupported events/deleting users/limited updates without a notice |
 | 200 | `{"method":"answerCallbackQuery","callback_query_id":"<incoming callback ID>"}` after accepted supported callback admission |
+| 200 | Callback acknowledgement with additive `text` containing a fixed limit notice |
+| 200 | `{"method":"sendMessage","chat_id":"<trusted private chat ID>","text":"<fixed notice>"}` for a limited message eligible for feedback |
 | 400 | `{"detail":"Invalid update"}` for malformed JSON/schema |
 | 403 | `{"detail":"Forbidden"}` for missing, incorrect or duplicate secret headers |
 | 413 | `{"detail":"Request too large"}` for an authenticated oversized body |
@@ -68,7 +79,10 @@ pending updates by default. Delete also preserves pending updates. Discarding
 pending updates requires the explicit `--drop-pending-updates` CLI flag.
 Gateway startup never registers or removes a webhook. Polling remains development-only.
 
-This is the initial ingress contract. Additive Telegram fields remain compatible;
+The Stage 20 limit responses add fixed Telegram method feedback while preserving
+HTTP acknowledgement and existing authentication/error shapes. No new caller-selected
+authority or durable rejected-message payload is introduced. Additive Telegram fields
+remain compatible;
 changes to authentication, canonical admission or response semantics require contract
 and test updates. HTTPS termination and preserving the received secret header belong
 to the deployment proxy. See [operator setup](../../docs/telegram-webhook.md).

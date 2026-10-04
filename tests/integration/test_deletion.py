@@ -132,6 +132,9 @@ async def test_complete_deletion_http_purge_replay_and_fresh_account(deletion):
     await worker.redis.set(
         f"oria:user:{other_id}:conversation-lock", "synthetic-other-lease", ex=120
     )
+    for sender in ("42", "43"):
+        for kind in ("rate", "notice"):
+            await worker.redis.set(f"oria:abuse:telegram:{sender}:{kind}", "1", ex=60)
     with pytest.raises(UserUnavailableError):
         await ingress.accept(message(text="private late text"))
     await runner.recover()
@@ -145,6 +148,10 @@ async def test_complete_deletion_http_purge_replay_and_fresh_account(deletion):
     assert worker.client.send_text.call_args.args == ("42", FINAL_TEXT)
     assert not await worker.redis.exists(f"oria:user:{user_id}:conversation-lock")
     assert await worker.redis.exists(f"oria:user:{other_id}:conversation-lock")
+    for kind in ("rate", "notice"):
+        assert not await worker.redis.exists(f"oria:abuse:telegram:42:{kind}")
+        assert await worker.redis.exists(f"oria:abuse:telegram:43:{kind}")
+        await worker.redis.delete(f"oria:abuse:telegram:43:{kind}")
     await worker.redis.delete(f"oria:user:{other_id}:conversation-lock")
     count = worker.client.send_text.await_count
     await runner.process(job_id)

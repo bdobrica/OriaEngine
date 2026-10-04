@@ -9,7 +9,7 @@ from typing import Any
 from aiogram import BaseMiddleware, Bot, Dispatcher, Router
 from aiogram.enums import ChatType
 from aiogram.filters import Command, CommandObject
-from aiogram.methods import AnswerCallbackQuery
+from aiogram.methods import AnswerCallbackQuery, SendMessage
 from aiogram.types import (
     CallbackQuery,
     InlineKeyboardButton,
@@ -25,6 +25,7 @@ from oria_engine.domain.consent import ConsentFlow
 from oria_engine.observability import correlation_scope
 from oria_engine.queue.broker import Publisher
 from oria_engine.queue.events import EventIngress
+from oria_engine.queue.limits import AdmissionRejected
 
 logger = logging.getLogger(__name__)
 ALLOWED_UPDATES = ["message", "callback_query"]
@@ -144,7 +145,7 @@ def create_dispatcher(
     dispatcher.update.outer_middleware(PrivateMessageMiddleware(webhook=webhook))
     router = Router(name="private_messages")
 
-    async def respond(channel_message: ChannelMessage, command: str | None = None) -> None:
+    async def respond(channel_message: ChannelMessage, command: str | None = None) -> str | None:
         if ingress is not None:
             # aiogram acknowledges offsets even when a handler raises. Keep this update
             # in flight until PostgreSQL accepts it; shutdown cancellation still propagates.
@@ -155,24 +156,30 @@ def create_dispatcher(
                 except UserUnavailableError:
                     # A deleted account is a permanent rejection, not a database outage.
                     logger.info("update_completed")
-                    return
+                    return None
+                except AdmissionRejected as exc:
+                    logger.info("inbound_limited")
+                    if not webhook and exc.reply:
+                        await client.send_text(channel_message.provider_chat_id, exc.reply)
+                    return exc.reply if webhook else None
                 except Exception:
                     if webhook:
                         raise
                     logger.error("update_failed")
                     await asyncio.sleep(1)
-            if publisher is not None:
+            if publisher is not None and await ingress.publishable(identifier):
                 try:
                     await asyncio.to_thread(publisher.send, str(identifier))
                 except Exception:
                     logger.warning("queue_unavailable")  # Durable worker scan closes enqueue gap.
                     if webhook:
                         raise
-            return
+            return None
         assert flow is not None
         reply = await flow.handle(channel_message, command=command)
         # handle() commits before network I/O; failed delivery cannot undo consent.
         await client.send_text(channel_message.provider_chat_id, reply.text, buttons=reply.buttons)
+        return None
 
     @router.message(
         Command(
@@ -188,20 +195,28 @@ def create_dispatcher(
     )
     async def command_handler(
         message: Message, channel_message: ChannelMessage, command: CommandObject
-    ) -> None:
-        await respond(channel_message, command.command)
+    ) -> SendMessage | None:
+        notice = await respond(channel_message, command.command)
+        return (
+            SendMessage(chat_id=channel_message.provider_chat_id, text=notice) if notice else None
+        )
 
     @router.message()
-    async def fallback_handler(message: Message, channel_message: ChannelMessage) -> None:
-        await respond(channel_message)
+    async def fallback_handler(
+        message: Message, channel_message: ChannelMessage
+    ) -> SendMessage | None:
+        notice = await respond(channel_message)
+        return (
+            SendMessage(chat_id=channel_message.provider_chat_id, text=notice) if notice else None
+        )
 
     @router.callback_query()
     async def consent_handler(
         callback: CallbackQuery, channel_message: ChannelMessage
     ) -> AnswerCallbackQuery | None:
         if webhook:
-            await respond(channel_message)
-            return AnswerCallbackQuery(callback_query_id=callback.id)
+            notice = await respond(channel_message)
+            return AnswerCallbackQuery(callback_query_id=callback.id, text=notice)
         try:
             await respond(channel_message)
         finally:

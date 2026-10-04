@@ -308,6 +308,21 @@ async def test_queue_ingress_does_not_run_flow_and_enqueue_failure_is_recoverabl
     client.send_text.assert_not_called()
 
 
+async def test_limited_polling_message_returns_fixed_notice_without_retry_or_queue():
+    from unittest.mock import Mock
+
+    from oria_engine.queue.limits import LIMIT_REPLY, AdmissionRejected
+
+    ingress, client, publisher = AsyncMock(), AsyncMock(), Mock()
+    ingress.accept.side_effect = AdmissionRejected(LIMIT_REPLY)
+    await create_dispatcher(client, ingress=ingress, publisher=publisher).feed_update(
+        Bot(TOKEN), update("/start")
+    )
+    ingress.accept.assert_awaited_once()
+    publisher.send.assert_not_called()
+    client.send_text.assert_awaited_once_with("42", LIMIT_REPLY)
+
+
 async def test_queue_ingress_retries_durability_before_callback_ack():
     from uuid import uuid4
 

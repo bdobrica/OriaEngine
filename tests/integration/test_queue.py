@@ -256,8 +256,9 @@ async def test_pending_event_order_and_redis_flush_recovery(queue):
     await worker.process(second)
     assert (await row(worker, second)).attempts == 0
     await worker.redis.flushdb()
-    assert await recoverable(worker.database) == [first, second]
+    assert await recoverable(worker.database) == [first]
     await worker.process(first)
+    assert await recoverable(worker.database) == [second]
     await worker.process(second)
     assert [c.status for c in await consent_rows(worker)] == ["accepted", "declined"]
 

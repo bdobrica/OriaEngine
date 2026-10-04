@@ -49,7 +49,9 @@ The Redis step removes the existing `oria:user:<uuid>:conversation-lock` key. Sh
 Dramatiq queues contain only event UUIDs; stale jobs become harmless through terminal
 PostgreSQL receipts. An already-started worker can briefly recreate the expiring lock,
 but rechecks canonical state before processing and releases it without accessing data.
-Future user-owned Redis keys must be added to this cleanup explicitly.
+Final cleanup also removes the exact 60-second sender rate/notice keys under the
+admission lock before deleting the identity. Event UUID publication reservations
+expire after 150 seconds and cannot process detached terminal receipts.
 
 Final cleanup uses the same admission lock as ingress, detaches inbound receipts,
 removes the Telegram mapping and hard-deletes the user. It encrypts the final reply

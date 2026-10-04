@@ -1015,6 +1015,18 @@ Important transitions should be durable:
 
 External calls should use bounded retries and timeouts.
 
+The implemented [abuse controls](docs/abuse-controls.md) admit 20 new updates per
+sender per 60-second Redis window and cap PostgreSQL nonterminal work at eight
+events per user by default. Text is limited to 4096 UTF-16 units. Limits acknowledge
+excess updates without queued work, with at most one fixed notice per minute.
+Ingress/recovery publish only each user's earliest due event; disposable Redis
+reservations suppress duplicate publications. Existing 60-second worker/20-second
+downstream deadlines and durable retry backoff remain. MCP responses are bounded
+before protocol parsing to 256 KiB; SecondContext retains its 256-KiB decoded limit.
+Final typed downstream failure returns a local temporary-unavailability reply after
+rolling back partial domain work. `LLM_PROCESSING_ENABLED=false` and restarting all
+workers stops new generation/memory ingestion while preserving commands and deletion.
+
 A failed astrology calculation should not corrupt the profile. A failed LLM call should allow the event to retry. A failed Telegram send should be recorded and retried conservatively.
 
 Exactly-once delivery of a Telegram message cannot be guaranteed across every crash boundary; the design should minimize duplicate replies and make duplicate state mutation impossible.
@@ -1197,7 +1209,8 @@ updated consent disclosure and a synthetic live tone review. External transcript
 effects are at least once across ambiguous failures; committed replies are reused.
 [Profile/privacy controls](docs/profile-commands.md), [end-to-end deletion](docs/deletion.md)
 and [production webhook ingress](docs/telegram-webhook.md) are implemented.
-Next is Stage 20 rate limiting and abuse controls; live TLS/Telegram validation
+[Rate limiting and abuse controls](docs/abuse-controls.md) are implemented.
+Next is Stage 21 observability and operational readiness; live TLS/Telegram validation
 requires the operator's public HTTPS endpoint.
 See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
 Confirmed deletion stops processing and durably retries local, SecondContext and Redis cleanup. The disclosure uses

@@ -178,6 +178,34 @@ async def test_malformed_and_oversized_responses(body):
         await client.aclose()
 
 
+@pytest.mark.parametrize("overflow", [False, True])
+async def test_decoded_chunked_response_limit_precedes_parsing_and_closes(overflow):
+    class Chunks(httpx.AsyncByteStream):
+        closed = False
+
+        async def __aiter__(self):
+            yield b" " * 262142
+            yield b"{}"
+            if overflow:
+                yield b"synthetic-private"
+
+        async def aclose(self):
+            self.closed = True
+
+    stream = Chunks()
+    client = provider(lambda request: httpx.Response(200, stream=stream))
+    try:
+        if overflow:
+            with pytest.raises(ContextUnavailable) as error:
+                await client._post("v1/responses", {"user": str(uuid4())})
+            assert "synthetic-private" not in str(error.value)
+        else:
+            assert len(await client._post("v1/responses", {"user": str(uuid4())})) == 262144
+        assert stream.closed
+    finally:
+        await client.aclose()
+
+
 @pytest.mark.parametrize("field", ["session_id", "user_external_id", "status", "output_text"])
 async def test_response_scope_and_typed_parsing(field):
     stub = SecondContextStub()

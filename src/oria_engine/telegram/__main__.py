@@ -17,6 +17,7 @@ from oria_engine.observability import configure_logging
 from oria_engine.privacy.encryption import ProfileEncryption
 from oria_engine.queue.broker import Publisher
 from oria_engine.queue.events import EventIngress
+from oria_engine.queue.limits import InboundLimits
 from oria_engine.telegram.adapter import ALLOWED_UPDATES, TelegramChannelClient, create_dispatcher
 
 logger = logging.getLogger(__name__)
@@ -39,7 +40,12 @@ async def run_polling(settings: Settings) -> None:
         database = Database(settings)
         dispatcher = create_dispatcher(
             TelegramChannelClient(bot),
-            ingress=EventIngress(database, encryption, settings.oria_policy_version),
+            ingress=EventIngress(
+                database,
+                encryption,
+                settings.oria_policy_version,
+                limits=InboundLimits(publisher.client, settings),
+            ),
             publisher=publisher,
         )
         logger.info("application_started")

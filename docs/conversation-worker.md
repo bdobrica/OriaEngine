@@ -34,12 +34,19 @@ or model-driven profile mutation is introduced.
 ## Failures and remote effects
 
 Active MCP and context failures propagate to the existing five-attempt queue retry
-budget. Errors retain only bounded codes. The context request has a 20-second
+budget with durable exponential backoff. The final typed downstream failure rolls
+back partial domain work and commits a fixed temporary-unavailability reply. Errors
+retain only bounded codes. The context request has a 20-second
 deadline; the complete worker attempt remains bounded at 60 seconds. Telegram
 delivery failures reuse the saved validated reply without repeating generation or
 transit calculation. Profile removal or user deletion before processing prevents
 old queued text from using a stale chart or context scope. A running operation
 holds the user row lock; withdrawal/deletion waits for that operation to finish.
+
+The [abuse controls](abuse-controls.md) bound each user's admission/backlog and both
+downstream response sizes. `LLM_PROCESSING_ENABLED=false`, followed by restarting
+all workers, disables new generation and memory ingestion while preserving
+deterministic commands and deletion. Running calls and committed replies may finish.
 
 SecondContext has no response idempotency key. Worker retry after a lost response,
 timeout, or crash before the local reply commit can repeat remote transcript writes

@@ -4,8 +4,10 @@ import asyncio
 from typing import Protocol
 
 from fastmcp import Client
+from fastmcp.client.transports import StreamableHttpTransport
 
 from oria_engine.astrology.contracts import NatalRequest, NatalResult
+from oria_engine.astrology.http import bounded_http_client
 from oria_engine.astrology.transits import TransitRequest, TransitResult
 
 
@@ -24,10 +26,13 @@ class FastMCPAstrologyClient:
         self.url = url
         self.timeout = timeout
 
+    def transport(self) -> StreamableHttpTransport:
+        return StreamableHttpTransport(self.url, httpx_client_factory=bounded_http_client)
+
     async def calculate_transits(self, request: TransitRequest) -> TransitResult:
         try:
             async with asyncio.timeout(self.timeout):
-                async with Client(self.url, timeout=self.timeout) as client:
+                async with Client(self.transport(), timeout=self.timeout) as client:
                     response = await client.call_tool(
                         "calculate_transits", {"request": request.model_dump(mode="json")}
                     )
@@ -46,7 +51,7 @@ class FastMCPAstrologyClient:
     async def calculate_natal_chart(self, request: NatalRequest) -> NatalResult:
         try:
             async with asyncio.timeout(self.timeout):
-                async with Client(self.url, timeout=self.timeout) as client:
+                async with Client(self.transport(), timeout=self.timeout) as client:
                     response = await client.call_tool(
                         "calculate_natal_chart", {"request": request.model_dump(mode="json")}
                     )

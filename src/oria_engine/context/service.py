@@ -12,16 +12,22 @@ from oria_engine.context.contracts import (
 )
 from oria_engine.db.conversation_sessions import ConversationSessionRepository
 from oria_engine.domain.policy import SAFETY_REPLY, guard_reply, is_high_stakes
+from oria_engine.queue.limits import UNAVAILABLE_REPLY
 
 
 class ConversationContext:
-    def __init__(self, provider: ContextProvider, policy_version: str) -> None:
+    def __init__(
+        self, provider: ContextProvider, policy_version: str, *, enabled: bool = True
+    ) -> None:
         self.provider = provider
         self.policy_version = policy_version
+        self.enabled = enabled
 
     async def respond(
         self, session: AsyncSession, user_id: UUID, request: ConversationRequest
     ) -> ContextReply:
+        if not self.enabled:
+            return ContextReply(response_id="oria-unavailable", text=UNAVAILABLE_REPLY)
         scope = await ConversationSessionRepository(session, self.policy_version).get_or_create(
             user_id
         )
@@ -34,6 +40,8 @@ class ConversationContext:
         return ContextReply(response_id=draft.response_id, text=text)
 
     async def remember(self, session: AsyncSession, user_id: UUID, kind: MemoryKind) -> None:
+        if not self.enabled:
+            return
         scope = await ConversationSessionRepository(session, self.policy_version).get_or_create(
             user_id
         )

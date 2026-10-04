@@ -18,6 +18,7 @@ from oria_engine.db.session import Database
 from oria_engine.observability import configure_logging, correlation_scope
 from oria_engine.queue.broker import Publisher
 from oria_engine.queue.events import EventIngress
+from oria_engine.queue.limits import InboundLimits
 from oria_engine.telegram.webhook import (
     WEBHOOK_PATH,
     WebhookGateway,
@@ -109,7 +110,12 @@ def create_app(
                     assert encryption is not None
                     app.state.webhook_gateway = WebhookGateway(
                         bot,
-                        EventIngress(database, encryption, settings.oria_policy_version),
+                        EventIngress(
+                            database,
+                            encryption,
+                            settings.oria_policy_version,
+                            limits=InboundLimits(publisher.client, settings),
+                        ),
                         publisher,
                     )
                 gateway = app.state.webhook_gateway

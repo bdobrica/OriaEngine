@@ -5,7 +5,7 @@ import hmac
 import logging
 
 from aiogram import Bot
-from aiogram.methods import AnswerCallbackQuery
+from aiogram.methods import AnswerCallbackQuery, SendMessage
 from aiogram.types import Update
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -60,11 +60,16 @@ class WebhookGateway:
                     raise HTTPException(400, "Invalid update") from None
                 result = await self.dispatcher.feed_update(self.bot, update)
                 if isinstance(result, AnswerCallbackQuery):
+                    acknowledgement = {
+                        "method": "answerCallbackQuery",
+                        "callback_query_id": result.callback_query_id,
+                    }
+                    if result.text:
+                        acknowledgement["text"] = result.text
+                    return JSONResponse(acknowledgement)
+                if isinstance(result, SendMessage):
                     return JSONResponse(
-                        {
-                            "method": "answerCallbackQuery",
-                            "callback_query_id": result.callback_query_id,
-                        }
+                        {"method": "sendMessage", "chat_id": result.chat_id, "text": result.text}
                     )
                 return JSONResponse({"ok": True})
         except HTTPException:

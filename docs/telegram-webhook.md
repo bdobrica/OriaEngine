@@ -86,6 +86,11 @@ listener/network configuration; do not expose an unauthenticated upstream.
 
 ## Failure and retry behavior
 
+[Admission limits](abuse-controls.md) bound sender bursts, pending work and text size.
+Excess new updates receive HTTP 200 without new stored payloads/jobs to avoid provider
+retry amplification. At most one fixed notice per sender/minute uses Telegram's
+webhook method-response mechanism. Transient limit-store failures still return 503.
+
 Missing, wrong or duplicate secrets return 403 before body parsing. Malformed
 authenticated input returns a fixed 400; oversized input returns 413, including
 chunked bodies. Unsupported updates return 200 without identities or event rows.

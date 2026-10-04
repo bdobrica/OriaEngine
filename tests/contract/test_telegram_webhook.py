@@ -13,6 +13,7 @@ from oria_engine.app import create_app
 from oria_engine.config import Settings
 from oria_engine.queue.broker import Publisher
 from oria_engine.queue.events import EventIngress
+from oria_engine.queue.limits import LIMIT_REPLY, AdmissionRejected
 from oria_engine.telegram.webhook import WEBHOOK_PATH, WebhookGateway
 
 
@@ -92,3 +93,23 @@ async def test_unknown_update_is_ignored_and_production_docs_are_disabled(client
     assert (await client.get("/docs")).status_code == 404
     assert (await client.get("/openapi.json")).status_code == 404
     assert (await client.get(WEBHOOK_PATH)).status_code == 405
+
+
+async def test_admission_limits_are_permanent_200_with_optional_telegram_notice(client):
+    client, ingress = client
+    event = {
+        "update_id": 11,
+        "message": {
+            "message_id": 1,
+            "date": 1700000000,
+            "chat": {"id": 42, "type": "private"},
+            "from": {"id": 42, "is_bot": False, "first_name": "Synthetic"},
+            "text": "Hi",
+        },
+    }
+    ingress.accept.side_effect = AdmissionRejected(LIMIT_REPLY)
+    response = await client.post(WEBHOOK_PATH, json=event)
+    assert response.status_code == 200
+    assert response.json() == {"method": "sendMessage", "chat_id": "42", "text": LIMIT_REPLY}
+    ingress.accept.side_effect = AdmissionRejected()
+    assert (await client.post(WEBHOOK_PATH, json=event)).json() == {"ok": True}

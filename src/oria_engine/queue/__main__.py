@@ -47,7 +47,9 @@ async def process(settings: Settings, resolver: LocalPlaceResolver, event_id: st
                 settings.oria_policy_version,
                 resolver,
                 FastMCPAstrologyClient(settings.astrology_mcp_url),
-                ConversationContext(context, settings.oria_policy_version),
+                ConversationContext(
+                    context, settings.oria_policy_version, enabled=settings.llm_processing_enabled
+                ),
             ),
         )
         await EventWorker(database, redis, encryption, flow, TelegramChannelClient(bot)).process(

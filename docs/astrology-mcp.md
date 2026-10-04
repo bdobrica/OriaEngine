@@ -40,6 +40,11 @@ may take several minutes. `make verify` includes all contract tests and this tes
 
 ## Version 1 contract
 
+The [MCP transport limits](../contracts/astrology/transport-v1.md) bound each HTTP
+response to 256 KiB before SDK parsing and each operation to 20 seconds. The consumer
+requests uncompressed JSON/SSE and rejects compressed responses. Calculation schemas
+and numerical meanings remain unchanged.
+
 The published [JSON schemas](../contracts/astrology/v1.json) are generated from
 [`contracts.py`](../src/oria_engine/astrology/contracts.py). MCP arguments have a
 single `request` property. Both nested and top-level identity/extra attributes are

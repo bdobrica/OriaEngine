@@ -14,10 +14,33 @@ from oria_engine.app import create_app
 from oria_engine.config import ConfigurationError, Settings
 from oria_engine.db.repositories import UserUnavailableError
 from oria_engine.observability import correlation_id, update_id
+from oria_engine.queue.limits import LIMIT_REPLY, AdmissionRejected
 from oria_engine.telegram.webhook import MAX_BODY_BYTES, WEBHOOK_PATH, WebhookGateway
 from oria_engine.telegram.webhook_admin import configure_webhook, main
 
 TOKEN = "123456:synthetic-webhook-token"
+
+
+@pytest.mark.parametrize("notice", [LIMIT_REPLY, None])
+async def test_limit_rejection_acknowledges_without_publication(client, gateway, notice):
+    gateway.ingress.accept.side_effect = AdmissionRejected(notice)
+    response = await client.post(WEBHOOK_PATH, json=payload())
+    assert response.status_code == 200
+    assert response.json() == (
+        {"method": "sendMessage", "chat_id": "42", "text": notice} if notice else {"ok": True}
+    )
+    gateway.publisher.send.assert_not_called()
+
+
+async def test_limit_callback_ack_contains_fixed_notice(client, gateway):
+    gateway.ingress.accept.side_effect = AdmissionRejected(LIMIT_REPLY)
+    response = await client.post(WEBHOOK_PATH, json=callback())
+    assert response.status_code == 200 and response.json() == {
+        "method": "answerCallbackQuery",
+        "callback_query_id": "synthetic-callback",
+        "text": LIMIT_REPLY,
+    }
+    gateway.publisher.send.assert_not_called()
 
 
 @pytest.fixture

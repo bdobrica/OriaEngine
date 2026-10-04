@@ -80,9 +80,12 @@ event do not consume attempts. PostgreSQL owns retries; Dramatiq retries are dis
 so a Redis flush cannot reset the attempt budget. Database/Redis outages leave the
 event recoverable; dependency downtime need not immediately consume an attempt.
 
-The recovery loop scans up to 100 eligible records at a time and republishes their
-UUIDs. Duplicate jobs are harmless. This closes the commit/enqueue gap and restores
-jobs after Redis loss, including those never successfully published. No durable
+The recovery loop scans up to 100 eligible user heads at a time and publishes their
+UUIDs. Ingress also publishes only the earliest due event for a user. Redis publication
+reservations suppress duplicate jobs for up to 150 seconds and release after claimed
+attempts; completed receipts are not published. Duplicate jobs are harmless. This
+closes the commit/enqueue gap and restores jobs after Redis loss, including those
+never successfully published. No durable
 `queued` flag can strand work when Redis disappears. A dead event no longer blocks
 later user messages. The user can resend a command or resume with `/start`;
 dead payloads cannot be replayed because they have been erased.
@@ -101,7 +104,7 @@ values. Only normalized commands and bounded consent/deletion actions survive. U
 become a fixed stale marker. Users should wait for the birth prompt after accepting;
 text arriving before that acceptance commits is deliberately discarded.
 
-After consent, bounded input (at most 4096 characters) is temporarily encrypted;
+After consent, bounded input (at most 4096 UTF-16 units) is temporarily encrypted;
 only validated birth fields enter drafts/profiles. Input is erased atomically when
 domain processing commits. Pending replies are also encrypted because they may contain
 confirmation summaries. Successful delivery and permanent failure erase both envelopes.
@@ -114,7 +117,9 @@ Both envelopes use the configured AES-256-GCM profile key with a random nonce an
 separate authenticated context: `['oria:event:v1', owner_uuid, event_uuid, kind,
 key_version]`, where kind is `input` or `reply`. Ciphertexts cannot be moved across
 users, events or payload kinds. Redis receives no input, reply, birth data or routing
-IDs. Keep old keys available while their queued payloads remain; multi-key rotation
+IDs in queue payloads. [Admission counters](abuse-controls.md) use only the trusted
+numeric provider sender, and publication reservations use event UUIDs. Keep old keys
+available while their queued payloads remain; multi-key rotation
 is not implemented. The policy bump discloses temporary encrypted message storage.
 
 ## Operator visibility and limits
@@ -133,10 +138,12 @@ Do not export encrypted envelopes or routing IDs when investigating errors.
 
 The baseline keeps bounded external calls under the owner database lock, and stores
 short-lived encrypted replies in the inbound row rather than a separate outbox table.
-Rate limits, fair scheduling at large queue depth, production containers and metrics
-remain later stages. [Stage 16](conversation-worker.md) adds guarded SecondContext
-interpretation and documents at-least-once remote effects. This stage introduces no
-new published wire contract and does not change astrology MCP v1.
+[Rate and backlog limits](abuse-controls.md), fair recovery scans, bounded downstream
+responses and the LLM emergency switch are implemented. Production containers and
+metrics remain later stages. [Stage 16](conversation-worker.md) adds guarded SecondContext
+interpretation and documents at-least-once remote effects. Astrology calculation
+schemas remain v1; the [transport limits](../contracts/astrology/transport-v1.md)
+record the bounded consumer response behavior.
 
 Automated checks use isolated PostgreSQL/Redis, synthetic identities and mocked
 Telegram sends, including an actual Dramatiq broker/consumer and production job.

@@ -684,7 +684,7 @@ Wire the full production-like message loop.
 
 Implemented: [conversation worker](docs/conversation-worker.md). Synthetic live-model
 review and deterministic verification are recorded in [Stage 16 evidence](docs/evidence/stage-16.md).
-Next is Stage 20 rate limiting; [profile/privacy controls](docs/profile-commands.md) are available.
+Next is Stage 21 observability; [profile/privacy controls](docs/profile-commands.md) are available.
 
 ### Tasks
 
@@ -752,7 +752,7 @@ coordinates/timezone. [Confirmed account deletion](docs/deletion.md) is availabl
 
 ## Stage 18 — End-to-end deletion workflow
 
-Implemented: [deletion and retention](docs/deletion.md). Next is Stage 20 rate limiting.
+Implemented: [deletion and retention](docs/deletion.md). Next is Stage 21 observability.
 
 ### Goal
 
@@ -792,8 +792,8 @@ Make user deletion complete, durable, and retryable across services.
 ## Stage 19 — Production Telegram webhook
 
 Implemented: [webhook setup](docs/telegram-webhook.md) and the
-[ingress v1 contract](contracts/telegram/webhook-v1.md). Next is Stage 20 rate limiting
-and abuse controls. Live registration/TLS validation awaits an operator-provided
+[ingress v1 contract](contracts/telegram/webhook-v1.md). Next is Stage 21 observability.
+Live registration/TLS validation awaits an operator-provided
 public HTTPS endpoint; see [verification evidence](docs/evidence/stage-19.md).
 
 ### Goal
@@ -831,26 +831,29 @@ Switch production ingress from polling to secure HTTPS webhooks.
 
 ## Stage 20 — Rate limiting and abuse controls
 
+Implemented: [abuse controls](docs/abuse-controls.md). Next is Stage 21 observability
+and operational readiness. See [verification evidence](docs/evidence/stage-20.md).
+
 ### Goal
 
 Protect costs, service availability, and user isolation.
 
 ### Tasks
 
-- [ ] Per-user inbound rate limit in Redis.
-- [ ] Bound message size.
-- [ ] Bound queued jobs per user.
-- [ ] Bound LLM/tool execution time.
-- [ ] Bound MCP response size.
-- [ ] Bound SecondContext response size.
-- [ ] Add backoff after repeated downstream failures.
-- [ ] Add safe user-facing “temporarily unavailable” response.
-- [ ] Add global emergency disable switch for LLM processing.
-- [ ] Ensure abuse-control keys contain no PII beyond internal UUID/provider numeric IDs.
+- [x] Per-user inbound rate limit in Redis.
+- [x] Bound message size.
+- [x] Bound queued jobs per user.
+- [x] Bound LLM/tool execution time.
+- [x] Bound MCP response size.
+- [x] Bound SecondContext response size.
+- [x] Add backoff after repeated downstream failures (existing canonical retry deadlines retained).
+- [x] Add safe user-facing “temporarily unavailable” response.
+- [x] Add global emergency disable switch for LLM processing (restart workers to apply).
+- [x] Ensure abuse-control keys contain no PII beyond internal UUID/provider numeric IDs.
 
 ### Acceptance criteria
 
-- [ ] A burst from one Telegram user cannot starve unrelated users.
+- [x] A burst from one Telegram user cannot starve unrelated users in the bounded worker baseline.
 
 ---
 

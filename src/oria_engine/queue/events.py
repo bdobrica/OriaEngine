@@ -13,6 +13,8 @@ from sqlalchemy import exists, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from oria_engine.astrology.client import AstrologyUnavailable
+from oria_engine.context.contracts import ContextUnavailable
 from oria_engine.db.models import InboundEvent, SocialIdentity, User
 from oria_engine.db.repositories import ConsentRepository, SocialIdentityRepository
 from oria_engine.db.session import Database
@@ -20,6 +22,13 @@ from oria_engine.domain.channel import ChannelButton, ChannelClient, ChannelMess
 from oria_engine.domain.consent import ConsentFlow
 from oria_engine.privacy.deletion import admission_lock
 from oria_engine.privacy.encryption import ProfileEncryption
+from oria_engine.queue.limits import (
+    LIMIT_REPLY,
+    SIZE_REPLY,
+    UNAVAILABLE_REPLY,
+    AdmissionRejected,
+    InboundLimits,
+)
 
 logger = logging.getLogger(__name__)
 TERMINAL = ("sent", "dead")
@@ -52,10 +61,42 @@ def terminal(event: InboundEvent, status: str, code: str | None = None) -> None:
 
 
 class EventIngress:
-    def __init__(self, database: Database, encryption: ProfileEncryption, policy_version: str):
+    def __init__(
+        self,
+        database: Database,
+        encryption: ProfileEncryption,
+        policy_version: str,
+        *,
+        limits: InboundLimits | None = None,
+    ):
         self.database = database
         self.encryption = encryption
         self.policy_version = policy_version
+        self.limits = limits
+
+    async def publishable(self, identifier: UUID) -> bool:
+        async with self.database.transaction() as session:
+            head = (
+                select(InboundEvent.id)
+                .where(InboundEvent.user_id == User.id, InboundEvent.status.not_in(TERMINAL))
+                .order_by(InboundEvent.sequence)
+                .limit(1)
+                .correlate(User)
+                .scalar_subquery()
+            )
+            return bool(
+                await session.scalar(
+                    select(
+                        exists().where(
+                            InboundEvent.id == identifier,
+                            InboundEvent.user_id == User.id,
+                            InboundEvent.status.not_in(TERMINAL),
+                            InboundEvent.next_attempt_at <= datetime.now(UTC),
+                            InboundEvent.id == head,
+                        )
+                    )
+                )
+            )
 
     async def accept(self, message: ChannelMessage, *, command: str | None = None) -> UUID:
         async with self.database.transaction() as session:
@@ -68,6 +109,18 @@ class EventIngress:
             )
             if existing_id is not None:
                 return existing_id
+            try:
+                oversized = len(message.text.encode("utf-16-le")) // 2 > 4096
+            except UnicodeError:
+                oversized = True
+            if oversized:
+                if self.limits is not None:
+                    await self.limits.reject(message.provider, message.provider_user_id, SIZE_REPLY)
+                raise AdmissionRejected()
+            if self.limits is not None and not await self.limits.admit(
+                message.provider, message.provider_user_id
+            ):
+                await self.limits.reject(message.provider, message.provider_user_id, LIMIT_REPLY)
             # Resolve trusted sender identity; the provider/update unique key arbitrates retries.
             user = await SocialIdentityRepository(session).get_or_create_user_for_social_identity(
                 provider=message.provider,
@@ -90,6 +143,19 @@ class EventIngress:
             )
             if existing is not None:
                 return existing.id
+            if self.limits is not None:
+                backlog = await session.scalar(
+                    select(func.count())
+                    .select_from(InboundEvent)
+                    .where(
+                        InboundEvent.user_id == user.id,
+                        InboundEvent.status.not_in(TERMINAL),
+                    )
+                )
+                if backlog is not None and backlog >= self.limits.backlog:
+                    await self.limits.reject(
+                        message.provider, message.provider_user_id, LIMIT_REPLY
+                    )
             consent = await ConsentRepository(session).current(user.id, self.policy_version)
             # Never durably collect unsolicited birth text before affirmative current consent.
             # The transport normalizes commands. Discard arbitrary callbacks.
@@ -103,9 +169,7 @@ class EventIngress:
                 and not (callback and callback.startswith("delete:") and len(callback) <= 64)
             ):
                 callback = "stale" if callback is not None else None
-            message = replace(
-                message, text=message.text[:4096] if consent else "", callback_data=callback
-            )
+            message = replace(message, text=message.text if consent else "", callback_data=callback)
             identifier = uuid4()
             now = datetime.now(UTC)
             payload = InputPayload(message=message, command=command)
@@ -168,10 +232,12 @@ class EventWorker:
         )
         if not await lock.acquire():
             return  # Durable dispatcher will retry; lock contention consumes no attempt.
+        claimed = False
         try:
             async with asyncio.timeout(PROCESS_SECONDS):
                 if not await self.claim(event_id, user_id):
                     return
+                claimed = True
                 try:
                     await self.calculate(event_id, user_id)
                     await self.deliver(event_id, user_id)
@@ -180,6 +246,11 @@ class EventWorker:
         except TimeoutError:
             await self.failed(event_id, user_id)
         finally:
+            if claimed:
+                try:
+                    await self.redis.delete(f"oria:event:{event_id}:publication")
+                except RedisError:
+                    logger.warning("queue_unavailable")
             try:
                 await lock.release()  # redis-py uses token-checked Lua; cannot delete a new owner.
             except (LockNotOwnedError, RedisError):
@@ -266,16 +337,24 @@ class EventWorker:
             if identity is None:
                 terminal(event, "dead", "user_unavailable")
                 return
-            reply = await self.flow.handle_in_session(
-                session,
-                user_id,
-                payload.message,
-                command=payload.command,
-            )
+            try:
+                # A final downstream failure must not commit partial domain mutations.
+                async with session.begin_nested():
+                    reply = await self.flow.handle_in_session(
+                        session,
+                        user_id,
+                        payload.message,
+                        command=payload.command,
+                    )
+                text, buttons = reply.text, reply.buttons
+            except (AstrologyUnavailable, ContextUnavailable):
+                if event.attempts < MAX_ATTEMPTS:
+                    raise
+                text, buttons = UNAVAILABLE_REPLY, ()
             consent = await ConsentRepository(session).latest(user_id)
             output = ReplyPayload(
-                text=reply.text,
-                buttons=reply.buttons,
+                text=text,
+                buttons=buttons,
                 chat_id=identity.provider_chat_id,
                 policy_version=self.flow.policy_version,
                 consent_id=consent.id if consent else None,
@@ -346,12 +425,25 @@ async def recoverable(database: Database) -> list[UUID]:
         for event in expired:
             terminal(event, "dead", "expired")
         await session.flush()
+        earlier = (
+            select(InboundEvent.id)
+            .where(
+                InboundEvent.user_id == User.id,
+                InboundEvent.status.not_in(TERMINAL),
+            )
+            .order_by(InboundEvent.sequence)
+            .limit(1)
+            .correlate(User)
+            .scalar_subquery()
+        )
         return list(
             await session.scalars(
                 select(InboundEvent.id)
+                .join(User, InboundEvent.user_id == User.id)
                 .where(
                     InboundEvent.status.not_in(TERMINAL),
                     InboundEvent.next_attempt_at <= now,
+                    InboundEvent.id == earlier,
                 )
                 .order_by(InboundEvent.sequence)
                 .limit(100)

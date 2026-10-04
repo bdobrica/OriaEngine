@@ -89,9 +89,9 @@ class SecondContextProvider:
                                 raise ContextUnavailable()
                             data = bytearray()
                             async for chunk in response.aiter_bytes():
-                                data.extend(chunk)
-                                if len(data) > 262144:
+                                if len(data) + len(chunk) > 262144:
                                     raise ContextUnavailable()
+                                data.extend(chunk)
                             return bytes(data)
                     except (httpx.ConnectError, httpx.ConnectTimeout):
                         # No request was sent. Ambiguous writes/read timeouts and HTTP failures

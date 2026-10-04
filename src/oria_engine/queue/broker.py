@@ -1,5 +1,7 @@
 """Redis carries only internal UUIDs. PostgreSQL owns retries, not broker history."""
 
+from uuid import UUID, uuid4
+
 from dramatiq import Message
 from dramatiq.brokers.redis import RedisBroker
 from dramatiq.middleware import Retries
@@ -20,15 +22,31 @@ class Publisher:
         )
 
     def send(self, event_id: str) -> None:
-        self.broker.enqueue(
-            Message(
-                queue_name="inbound",
-                actor_name="process_inbound",
-                args=(event_id,),
-                kwargs={},
-                options={},
+        event_id = str(UUID(event_id))
+        key = f"oria:event:{event_id}:publication"
+        token = str(uuid4())
+        if not self.client.set(key, token, nx=True, ex=150):
+            return
+        try:
+            self.broker.enqueue(
+                Message(
+                    queue_name="inbound",
+                    actor_name="process_inbound",
+                    args=(event_id,),
+                    kwargs={},
+                    options={},
+                )
             )
-        )
+        except BaseException:
+            # A failed publication must not hide the canonical event until TTL expiry.
+            self.client.eval(
+                "if redis.call('GET', KEYS[1]) == ARGV[1] then "
+                "return redis.call('DEL', KEYS[1]) end return 0",
+                1,
+                key,
+                token,
+            )
+            raise
 
     def close(self) -> None:
         self.broker.close()
