@@ -1155,8 +1155,10 @@ from canonical PostgreSQL metadata, independently checks Redis, and reports unkn
 values on database failure. Funnel gauges describe retained current state rather
 than lifetime/cohort conversion. Log aggregation remains operator-owned and best
 effort. Startup summaries omit secrets/URLs; `make logs` follows local Compose services.
-Existing PostgreSQL, Redis and MCP Docker health checks remain in use; application
-container health wiring follows in Stage 23. No public telemetry endpoint is added.
+Existing PostgreSQL, Redis and MCP Docker health checks remain in use. The
+[Docker development stack](docs/development.md) adds gateway readiness and worker
+heartbeat/DB/Redis probes, with successful migrations before application startup.
+No public telemetry endpoint is added.
 
 ---
 
@@ -1224,7 +1226,11 @@ and [production webhook ingress](docs/telegram-webhook.md) are implemented.
 The [isolated integration and E2E replay harness](docs/testing.md) now runs all four
 mandatory test lanes through `make verify`, including real MCP and local HTTP
 Telegram/SecondContext fakes without provider credentials.
-Next is Stage 23 containerized local development; live TLS/Telegram validation
+The [Docker development stack](docs/development.md) now starts gateway, worker,
+PostgreSQL, Redis and private MCP with one `make dev`, including migrations.
+SecondContext remains externally managed and configurable. `make down` preserves
+canonical data; host polling can feed the container worker for the demo.
+Next is Stage 24 documentation reconciliation; live TLS/Telegram validation
 requires the operator's public HTTPS endpoint.
 See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
 Confirmed deletion stops processing and durably retries local, SecondContext and Redis cleanup. The disclosure uses
@@ -1250,7 +1256,8 @@ Expected commands:
 | `make mcp` | Run the astrology MCP service |
 | `make run` | Run Telegram bot in local polling mode |
 | `make worker` | Run worker process |
-| `make dev` | Start the complete local Docker Compose development stack |
+| `make dev` | Build, migrate and start the complete local Docker Compose development stack |
+| `make down` | Stop the local stack, preserving PostgreSQL data |
 | `make logs` | Follow local service logs |
 | `make format` | Format source |
 | `make lint` | Run lint checks |

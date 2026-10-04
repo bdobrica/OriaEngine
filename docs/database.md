@@ -9,6 +9,8 @@ make migrate
 ```
 
 Compose starts PostgreSQL 16 and Redis 7 and waits for both health checks.
+For all owned application services and automatic development migration ordering,
+use [`make dev`](development.md).
 The fixed local project is `oria-local`. Ports bind only to loopback, defaulting
 to 5432 and 6379. If these ports are occupied, set `POSTGRES_PORT` and
 `REDIS_PORT` in `.env` and update the corresponding application URLs.

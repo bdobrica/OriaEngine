@@ -1,9 +1,11 @@
 """make worker: four worker threads plus PostgreSQL recovery every five seconds."""
 
+import argparse
 import asyncio
 import logging
 import signal
 import sys
+from pathlib import Path
 from threading import Event
 from uuid import UUID
 
@@ -83,7 +85,7 @@ async def recover(settings: Settings, publisher: Publisher) -> None:
         await database.close()
 
 
-def run(settings: Settings) -> None:
+def run(settings: Settings, *, health_file: Path | None = None) -> None:
     ProfileEncryption(settings)
     if not settings.telegram_bot_token.get_secret_value():
         raise ConfigurationError("Worker requires TELEGRAM_BOT_TOKEN")
@@ -98,6 +100,8 @@ def run(settings: Settings) -> None:
     }:
         raise ConfigurationError("Set ORIA_POLICY_VERSION=2026-10-03.2 for conversation storage")
     resolver = LocalPlaceResolver()
+    if health_file is not None:
+        health_file.unlink(missing_ok=True)
     publisher = Publisher(settings)
     stop = Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
@@ -124,18 +128,25 @@ def run(settings: Settings) -> None:
                 asyncio.run(recover(settings, publisher))
             except Exception:
                 logger.error("queue_unavailable")
+            if health_file is not None:
+                health_file.touch()
             stop.wait(5)
     finally:
+        if health_file is not None:
+            health_file.unlink(missing_ok=True)
         worker.stop(timeout=70000)
         publisher.close()
         logger.info("application_stopped")
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--health-file", type=Path)
+    args = parser.parse_args(argv)
     try:
         settings = load_settings()
         configure_logging(settings)
-        run(settings)
+        run(settings, health_file=args.health_file)
     except ConfigurationError as exc:
         print(str(exc), file=sys.stderr)
         raise SystemExit(1) from None

@@ -70,7 +70,8 @@ the [Telegram Bot API](https://core.telegram.org/bots/api#setwebhook).
 [deploy/nginx.webhook.conf.example](../deploy/nginx.webhook.conf.example) shows a
 same-host proxy. Replace its hostname/certificate paths and validate it with your
 installed Nginx before using it. The example has not been deployed or TLS-tested.
-Production containers/network configuration remain Stage 23 work.
+The [Docker development stack](development.md) publishes the gateway only on
+host loopback. Production TLS/proxy deployment remains an operator responsibility.
 
 Expose only HTTPS ingress; keep PostgreSQL, Redis, workers, MCP and SecondContext
 private. Forward the **received** secret header; never inject the configured secret

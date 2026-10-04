@@ -1,7 +1,10 @@
 UV ?= uv
 COMPOSE = docker compose --env-file .env -p oria-local -f deploy/compose.yaml
+DEV_COMPOSE = $(COMPOSE) -f deploy/compose.dev.yaml --profile dev --profile astrology
 
 .DEFAULT_GOAL := help
+
+.PHONY: dev down
 
 .PHONY: worker help bootstrap env api run format lint typecheck test-unit test-integration test-e2e test verify clean infra-up infra-down infra-reset migrate migrate-down mcp mcp-local mcp-test test-contract webhook-set webhook-delete webhook-reset logs metrics
 
@@ -20,8 +23,14 @@ api: ## Run the local HTTP gateway on http://127.0.0.1:8001
 worker: ## Run Redis workers and durable event recovery
 	$(UV) run python -m oria_engine.queue
 
-logs: env ## Follow the last 100 lines from local PostgreSQL, Redis and MCP services
-	$(COMPOSE) --profile astrology logs --follow --tail 100
+dev: env ## Build, migrate and start the complete local application stack
+	$(DEV_COMPOSE) up --build -d --wait --wait-timeout 120
+
+down: env ## Stop the complete local stack, preserving PostgreSQL data
+	$(DEV_COMPOSE) -f deploy/compose.polling.yaml down --remove-orphans
+
+logs: env ## Follow local infrastructure, gateway, worker and migration logs
+	$(DEV_COMPOSE) logs --follow --tail 100
 
 metrics: ## Print a private aggregate queue/consent/onboarding/deletion snapshot
 	@$(UV) run python -m oria_engine.operations
@@ -54,11 +63,11 @@ infra-up: env ## Start local PostgreSQL and Redis and wait for health checks
 	$(COMPOSE) up -d --wait --wait-timeout 90
 
 infra-down: env ## Stop local infrastructure, preserving PostgreSQL data
-	$(COMPOSE) -f deploy/compose.polling.yaml --profile astrology down
+	$(DEV_COMPOSE) -f deploy/compose.polling.yaml down --remove-orphans
 
 infra-reset: env ## Delete local PostgreSQL data and stop infrastructure (dev/test only)
 	$(UV) run python -m oria_engine.db.local
-	$(COMPOSE) -f deploy/compose.polling.yaml --profile astrology down --volumes
+	$(DEV_COMPOSE) -f deploy/compose.polling.yaml down --remove-orphans --volumes
 
 migrate: ## Apply all pending database migrations
 	$(UV) run alembic upgrade head

@@ -684,7 +684,7 @@ Wire the full production-like message loop.
 
 Implemented: [conversation worker](docs/conversation-worker.md). Synthetic live-model
 review and deterministic verification are recorded in [Stage 16 evidence](docs/evidence/stage-16.md).
-Next is Stage 23 containerized local development; [profile/privacy controls](docs/profile-commands.md) are available.
+Next is Stage 24 documentation reconciliation; [profile/privacy controls](docs/profile-commands.md) are available.
 
 ### Tasks
 
@@ -752,7 +752,7 @@ coordinates/timezone. [Confirmed account deletion](docs/deletion.md) is availabl
 
 ## Stage 18 — End-to-end deletion workflow
 
-Implemented: [deletion and retention](docs/deletion.md). Next is Stage 23 containerized local development.
+Implemented: [deletion and retention](docs/deletion.md). Next is Stage 24 documentation reconciliation.
 
 ### Goal
 
@@ -792,7 +792,7 @@ Make user deletion complete, durable, and retryable across services.
 ## Stage 19 — Production Telegram webhook
 
 Implemented: [webhook setup](docs/telegram-webhook.md) and the
-[ingress v1 contract](contracts/telegram/webhook-v1.md). Next is Stage 23 containerized local development.
+[ingress v1 contract](contracts/telegram/webhook-v1.md). Next is Stage 24 documentation reconciliation.
 Live registration/TLS validation awaits an operator-provided
 public HTTPS endpoint; see [verification evidence](docs/evidence/stage-19.md).
 
@@ -831,7 +831,7 @@ Switch production ingress from polling to secure HTTPS webhooks.
 
 ## Stage 20 — Rate limiting and abuse controls
 
-Implemented: [abuse controls](docs/abuse-controls.md). Next is Stage 23 containerized local development.
+Implemented: [abuse controls](docs/abuse-controls.md). Next is Stage 24 documentation reconciliation.
 See [verification evidence](docs/evidence/stage-20.md).
 
 ### Goal
@@ -860,7 +860,7 @@ Protect costs, service availability, and user isolation.
 ## Stage 21 — Observability and operational readiness
 
 Implemented: [operator guide](docs/operations.md) and
-[telemetry v1](contracts/operations/v1.md). Next is Stage 23 containerized local development.
+[telemetry v1](contracts/operations/v1.md). Next is Stage 24 documentation reconciliation.
 See [verification evidence](docs/evidence/stage-21.md).
 
 ### Goal
@@ -892,8 +892,8 @@ Make failures diagnosable without logging private profile data.
 
 ## Stage 22 — Integration and E2E test harness
 
-Implemented: [isolated replay harness](docs/testing.md). Next is Stage 23 containerized
-local development. See [verification evidence](docs/evidence/stage-22.md).
+Implemented: [isolated replay harness](docs/testing.md). Next is Stage 24 documentation
+reconciliation. See [verification evidence](docs/evidence/stage-22.md).
 
 ### Goal
 
@@ -929,30 +929,33 @@ Make the entire MVP reproducibly testable without a real Telegram account or pro
 
 ## Stage 23 — Dockerized development environment
 
+Implemented: [Docker development stack](docs/development.md). Next is Stage 24
+documentation reconciliation. See [verification evidence](docs/evidence/stage-23.md).
+
 ### Goal
 
 Make the normal local workflow one command.
 
 ### Tasks
 
-- [ ] Add OriaEngine gateway Dockerfile.
-- [ ] Add worker container using same application image.
-- [ ] Add Astrology MCP Dockerfile.
-- [ ] Add development Docker Compose stack.
-- [ ] Include PostgreSQL.
-- [ ] Include Redis.
-- [ ] Include gateway.
-- [ ] Include worker.
-- [ ] Include Astrology MCP.
-- [ ] Support external/configurable SecondContext URL.
-- [ ] Add health/dependency ordering without relying only on container start order.
-- [ ] Add `make dev`.
-- [ ] Add `make down`.
-- [ ] Add `make logs`.
+- [x] Add OriaEngine gateway Dockerfile.
+- [x] Add worker container using same application image.
+- [x] Add Astrology MCP Dockerfile.
+- [x] Add development Docker Compose stack.
+- [x] Include PostgreSQL.
+- [x] Include Redis.
+- [x] Include gateway.
+- [x] Include worker.
+- [x] Include Astrology MCP.
+- [x] Support external/configurable SecondContext URL.
+- [x] Add health/dependency ordering without relying only on container start order.
+- [x] Add `make dev`.
+- [x] Add `make down`.
+- [x] Add `make logs`.
 
 ### Acceptance criteria
 
-- [ ] With configured secrets, `make dev` starts the complete OriaEngine-owned stack.
+- [x] With configured secrets, `make dev` starts the complete OriaEngine-owned stack.
 
 ---
 

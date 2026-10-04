@@ -1,0 +1,76 @@
+# Overlay on compose.yaml: same local database/Redis, application-owned services only.
+x-application: &application
+  image: ${ORIA_APP_IMAGE:-oria-engine:development}
+  build:
+    context: ..
+    dockerfile: deploy/Dockerfile
+  profiles: ["dev"]
+  read_only: true
+  tmpfs: ["/tmp:rw,noexec,nosuid,size=16m,mode=1777"]
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+  stop_grace_period: 90s
+  extra_hosts: ["host.docker.internal:host-gateway"]
+
+x-environment: &environment
+  APP_ENV: development
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  DATABASE_URL: postgresql+psycopg://oria:${POSTGRES_PASSWORD_URLENCODED:-${POSTGRES_PASSWORD}}@postgres:5432/oria
+  REDIS_URL: redis://redis:6379/0
+  ASTROLOGY_MCP_URL: http://astrology-mcp:8000/mcp
+  TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+  TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+  TELEGRAM_WEBHOOK_BASE_URL: ${TELEGRAM_WEBHOOK_BASE_URL:-}
+  PROFILE_ENCRYPTION_KEY: ${PROFILE_ENCRYPTION_KEY:-}
+  PROFILE_ENCRYPTION_KEY_VERSION: ${PROFILE_ENCRYPTION_KEY_VERSION:-v1}
+  ORIA_POLICY_VERSION: ${ORIA_POLICY_VERSION:-2026-10-03.2}
+  SECOND_CONTEXT_BASE_URL: ${SECOND_CONTEXT_DOCKER_URL:-${SECOND_CONTEXT_BASE_URL:-http://host.docker.internal:8080}}
+  SECOND_CONTEXT_BEARER_TOKEN: ${SECOND_CONTEXT_BEARER_TOKEN:-}
+  SECOND_CONTEXT_SUBJECT_NAMESPACE: ${SECOND_CONTEXT_SUBJECT_NAMESPACE:-}
+  INBOUND_RATE_PER_MINUTE: ${INBOUND_RATE_PER_MINUTE:-20}
+  QUEUED_JOBS_PER_USER: ${QUEUED_JOBS_PER_USER:-8}
+  LLM_PROCESSING_ENABLED: ${LLM_PROCESSING_ENABLED:-true}
+
+services:
+  migrate:
+    <<: *application
+    restart: "no"
+    command: ["python", "-m", "alembic", "upgrade", "head"]
+    healthcheck:
+      disable: true
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://oria:${POSTGRES_PASSWORD_URLENCODED:-${POSTGRES_PASSWORD}}@postgres:5432/oria
+    depends_on:
+      postgres:
+        condition: service_healthy
+  gateway:
+    <<: *application
+    environment: *environment
+    ports: ["127.0.0.1:${GATEWAY_PORT:-8001}:8001"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+  worker:
+    <<: *application
+    # Allow an in-flight bounded recovery attempt, then Dramatiq's 70-second drain.
+    stop_grace_period: 150s
+    environment: *environment
+    networks: [default, astrology]
+    command: ["python", "-m", "oria_engine.queue", "--health-file", "/tmp/oria-worker.health"]
+    healthcheck:
+      test: ["CMD", "python", "-m", "oria_engine.container_health", "worker"]
+      interval: 10s
+      timeout: 8s
+      start_period: 15s
+      retries: 6
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      astrology-mcp:
+        condition: service_healthy

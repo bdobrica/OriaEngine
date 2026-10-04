@@ -226,13 +226,17 @@ the implemented settings and endpoint contracts.
 
 ### Full local Docker development stack
 
-When the Docker development stack is implemented:
+Configure the bot token, stable encryption key and container-accessible
+SecondContext URL in `.env`, then:
 
 ```bash
 make dev
 ```
 
 This starts the OriaEngine-owned services: gateway, worker, PostgreSQL, Redis, and Astrology MCP. SecondContext can be configured as an external service through `SECOND_CONTEXT_BASE_URL`.
+Migrations run before application startup. See [Docker development setup](docs/development.md)
+for `SECOND_CONTEXT_DOCKER_URL`, secrets, health checks and the polling demo
+(`make dev`, then `make run`).
 
 Follow logs with:
 

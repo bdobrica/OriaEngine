@@ -13,8 +13,8 @@ mappings or messages. Collect periodically if trends are needed. Database failur
 produces unknown (`null`) gauges; Redis failure preserves database counts. Exit one
 indicates a failed dependency/configuration check.
 
-`make logs` follows the last 100 lines from local Compose PostgreSQL, Redis and optional
-MCP containers. Host-run `make api`, `make run` and `make worker` emit to their consoles;
+`make logs` follows the last 100 lines from local Compose infrastructure, MCP,
+gateway, worker and migration containers. Host-run `make api`, `make run` and `make worker` emit to their consoles;
 collect those streams with your supervisor. `make logs` does not capture host processes
 or external SecondContext. Infrastructure logs do not pass through Oria's formatter;
 keep them private too.
@@ -91,8 +91,9 @@ Gateway `/healthz` is liveness; `/readyz` checks PostgreSQL/Redis when webhook i
 is enabled. They do not prove worker progress, schema compatibility, SecondContext,
 bot authorization, public TLS or end-to-end delivery. Keep them private; the supplied
 proxy exposes only the authenticated webhook. Combine readiness with queue snapshots
-and component metrics. Gateway/worker Docker images and Compose health wiring belong
-to Stage 23's application containerization.
+and component metrics. The [Docker development stack](development.md) gates application
+startup on migration success and dependencies; worker health additionally checks a
+fresh recovery-loop heartbeat and DB/Redis connectivity.
 
 Restart gateway/polling and workers to apply instrumentation. No migration/new secret
 is required. Live HTTPS/Telegram activation and provider monitoring remain operator
