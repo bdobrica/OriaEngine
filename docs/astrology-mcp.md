@@ -15,6 +15,10 @@ make mcp-test
 make verify
 ```
 
+For application development, `make dev` includes the private MCP service and
+container worker. Use `make mcp-local` with a host worker instead. Stop the previous
+local stack before changing modes; see [development](development.md).
+
 `make mcp` builds and starts the Compose `astrology-mcp` service. It is opt-in via
 the `astrology` profile, so ordinary database tests and `make infra-up` retain
 their existing behavior. The container runs as UID/GID 65532 with a read-only

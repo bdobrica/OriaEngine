@@ -37,6 +37,20 @@ Provide a base64-encoded 32-byte random key through runtime secret configuration
 keep it out of source, logs, database rows, and chat. For local development, store
 it in the ignored `.env` through your local secret workflow. Keep a secure backup:
 losing the key loses access to profiles. Do not regenerate it on process startup.
+
+For a new, empty local database, generate a key in your private terminal:
+
+```sh
+uv run python -c 'import base64, secrets; print(base64.b64encode(secrets.token_bytes(32)).decode())'
+```
+
+Copy that value into `PROFILE_ENCRYPTION_KEY` in the ignored `.env`; do not paste
+it into chat, evidence or committed examples. Restrict local file access, for
+example `chmod 600 .env` on a filesystem that supports Unix permissions. Do not
+run this to replace the key on a populated database. Polling, gateway and workers
+must use the same key/version. The key also encrypts drafts, temporary event/reply
+envelopes and deletion notification addresses, so retain it while those exist.
+
 `PROFILE_ENCRYPTION_KEY_VERSION` identifies that key (default `v1`). This stage
 supports one configured key, not an automatic rotation/keyring workflow. Unknown
 key versions, wrong keys, malformed envelopes, invalid payloads and authentication
@@ -56,14 +70,14 @@ a current [derived result](astrology-profiles.md) after successful calculation.
 
 `get(user_id, profile_id=None)` always scopes reads to an active owner; a supplied
 profile UUID is an additional filter. It returns the validated decrypted payload
-or `None`. Reading after withdrawal remains possible for future inspect/delete
+or `None`. Reading after withdrawal remains possible for owner inspection/deletion
 controls; this is not authorization to calculate a chart or call a model.
 Ingress must resolve the trusted internal UUID, never accept it as authentication
 from user text. Deleted users cannot read or write through the repository.
 
 Both private Pydantic models redact `repr` and `str`; input details are hidden in
 formatted validation errors. Explicit serialization is intentionally available
-for encryption and future user-facing profile controls. Never log serialized
+for encryption and user-facing profile controls. Never log serialized
 payloads, individual fields, validation error dictionaries, or exception locals.
 Existing application logging remains the final privacy boundary.
 

@@ -84,16 +84,17 @@ relationships uncertain. Unknown birth time still permits target-time planetary
 positions, but returns no natal relationships; the reply labels these general
 positions as unpersonalized.
 
-## Future interpretation boundary
+## Interpretation boundary
 
-`prepare_active` returns only the facts selected for the route: natal or transit,
-neither for clarification/follow-up/high-stakes responses. `ConversationRequest`
+`prepare_active` returns the facts selected for the route; clarification and
+high-stakes responses remain local. The conversation flow supplies current natal
+facts for follow-ups. `ConversationRequest`
 now accepts an optional typed `transit_facts` alongside existing `natal_facts`.
 The SecondContext adapter includes them in instructions only, with existing
 untrusted-data guidance, never explicit memory ingestion or identity metadata.
 No raw birth inputs are added. A transit target timestamp is not a birth timestamp.
 Transcript/provider retention caveats in the [consumer contract](../contracts/second-context/v1.md)
-still apply. Persona assembly is implemented; filtering, output policy validation,
-contextual follow-ups and worker activation of that adapter remain later stages.
+still apply. The [complete conversation worker](conversation-worker.md) connects
+persona assembly, input filtering, output validation and contextual follow-ups.
 
 See [Stage 13 verification](evidence/stage-13.md).

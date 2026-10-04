@@ -6,6 +6,9 @@ This checklist translates `PLAN.md` into a consecutive implementation path.
 end-to-end path through the required stages; defer optional polish and speculative
 abstractions. Preserve consent, privacy, security, and component boundaries.
 A demo is an intermediate milestone, not completion of the MVP release gate.
+The next stage is **Stage 25 — MVP release gate**; use the unchecked gate below
+to track remaining validation. Setup and known limits live in [README](README.md)
+and [the limitations reference](docs/limitations.md).
 
 The stages are intentionally ordered so each stage leaves the repository in a testable state and provides the foundation required by the next stage. Avoid implementing post-MVP features until the MVP completion gate at the end of this document passes.
 
@@ -684,7 +687,7 @@ Wire the full production-like message loop.
 
 Implemented: [conversation worker](docs/conversation-worker.md). Synthetic live-model
 review and deterministic verification are recorded in [Stage 16 evidence](docs/evidence/stage-16.md).
-Next is Stage 24 documentation reconciliation; [profile/privacy controls](docs/profile-commands.md) are available.
+[Profile/privacy controls](docs/profile-commands.md) are available.
 
 ### Tasks
 
@@ -752,7 +755,7 @@ coordinates/timezone. [Confirmed account deletion](docs/deletion.md) is availabl
 
 ## Stage 18 — End-to-end deletion workflow
 
-Implemented: [deletion and retention](docs/deletion.md). Next is Stage 24 documentation reconciliation.
+Implemented: [deletion and retention](docs/deletion.md).
 
 ### Goal
 
@@ -792,7 +795,7 @@ Make user deletion complete, durable, and retryable across services.
 ## Stage 19 — Production Telegram webhook
 
 Implemented: [webhook setup](docs/telegram-webhook.md) and the
-[ingress v1 contract](contracts/telegram/webhook-v1.md). Next is Stage 24 documentation reconciliation.
+[ingress v1 contract](contracts/telegram/webhook-v1.md).
 Live registration/TLS validation awaits an operator-provided
 public HTTPS endpoint; see [verification evidence](docs/evidence/stage-19.md).
 
@@ -831,7 +834,7 @@ Switch production ingress from polling to secure HTTPS webhooks.
 
 ## Stage 20 — Rate limiting and abuse controls
 
-Implemented: [abuse controls](docs/abuse-controls.md). Next is Stage 24 documentation reconciliation.
+Implemented: [abuse controls](docs/abuse-controls.md).
 See [verification evidence](docs/evidence/stage-20.md).
 
 ### Goal
@@ -860,7 +863,7 @@ Protect costs, service availability, and user isolation.
 ## Stage 21 — Observability and operational readiness
 
 Implemented: [operator guide](docs/operations.md) and
-[telemetry v1](contracts/operations/v1.md). Next is Stage 24 documentation reconciliation.
+[telemetry v1](contracts/operations/v1.md).
 See [verification evidence](docs/evidence/stage-21.md).
 
 ### Goal
@@ -892,8 +895,7 @@ Make failures diagnosable without logging private profile data.
 
 ## Stage 22 — Integration and E2E test harness
 
-Implemented: [isolated replay harness](docs/testing.md). Next is Stage 24 documentation
-reconciliation. See [verification evidence](docs/evidence/stage-22.md).
+Implemented: [isolated replay harness](docs/testing.md). See [verification evidence](docs/evidence/stage-22.md).
 
 ### Goal
 
@@ -929,8 +931,7 @@ Make the entire MVP reproducibly testable without a real Telegram account or pro
 
 ## Stage 23 — Dockerized development environment
 
-Implemented: [Docker development stack](docs/development.md). Next is Stage 24
-documentation reconciliation. See [verification evidence](docs/evidence/stage-23.md).
+Implemented: [Docker development stack](docs/development.md). See [verification evidence](docs/evidence/stage-23.md).
 
 ### Goal
 
@@ -961,29 +962,33 @@ Make the normal local workflow one command.
 
 ## Stage 24 — Documentation pass
 
+Implemented: [README quick start](README.md), [architecture](docs/architecture.md),
+[configuration](docs/application.md) and [known limitations](docs/limitations.md).
+Validation is recorded in [Stage 24 evidence](docs/evidence/stage-24.md).
+
 ### Goal
 
 Ensure repository documentation describes the implementation that actually exists.
 
 ### Tasks
 
-- [ ] Reconcile README commands with the real Makefile.
-- [ ] Reconcile `.env.example` with typed settings.
-- [ ] Document BotFather bot creation.
-- [ ] Document polling mode.
-- [ ] Document webhook mode.
-- [ ] Document SecondContext dependency.
-- [ ] Document Astrology MCP development.
-- [ ] Document profile-encryption key management for local dev.
-- [ ] Document migration workflow.
-- [ ] Document testing lanes.
-- [ ] Document privacy/deletion behavior.
-- [ ] Document known MVP limitations.
-- [ ] Add architecture Mermaid diagrams if implementation changed.
+- [x] Reconcile README commands with the real Makefile.
+- [x] Reconcile `.env.example` with typed settings.
+- [x] Document BotFather bot creation.
+- [x] Document polling mode.
+- [x] Document webhook mode.
+- [x] Document SecondContext dependency.
+- [x] Document Astrology MCP development.
+- [x] Document profile-encryption key management for local dev.
+- [x] Document migration workflow.
+- [x] Document testing lanes.
+- [x] Document privacy/deletion behavior.
+- [x] Document known MVP limitations.
+- [x] Add architecture Mermaid diagrams if implementation changed.
 
 ### Acceptance criteria
 
-- [ ] A new developer can reach a successful test run using only README + Make targets.
+- [x] A new developer can reach a successful test run using only README + Make targets.
 
 ---
 

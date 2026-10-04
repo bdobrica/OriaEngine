@@ -139,8 +139,10 @@ Do not export encrypted envelopes or routing IDs when investigating errors.
 The baseline keeps bounded external calls under the owner database lock, and stores
 short-lived encrypted replies in the inbound row rather than a separate outbox table.
 [Rate and backlog limits](abuse-controls.md), fair recovery scans, bounded downstream
-responses and the LLM emergency switch are implemented. Production containers and
-metrics remain later stages. [Stage 16](conversation-worker.md) adds guarded SecondContext
+responses and the LLM emergency switch are implemented. The
+[Docker development stack](development.md) and [private operational metrics](operations.md)
+are available; production TLS/proxy deployment remains operator-owned.
+The [conversation worker](conversation-worker.md) adds guarded SecondContext
 interpretation and documents at-least-once remote effects. Astrology calculation
 schemas remain v1; the [transport limits](../contracts/astrology/transport-v1.md)
 record the bounded consumer response behavior.

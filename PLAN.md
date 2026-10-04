@@ -289,7 +289,7 @@ flowchart TD
 - `cryptography` for application-level profile encryption;
 - pytest for tests;
 - Ruff for linting/formatting;
-- mypy or Pyright for static type checking;
+- strict mypy for static type checking;
 - uv for dependency/environment management behind Make targets.
 
 ### Infrastructure
@@ -310,9 +310,9 @@ Dramatiq is selected for the initial implementation because it provides a simple
 
 ---
 
-## 9. Suggested repository layout
+## 9. Repository layout
 
-The repository should be organized by domain responsibilities rather than by Telegram handlers alone.
+The repository is organized by domain responsibilities rather than by Telegram handlers alone.
 
 - `src/oria_engine/app.py` — FastAPI application assembly;
 - `src/oria_engine/config.py` — environment configuration;
@@ -324,7 +324,8 @@ The repository should be organized by domain responsibilities rather than by Tel
 - `src/oria_engine/astrology/` — MCP client and calculation contracts;
 - `src/oria_engine/persona/` — Oria persona and response prompt construction;
 - `src/oria_engine/privacy/` — encryption, redaction, deletion orchestration;
-- `src/oria_engine/observability/` — logging and metrics;
+- `src/oria_engine/observability.py` — privacy-safe logging and metric samples;
+- `src/oria_engine/operations.py` — private aggregate operator snapshot;
 - `services/astrology_mcp/` — FastMCP service exposing the astrology calculation engine;
 - `migrations/` — Alembic migrations;
 - `tests/unit/` — pure and mocked tests;
@@ -1164,32 +1165,15 @@ No public telemetry endpoint is added.
 
 ## 28. Configuration and secrets
 
-Expected environment variables include:
+Typed settings and Compose-only variables are documented in
+[configuration](docs/application.md#configuration), with current defaults in
+[`.env.example`](.env.example). Host commands use loopback URLs; `make dev` supplies
+internal database/Redis/MCP URLs and an explicit container-accessible SecondContext
+URL. Polling, gateway and workers use matching policy, key and subject configuration.
 
-```dotenv
-APP_ENV=development
-LOG_LEVEL=INFO
-
-DATABASE_URL=postgresql+psycopg://oria:oria@postgres:5432/oria
-REDIS_URL=redis://redis:6379/0
-
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_WEBHOOK_BASE_URL=
-TELEGRAM_WEBHOOK_SECRET=
-
-PROFILE_ENCRYPTION_KEY=
-PROFILE_ENCRYPTION_KEY_VERSION=v1
-
-SECOND_CONTEXT_BASE_URL=http://secondcontext:8080
-SECOND_CONTEXT_BEARER_TOKEN=
-
-ASTROLOGY_MCP_URL=http://astrology-mcp:8000/mcp
-ORIA_POLICY_VERSION=2026-10-03.2
-```
-
-Production secrets must come from the deployment platform's secret mechanism rather than committed files.
-
-`.env` must be ignored by Git.
+Production secrets come from the deployment platform's secret mechanism. `.env`
+remains ignored by Git. Local [key management](docs/birth-profiles.md#encryption-and-keys)
+requires a stable key and secure backup; automatic multi-key rotation is not implemented.
 
 ---
 
@@ -1199,43 +1183,21 @@ The immediate delivery priority is a working demo. Implement the minimum needed
 to connect the core flow, deferring optional polish without weakening consent,
 privacy, or security requirements. The MVP completion criteria remain unchanged.
 
-For the staged demo, consent acceptance starts or resumes deterministic onboarding.
-Encrypted drafts preserve date/time progress and candidate selection; confirmed
-profiles use the consent-checked storage repository. The worker resolves local
-places through `PlaceResolver`, clarifies clock changes, and saves confirmed profiles.
-Confirmed profiles now calculate through MCP and retain a versioned derived cache.
-/profile displays confirmed details, unfinished edits, consent and cache validity;
-/edit_profile reuses field editors and confirmation.
-Failed calculations are recoverable with /retry_profile. Polling now persists and
-enqueues events; `make worker` owns consent, onboarding, calculation and delivery.
-PostgreSQL recovers work after Redis loss and anchors idempotent domain changes.
-The Stage 12 adapter, stable session mapping, scoped service authentication and
-SecondContext subject purge are implemented; see [adapter setup](docs/second-context.md).
-Transit calculations and active-message routing now provide deterministic natal
-and target/current transit fact summaries. Stage 14 policy, methodology and persona
-assembly is implemented in the adapter. Stage 15 adds the deterministic
-[response guard](docs/response-policy.md) and shared high-stakes routing.
-The [complete conversation worker](docs/conversation-worker.md) now connects
-SecondContext through the guarded service, with conservative inbound filtering,
-updated consent disclosure and a synthetic live tone review. External transcript
-effects are at least once across ambiguous failures; committed replies are reused.
-[Profile/privacy controls](docs/profile-commands.md), [end-to-end deletion](docs/deletion.md)
-and [production webhook ingress](docs/telegram-webhook.md) are implemented.
-[Rate limiting and abuse controls](docs/abuse-controls.md) are implemented.
-[Observability and operational readiness](docs/operations.md) is implemented.
-The [isolated integration and E2E replay harness](docs/testing.md) now runs all four
-mandatory test lanes through `make verify`, including real MCP and local HTTP
-Telegram/SecondContext fakes without provider credentials.
-The [Docker development stack](docs/development.md) now starts gateway, worker,
-PostgreSQL, Redis and private MCP with one `make dev`, including migrations.
-SecondContext remains externally managed and configurable. `make down` preserves
-canonical data; host polling can feed the container worker for the demo.
-Next is Stage 24 documentation reconciliation; live TLS/Telegram validation
-requires the operator's public HTTPS endpoint.
-See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
-Confirmed deletion stops processing and durably retries local, SecondContext and Redis cleanup. The disclosure uses
-policy version 2026-10-03.2. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),
-[birth-profile storage](docs/birth-profiles.md) and [consent flow](docs/consent-flow.md).
+The implemented demo path is documented in the [README](README.md) and
+[Docker development guide](docs/development.md): configure a development bot,
+stable key and external SecondContext, then run `make dev` followed by `make run`.
+Consent and onboarding stay deterministic; confirmed profiles calculate through
+private MCP, while eligible chat uses the guarded SecondContext adapter.
+[Architecture](docs/architecture.md) records component ownership and current flow;
+[privacy commands](docs/profile-commands.md) and [deletion](docs/deletion.md) record
+user controls and actual retention limits.
+
+Next is Stage 25, the MVP release gate. Keep live Telegram/TLS, deployed
+SecondContext continuity/purge, PostgreSQL backup/restore and CI validation separate
+from automated contract evidence. The [limitations reference](docs/limitations.md)
+collects calculation, language, privacy, delivery and deployment constraints. A
+working demo does not complete that gate. Run the [isolated test harness](docs/testing.md)
+through `make verify` without provider credentials or an operator database.
 
 The Makefile is the supported developer interface.
 
@@ -1327,7 +1289,7 @@ Verify:
 - session creation/reuse;
 - response parsing;
 - failure behavior;
-- deletion capability once implemented.
+- authenticated subject purge with strict completion acknowledgement.
 
 ### Telegram replay E2E tests
 

@@ -65,8 +65,8 @@ including delayed replay handling.
 These methods are deterministic persistence operations, not permission for a model
 to grant consent. The consent flow calls them only after the corresponding explicit user
 action. [Birth-profile writes](birth-profiles.md) take the same user lock and check
-current consent to serialize with withdrawal. Future activation must also check
-current consent within its own transaction.
+current consent to serialize with withdrawal. Derived-profile activation also
+checks current consent within its own transaction.
 
 ## Verification
 

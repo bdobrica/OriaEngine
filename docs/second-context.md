@@ -39,6 +39,12 @@ Use the same secret in Oria's `SECOND_CONTEXT_BEARER_TOKEN`, and set
 no OpenAI key is needed for the test suites. `SECOND_CONTEXT_BASE_URL` points to
 the private SecondContext API, as before.
 
+For `make dev`, also set `SECOND_CONTEXT_DOCKER_URL` to a container-reachable API
+address; the [Docker guide](development.md#configuration) explains host bridging.
+The owning repository's [README](https://github.com/bdobrica/SecondContext) supplies
+its deployment/provider setup. OriaEngine does not start that service or require
+its source checkout at runtime. OpenAI credentials stay in its runtime environment.
+
 The namespace is opt-in: leaving it empty preserves existing plain UUID scopes
 and ordinary subject-bound token behavior. With `oria`, the external subject is
 `oria:<internal UUID>` and each HTTP request gets its own `X-SecondContext-Subject`
@@ -55,12 +61,10 @@ lifecycles; deletion does not magically erase those copies.
 
 ## Runtime status
 
-Stage 12 is implemented, including the upstream service-auth/purge contract and
-real PostgreSQL/Qdrant tests with synthetic LLM responses. Stage 13 adds
-[active routing and transit facts](transits-and-routing.md). Stage 14 adds
-[policy, methodology and persona assembly](persona-prompts.md) to the adapter.
-Stage 15 adds [application output validation](response-policy.md). Stage 16 adds
-[input filtering and context worker wiring](conversation-worker.md) through the guarded service.
+The adapter supports [active routing and transit facts](transits-and-routing.md),
+[policy, methodology and persona assembly](persona-prompts.md),
+[application output validation](response-policy.md), and
+[input filtering and worker wiring](conversation-worker.md) through the guarded service.
 The polling/worker demo calls this adapter for eligible active chat and
 [confirmed, durable account deletion](deletion.md) across Oria and SecondContext.
 
@@ -69,7 +73,9 @@ bump custom versions before enabling conversation storage. It describes actual
 SecondContext retention and deletion controls, including the minimal deletion marker.
 
 The reusable HTTP stub in `tests/support/second_context.py` exercises consumer-side
-scope, continuity and strict purge parsing. Upstream tests exercise the actual API,
-PostgreSQL and Qdrant with synthetic LLM responses. No real OpenAI/Telegram calls or
-operator database changes are required. Run `make test-contract` for adapter tests,
+scope, continuity and strict purge parsing. The [Stage 12 evidence](evidence/stage-12.md)
+records upstream API, PostgreSQL and Qdrant tests with synthetic LLM responses.
+Oria's verification gate does not run that sibling repository's suite.
+No real OpenAI/Telegram calls or operator database changes are required.
+Run `make test-contract` for adapter tests,
 `make test-integration` for Oria's database tests, and `make verify` for the full gate.

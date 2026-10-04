@@ -52,7 +52,7 @@ or place clears the prior occurrence. Stale callbacks cannot reuse that decision
 New onboarding confirmations write profile schema **2**, adding nullable
 `birth_time_occurrence` (`0` = earlier UTC instant, `1` = later). Version 2 validates
 conversion before encryption. Original local date/time, accuracy and place remain
-unchanged. `utc_instant()` derives UTC for the future calculation boundary; UTC is
+unchanged. `utc_instant()` derives UTC for the calculation boundary; UTC is
 not stored as independent authoritative state. Version 1 ciphertext stays readable;
 its unresolved gap/overlap fails conversion rather than choosing implicitly.
 The derived-profile flow routes such legacy profiles through clarification before calculation.

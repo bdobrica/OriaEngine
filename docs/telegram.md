@@ -2,6 +2,10 @@
 
 ## Development bot setup
 
+For the quickest demo, use [the Docker worker with host polling](development.md#telegram-demo-and-webhook)
+(`make dev`, then `make run`). The steps below describe the alternative host-worker
+workflow. Stop existing host/container workers before switching between these modes.
+
 1. In Telegram, open the official [@BotFather](https://t.me/BotFather), send
    `/newbot`, and follow the prompts for a name and username. This is a manual
    account step; see the [Telegram tutorial](https://core.telegram.org/bots/tutorial).
@@ -34,7 +38,8 @@
 6. Stop with Ctrl-C or SIGTERM. The process closes the database pool and Telegram session.
 
 Polling requires the bot token, encryption key, outbound Telegram access and migrated PostgreSQL.
-Redis and a running worker are required for replies; no model service is called.
+Redis and a running worker are required for replies. Polling ingress never calls
+a model; eligible active chat calls SecondContext from the worker.
 See [queue recovery](worker-queue.md). Use the same configuration in both processes.
 `make api` remains a separate HTTP process. No new dependencies are introduced.
 Polling rejects production configuration and bots with an active webhook. Use a
@@ -64,7 +69,7 @@ including after handler failure. Replies remain plain text.
 onboarding stopped; `/start` or `/privacy` reoffers the disclosure without changing
 the decision. After acceptance, `/help` describes commands and `/start` resumes the
 current birth-field prompt. Validated birth values enter encrypted drafts; pre-consent free text is discarded. After consent, input is temporarily encrypted
-until processing finishes or expires; no model is called. Confirmation summaries show
+until processing finishes or expires. Onboarding never calls a model. Confirmation summaries show
 only the allowed fields back to their owner. See [onboarding](onboarding.md).
 
 Each handled update has a fresh correlation ID and provider update ID. Normal logs

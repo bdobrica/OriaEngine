@@ -29,6 +29,28 @@ platform; do not deploy a development `.env` or commit secrets.
 | `SECOND_CONTEXT_SUBJECT_NAMESPACE` | Empty for legacy scopes; e.g. `oria` enables service subject headers and requires a bearer token |
 | `ASTROLOGY_MCP_URL` | `http://localhost:8000/mcp`; HTTP(S) |
 | `ORIA_POLICY_VERSION` | `2026-10-03.2`; nonempty version identifier |
+| `INBOUND_RATE_PER_MINUTE` | `20`; integer 1–120, new updates per sender per 60-second window |
+| `QUEUED_JOBS_PER_USER` | `8`; integer 1–32, canonical nonterminal events per user |
+| `LLM_PROCESSING_ENABLED` | `true`; boolean, disable and restart all workers to stop new generation/memory ingestion |
+
+All typed settings appear in [`.env.example`](../.env.example). The following
+entries configure Compose rather than `Settings`; host processes ignore them:
+
+| Variable | Compose purpose / default |
+| --- | --- |
+| `POSTGRES_PASSWORD` | Required local database password; replace the `oria` example placeholder and match the host database URL |
+| `POSTGRES_PASSWORD_URLENCODED` | Optional percent-encoded password for the container database URL; falls back to `POSTGRES_PASSWORD` |
+| `POSTGRES_PORT` / `REDIS_PORT` | Loopback host ports `5432` / `6379`; update host URLs if changed |
+| `GATEWAY_PORT` | Loopback host gateway port `8001`; host `make api` still uses 8001 |
+| `SECOND_CONTEXT_DOCKER_URL` | Container-reachable SecondContext API; example uses `http://host.docker.internal:8080` |
+| `ORIA_APP_IMAGE` | Optional shared gateway/worker/migration image tag; `oria-engine:development` |
+
+`make dev` fixes `APP_ENV=development` and supplies internal DB/Redis/MCP URLs.
+The Docker context URL overrides the host base URL; see
+[networking and precedence](development.md#configuration). Shell variables also
+affect Compose interpolation. Do not treat the development overlay as production
+configuration. The gateway/worker receive an explicit allowlist of settings;
+the migration job receives only development environment and database URL.
 
 HTTP URLs reject embedded credentials, query strings and fragments. Authentication
 belongs in the dedicated secret settings. Version identifiers use letters, digits,
@@ -36,7 +58,9 @@ belongs in the dedicated secret settings. Version identifiers use letters, digit
 
 Production requires explicit database, Redis, SecondContext and Astrology MCP URLs,
 a nonempty bot token, HTTPS webhook base URL, webhook secret and encryption key.
-SecondContext authentication remains optional, as specified in the plan. Supplied
+SecondContext authentication remains optional in typed configuration; complete
+account deletion needs compatible authenticated purge as described in
+[service setup](second-context.md#service-setup-and-deletion). Supplied
 values are validated in every environment. These are syntax/presence checks, not
 credential verification or a production deployment readiness guarantee.
 The process fails before opening a listener on invalid configuration and emits a
@@ -63,8 +87,8 @@ shutdown. See [webhook setup](telegram-webhook.md) and the
 [ingress contract](../contracts/telegram/webhook-v1.md).
 
 Responses carry a generated UUID-based `X-Request-ID`; caller-provided IDs are not
-trusted or echoed. The same ID appears in request logs. Future Telegram handlers
-can use `correlation_scope(telegram_update_id=...)` around a normalized update.
+trusted or echoed. The same ID appears in request logs. Telegram handlers use
+`correlation_scope(telegram_update_id=...)` around a normalized update.
 Context is isolated across concurrent tasks and restored after each scope.
 OpenAPI at `/openapi.json` describes both endpoints in development/test; API docs
 and OpenAPI routes are disabled in production.

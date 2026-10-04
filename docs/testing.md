@@ -5,11 +5,16 @@ Docker Compose v2 are required. No `.env`, Telegram account, OpenAI key, live
 SecondContext instance or sibling checkout is required. GitHub Actions runs the
 same `make verify` command.
 
+Host bootstrap builds the locked `pyswisseph` source distribution when a cached
+wheel is unavailable. Provide C/C++ compilers, libc development headers and headers
+for the selected Python interpreter. Dockerfiles install their own build toolchain;
+they do not supply the host bootstrap toolchain.
+
 | Command | Coverage |
 | --- | --- |
 | `make test-unit` | Pure and mocked domain/adapter checks |
 | `make test-integration` | Real PostgreSQL/Redis, migrations, storage, ordering, retries and recovery |
-| `make test-contract` | Published wire formats, golden calculations and real MCP container/transport |
+| `make test-contract` | Published wire formats, golden calculations, real MCP transport and application development containers |
 | `make test-e2e` | Synthetic Telegram conversations through webhook, queue, worker and service adapters |
 | `make test` | All four test lanes |
 | `make verify` | Formatting, lint, strict type checking and all four test lanes |
@@ -28,12 +33,17 @@ test environment; migrations run outside the checkout so they cannot load local
 Replay tests also build and start the real owned Astrology MCP image and apply all
 migrations before replay. Existing contract tests separately check the deployment
 image's private network, read-only filesystem and explicit loopback override.
+The [development-stack contract test](development.md#health-and-verification)
+also builds the shared application image in its own `oria-dev-test-*` project,
+checks migration ordering and gateway/worker health, consumes an actual worker UUID
+and calls private MCP. It restarts with retained schema before removing its own volume.
 Build/image acquisition requires network access on an uncached machine. Docker
 failures fail the lane; tests do not silently skip required dependencies.
 
 An interrupted process that cannot execute cleanup can leave a project behind.
-Use `docker compose ls --all` to identify its exact `oria-test-*` project and remove
-only that project's containers/volumes using the test Compose file. Keep developer
+Use `docker compose ls --all` to identify its exact `oria-test-*` or `oria-dev-test-*`
+project and remove only that project's containers/volumes using its matching
+test or development Compose definitions. Keep developer
 and deployment projects separate. Parallel pytest workers sharing one project are
 not supported; separate command invocations have separate projects.
 

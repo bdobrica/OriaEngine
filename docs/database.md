@@ -75,9 +75,9 @@ containing SQL or data. Never add profile values or credentials to migrations.
 
 `oria_engine.db.session.Base` owns OriaEngine model metadata and stable constraint
 names. Create one `Database(settings)` per process/event-loop lifetime and call
-`await database.close()` after in-flight work has drained. The HTTP skeleton
-does not use storage yet; the consuming stage will register that lifecycle
-resource and its readiness check.
+`await database.close()` after in-flight work has drained. Enabled webhook ingress
+registers storage in the gateway lifespan and checks DB/Redis readiness. The
+development HTTP skeleton without a webhook secret remains dependency-free.
 
 ```python
 async with database.transaction() as session:

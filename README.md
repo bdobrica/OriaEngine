@@ -1,427 +1,97 @@
 # OriaEngine
 
-**OriaEngine** is the application runtime for **Oria**, a persistent AI astrology personality designed to interact with users through private messaging.
+OriaEngine runs **Oria**, an AI astrology personality for private Telegram chats.
+Users explicitly consent, create an encrypted birth profile, and receive
+interpretations of deterministic natal and transit calculations with conversational
+continuity through [SecondContext](https://github.com/bdobrica/SecondContext).
 
-The first MVP targets **Telegram**. A user can talk to Oria in a DM, explicitly consent to providing the minimum birth information required for astrological calculations, create a persistent birth profile, and receive personalized interpretations grounded in deterministic chart calculations and prior conversation context.
+**Status:** the demo pipeline, privacy commands, deletion, webhook ingress and
+Docker development stack are implemented. The [Stage 25 release gate](TODO.md#stage-25--mvp-release-gate)
+is still pending; the project is not MVP-complete.
 
-OriaEngine is designed to build on [SecondContext](https://github.com/bdobrica/SecondContext) for persistent conversational memory while keeping private birth-profile data in a separate, encrypted application store.
+Astrology is an interpretive framework, not a scientifically established forecasting
+method. Oria is not a source of medical, legal, financial or other high-stakes advice.
 
-> **Project status:** design / early MVP implementation.
-> The [SecondContext adapter](docs/second-context.md) supports scoped sessions,
-> service authentication and purge. The [conversation worker](docs/conversation-worker.md)
-> now connects calculated natal/transit facts to SecondContext interpretation,
-> with consent, input filtering and output policy checks. [Profile/privacy commands](docs/profile-commands.md)
-> support inspection, deterministic edits and withdrawal. [Account deletion](docs/deletion.md) is implemented with durable cross-service recovery.
-> [Production webhook ingress](docs/telegram-webhook.md) is available with explicit setup commands; polling remains for development.
-> [Abuse controls](docs/abuse-controls.md) bound bursts, pending work and downstream responses, with an LLM emergency switch.
-> [Operational telemetry](docs/operations.md) provides private metrics, job correlation and failure diagnosis.
->
-> Astrology is used here as an interpretive framework. Oria should not be treated as a source of scientific prediction, medical advice, legal advice, financial advice, or other high-stakes professional guidance.
+## Quick start: verify a checkout
 
-## What the MVP does
+Install Git, GNU Make, Python 3.12+, [uv](https://docs.astral.sh/uv/), Docker and
+Docker Compose v2. Use a POSIX shell (for example, Linux/WSL). The locked
+`pyswisseph` source build needs C/C++ compilers, libc development headers and
+headers for your Python interpreter. Docker must be running and accessible to
+your user. An uncached bootstrap/build needs network access to package and image registries.
 
-- interacts with users in private Telegram chats;
-- presents a versioned disclosure and requires explicit consent before collecting birth data;
-- collects only the calculation profile: birth date, birth time/accuracy, and birthplace;
-- supports exact, approximate, and unknown birth times;
-- resolves birthplace, coordinates, timezone, and historical UTC birth instant deterministically;
-- stores raw birth-profile data encrypted in PostgreSQL;
-- runs the astrology mathematical model as a separate FastMCP service;
-- computes and stores a derived natal profile;
-- calculates transits/aspects when needed for a conversation;
-- uses SecondContext for persistent conversational context and preferences;
-- keeps calculated facts separate from LLM interpretation;
-- prevents the personality layer from overriding privacy and safety policy;
-- uses Redis for worker jobs, per-user locks, and temporary state;
-- supports profile inspection, correction, privacy information, and deletion.
-
-## Architecture
-
-```mermaid
-flowchart TD
-    U[Telegram user] --> TG[Telegram Bot API]
-    TG --> G[OriaEngine gateway<br/>Python / FastAPI / aiogram]
-
-    G --> PG[(PostgreSQL<br/>canonical app state)]
-    G --> R[(Redis<br/>queue / locks / temporary state)]
-    R --> W[OriaEngine worker]
-
-    W --> PG
-    W --> SC[SecondContext<br/>conversation memory]
-    W --> MCP[Astrology MCP<br/>FastMCP]
-    MCP --> M[Mathematical astrology model]
-
-    W --> TG
-```
-
-The main architectural rules are:
-
-- **PostgreSQL is the source of truth.**
-- **Redis is disposable coordination state.**
-- **Birth data is private profile data, not semantic memory.**
-- **The astrology service calculates; the LLM interprets.**
-- **Policy outranks persona.**
-- **Telegram is an adapter, so other messaging networks can be added later.**
-
-See [PLAN.md](PLAN.md) for the complete design.
-
-## Oria's behavior
-
-Oria is intended to feel like a consistent astrology personality rather than a generic assistant. She can remember conversational preferences and prior discussions, explain natal placements, interpret current or date-specific transits, and offer low-stakes reflective suggestions.
-
-Oria must remain transparent about being an AI personality and must never fabricate chart facts.
-
-The response model separates:
-
-1. deterministic computed facts;
-2. traditional astrological interpretation;
-3. reflective conversational advice.
-
-If data is unavailable — for example because the user's birth time is unknown — Oria should say so rather than inventing an ascendant or house placement.
-
-## Privacy model
-
-The MVP intentionally keeps the user profile small.
-
-Oria may solicit only the information required to calculate the profile:
-
-- birth date;
-- birth time, including an “unknown” option;
-- birthplace, normally city + country, plus clarification needed to disambiguate the place.
-
-The system should not solicit unrelated data such as legal name, email address, phone number, home address, employer, government identifiers, passwords, or payment details.
-
-Raw birth-profile data is stored in PostgreSQL using application-level authenticated encryption. It is not intentionally stored as a SecondContext semantic memory or vector embedding.
-
-The Telegram identity mapping stores only the identifiers required to route messages. Display names, usernames, phone numbers, and profile metadata are not copied into the Oria profile by default.
-
-Users will have:
-
-- `/profile` — inspect the profile used for calculations;
-- `/edit-profile` — correct birth information;
-- `/privacy` — see what is collected and why;
-- `/delete-me` — request complete profile/context deletion.
-
-## Safety boundaries
-
-Oria can discuss symbolic themes and low-stakes reflection, but astrology must not be presented as a reliable basis for high-impact decisions.
-
-The MVP explicitly avoids deterministic predictions about illness, death, pregnancy, accidents, criminal behavior, financial ruin, or certain relationship outcomes. It also avoids medical diagnosis, personalized investment instructions, legal advice, and similar high-stakes guidance based on astrology.
-
-## Planned stack
-
-- Python 3.12+
-- FastAPI
-- aiogram 3
-- PostgreSQL
-- SQLAlchemy 2.x + Alembic
-- Redis
-- Dramatiq with Redis broker
-- FastMCP
-- SecondContext
-- Pydantic
-- httpx
-- cryptography
-- pytest
-- Ruff
-- mypy/Pyright
-- Docker Compose
-- uv
-- Make
-
-## Repository structure
-
-The implementation is organized around application responsibilities:
-
-- `src/oria_engine/domain/` — consent, onboarding, profile, policy, conversation logic;
-- `src/oria_engine/telegram/` — Telegram transport adapter;
-- `src/oria_engine/db/` — SQLAlchemy models and repositories;
-- `src/oria_engine/queue/` — Redis/Dramatiq workers and user locks;
-- `src/oria_engine/context/` — SecondContext adapter;
-- `src/oria_engine/astrology/` — MCP client and calculation contracts;
-- `src/oria_engine/persona/` — Oria persona and prompt assembly;
-- `src/oria_engine/privacy/` — encryption, redaction, deletion;
-- `services/astrology_mcp/` — Dockerized FastMCP wrapper for the mathematical model;
-- `migrations/` — Alembic migrations;
-- `tests/` — unit, integration, contract, and E2E tests;
-- `deploy/` — local/deployment configuration.
-
-The implementation order is tracked in [TODO.md](TODO.md).
-
-## Prerequisites
-
-For local development, install:
-
-- Git;
-- Docker with Docker Compose v2;
-- GNU Make;
-- Python 3.12+;
-- [uv](https://docs.astral.sh/uv/);
-- a Telegram bot token from BotFather for live local testing;
-- access to a SecondContext instance for full conversational integration.
-
-CI and all required automated tests need no real Telegram token or LLM credential.
-See [the isolated test harness](docs/testing.md).
-
-## Install
-
-Clone the repository and bootstrap the development environment:
-
-```bash
-git clone https://github.com/<your-user>/OriaEngine.git
+```sh
+git clone https://github.com/bdobrica/OriaEngine.git
 cd OriaEngine
 make bootstrap
-make env
-```
-
-`make env` creates `.env` from `.env.example` when one does not already exist. Add local secrets to `.env`; never commit it.
-
-Start PostgreSQL and Redis and apply migrations:
-
-```bash
-make infra-up
-make migrate
-```
-
-See [local infrastructure and migrations](docs/database.md) for configuration,
-reset/rollback commands, transaction conventions, and isolated database tests.
-
-## Configuration
-
-The initial configuration surface is expected to include:
-
-```dotenv
-APP_ENV=development
-LOG_LEVEL=INFO
-
-DATABASE_URL=postgresql+psycopg://oria:oria@localhost:5432/oria
-REDIS_URL=redis://localhost:6379/0
-
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_WEBHOOK_BASE_URL=
-TELEGRAM_WEBHOOK_SECRET=
-
-PROFILE_ENCRYPTION_KEY=
-PROFILE_ENCRYPTION_KEY_VERSION=v1
-
-SECOND_CONTEXT_BASE_URL=http://localhost:8080
-SECOND_CONTEXT_BEARER_TOKEN=
-
-ASTROLOGY_MCP_URL=http://localhost:8000/mcp
-ORIA_POLICY_VERSION=2026-10-03.2
-```
-
-Use a generated development key for `PROFILE_ENCRYPTION_KEY`. Production deployments must provide secrets through the deployment platform rather than a committed environment file.
-
-## Run locally
-
-Confirmed birth profiles now calculate and cache a natal result. See
-[derived profiles](docs/astrology-profiles.md) for `make mcp-local`, migration and
-policy setup, chart status, retry and editing commands.
-
-The HTTP skeleton is available now with `make api` at
-`http://127.0.0.1:8001/healthz`; it needs no running dependencies or secrets in
-development. See [configuration, readiness and logging](docs/application.md) for
-the implemented settings and endpoint contracts.
-
-### Full local Docker development stack
-
-Configure the bot token, stable encryption key and container-accessible
-SecondContext URL in `.env`, then:
-
-```bash
-make dev
-```
-
-This starts the OriaEngine-owned services: gateway, worker, PostgreSQL, Redis, and Astrology MCP. SecondContext can be configured as an external service through `SECOND_CONTEXT_BASE_URL`.
-Migrations run before application startup. See [Docker development setup](docs/development.md)
-for `SECOND_CONTEXT_DOCKER_URL`, secrets, health checks and the polling demo
-(`make dev`, then `make run`).
-
-Follow logs with:
-
-```bash
-make logs
-```
-
-Stop the stack with:
-
-```bash
-make down
-```
-
-### Telegram polling mode
-
-Set `TELEGRAM_BOT_TOKEN` and `DATABASE_URL` in `.env`, start local infrastructure
-and apply migrations (`make infra-up migrate`), then run the private-chat bot:
-
-```bash
-make run
-```
-
-See [Telegram setup and smoke test](docs/telegram.md). `/start`, `/help`, `/privacy`
-and versioned consent buttons, encrypted profile setup, and natal calculations are available.
-Run `make worker` in another terminal: polling now queues all conversation work.
-See [worker queue and recovery](docs/worker-queue.md) and [consent behavior](docs/consent-flow.md).
-
-Run the worker in another terminal when it is not already running through Docker Compose:
-
-```bash
-make worker
-```
-
-For host-run workers, start the astrology MCP service with loopback access:
-
-```bash
-make mcp-local
-```
-
-The astrology service exposes deterministic natal calculations on a private
-Compose network. See [Astrology MCP](docs/astrology-mcp.md) for its versioned
-contract, calculation limits, container smoke test and licensing prerequisites.
-
-Production deployments use Telegram webhooks instead of polling.
-
-## Makefile workflows
-
-The Makefile is the supported interface for common development tasks.
-
-```bash
-make help
-make bootstrap
-make env
-make infra-up
-make migrate
-make api
-make run
-make worker
-make mcp
-make dev
-make logs
-make format
-make lint
-make typecheck
 make test-unit
-make test-integration
-make test-contract
-make test-e2e
-make test
-make verify
-make down
-make clean
-```
-
-The exact commands behind these targets may evolve; contributor-facing workflows should remain stable where practical.
-
-## Testing
-
-### Fast tests
-
-```bash
-make test-unit
-```
-
-Unit tests cover domain logic such as consent, onboarding, parsing, encryption, profile scoping, policy rules, and calculation routing.
-
-### Integration tests
-
-```bash
-make test-integration
-```
-
-Integration tests start isolated PostgreSQL and Redis dependencies and validate migrations, repositories, queue behavior, retries, idempotency, user isolation, and deletion recovery.
-
-### Contract tests
-
-```bash
-make test-contract
-```
-
-Contract tests validate the structured interfaces to Astrology MCP and SecondContext. Astrology calculations use golden fixtures so deliberate model changes are visible in review.
-
-### End-to-end replay tests
-
-```bash
-make test-e2e
-```
-
-E2E tests replay sanitized Telegram update fixtures without requiring a real Telegram account. They cover the consent flow, onboarding, profile editing, chart calculation, safety behavior, duplicate updates, and deletion.
-
-### Full verification
-
-Before opening a pull request:
-
-```bash
 make verify
 ```
 
-`make verify` is the command required by CI and includes formatting verification,
-linting, type checking, and all four mandatory test lanes. See
-[test setup, replay coverage and limits](docs/testing.md).
+No `.env`, Telegram token, OpenAI key, live SecondContext service or sibling checkout
+is needed for these tests. `make verify` checks formatting, lint and strict mypy,
+then runs unit, integration, contract and E2E lanes. Tests start and remove isolated
+Docker services with generated credentials; they do not use your local database.
+See [testing](docs/testing.md) for coverage and limits. `make help` lists all targets.
 
-## Telegram deployment model
+## Run a Telegram demo
 
-Local development uses long polling. Production uses a webhook exposed through HTTPS.
+1. Run `make env` to create the ignored `.env` without replacing an existing one.
+2. [Create a development bot with BotFather](docs/telegram.md) and set its token.
+3. [Generate and retain an encryption key](docs/birth-profiles.md#encryption-and-keys),
+   replace the PostgreSQL password placeholder and match the host `DATABASE_URL`.
+4. Start a compatible, separately managed [SecondContext service](docs/second-context.md).
+   Configure its URL, service authentication and subject namespace for chat and deletion.
+   Its OpenAI credentials belong in SecondContext, not OriaEngine.
+5. Set `SECOND_CONTEXT_DOCKER_URL` to an address reachable from containers and retain
+   `ORIA_POLICY_VERSION=2026-10-03.2`. For polling, leave the webhook secret empty
+   and use a development bot with no registered webhook.
 
-```mermaid
-sequenceDiagram
-    participant U as Telegram user
-    participant T as Telegram
-    participant G as OriaEngine gateway
-    participant R as Redis
-    participant W as Worker
-
-    U->>T: Send private message
-    T->>G: HTTPS webhook update
-    G->>G: Validate webhook secret
-    G->>G: Persist / deduplicate update
-    G->>R: Enqueue inbound event ID
-    G-->>T: 2xx
-    R->>W: Process job
-    W->>T: Send Oria response
-    T-->>U: Deliver response
+```sh
+make dev
+make run
 ```
 
-Only the public gateway needs internet ingress. PostgreSQL, Redis, workers, Astrology MCP, and SecondContext should remain private services.
+`make dev` builds gateway/worker/MCP images, starts PostgreSQL/Redis, applies
+migrations and waits for container health. `make run` polls on the host and feeds
+the container worker. Send `/start`, accept the disclosure, complete the prompted
+profile, then ask `Explain my natal chart` or `transits today`.
 
-## Development principles
+Use `make logs` for container logs, `make metrics` for private aggregate status,
+and `make down` to stop the stack while preserving PostgreSQL data. Stop polling
+with Ctrl-C. See [Docker development](docs/development.md) for networking and mode
+switching, [host polling](docs/telegram.md) for the host-worker alternative, and
+[webhook setup](docs/telegram-webhook.md) for explicit HTTPS registration.
 
-### Calculate first, interpret second
+## Core boundaries
 
-Planetary positions, aspects, houses, transits, orbs, and other mathematical values must come from the calculation service. The LLM should explain supplied values, not invent them.
+- PostgreSQL owns identity, consent, encrypted profiles and canonical jobs;
+  Redis coordinates UUID-only work and can be rebuilt.
+- Swiss Ephemeris plus Oria's astrology calculation engine produces structured
+  facts through a private MCP service. The LLM interprets them.
+- Consent, onboarding, profile edits and deletion use deterministic application
+  code. Policy takes priority over persona.
+- Raw birth fields stay out of SecondContext requests and explicit semantic memory.
+  Filtered active messages and generated replies can be retained by SecondContext
+  and its AI provider; filtering has documented limits.
 
-### Collect less
+Commands include `/profile`, `/edit_profile`, `/retry_profile`, `/privacy` and
+`/delete_me`. Decline stops processing but retains previous data; deletion requires
+confirmation and durable cleanup across services. See [profile commands](docs/profile-commands.md)
+and [deletion and retention](docs/deletion.md).
 
-Oria should know what is necessary to calculate a chart without trying to build a broad identity profile of the person behind it.
+## Documentation
 
-### Policy outranks persona
+| Topic | Reference |
+| --- | --- |
+| Component ownership and message flow | [Architecture](docs/architecture.md) |
+| Typed settings and Compose variables | [Configuration](docs/application.md#configuration) |
+| Storage, migrations and key management | [Database](docs/database.md), [encrypted profiles](docs/birth-profiles.md) |
+| BotFather, polling and HTTPS ingress | [Telegram](docs/telegram.md), [webhooks](docs/telegram-webhook.md) |
+| Calculation contracts and development | [Astrology MCP](docs/astrology-mcp.md) |
+| Conversation dependency and policy | [SecondContext](docs/second-context.md), [worker pipeline](docs/conversation-worker.md) |
+| Logs, health, limits and recovery | [Operations](docs/operations.md), [abuse controls](docs/abuse-controls.md) |
+| Known gaps and live checks | [MVP limitations](docs/limitations.md) |
+| Implementation intent and remaining release work | [PLAN.md](PLAN.md), [TODO.md](TODO.md) |
 
-Oria's tone and character can evolve. Consent, data access, PII rules, deletion, and high-stakes boundaries are application policy and cannot be overridden by personality prompts.
-
-### Postgres remembers; Redis coordinates
-
-Loss of Redis should never destroy the user's canonical consent or profile state.
-
-### Telegram is an adapter
-
-The first MVP is a Telegram bot, but the domain model is intentionally transport-neutral so Instagram, Matrix, Discord, or other channels can be added later.
-
-## Roadmap
-
-After the Telegram MVP is stable, likely directions include:
-
-- Instagram DM support;
-- opt-in daily or weekly readings;
-- additional astrology calculations;
-- richer feedback/evaluation;
-- additional social/messaging adapters;
-- carefully separated prospective research into whether astrological feature sets add predictive value beyond ordinary contextual baselines.
-
-See [TODO.md](TODO.md) for the consecutive MVP implementation checklist and [PLAN.md](PLAN.md) for the detailed product and architecture design.
-
-## References
-
-- [Telegram Bot API](https://core.telegram.org/bots/api)
-- [aiogram](https://docs.aiogram.dev/)
-- [FastMCP](https://gofastmcp.com/)
-- [SecondContext](https://github.com/bdobrica/SecondContext)
+Durable validation records live in [docs/evidence](docs/evidence).

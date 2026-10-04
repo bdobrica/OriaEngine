@@ -19,7 +19,7 @@ write drafts or profiles.
 | `BirthTimeClarification` | Select an occurrence of a repeated time, correct a gap, or choose unknown |
 | `ProfileConfirmation` | Review summary; confirm or edit date, time or place |
 | `ComputingProfile` | Confirmed encrypted profile awaits successful calculation |
-| `Active` | Valid derived result cached; interpretation arrives in later stages |
+| `Active` | Valid derived result cached; eligible chat uses the guarded conversation worker |
 
 Numeric slash dates, impossible/future dates, offsets, informal time phrases and
 extra text are rejected with a focused retry. Unknown time stores no invented
