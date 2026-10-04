@@ -1,0 +1,7 @@
+[
+  {"text": "/edit_profile", "contains": "Please confirm"},
+  {"button": "Edit time", "contains": "birth time"},
+  {"text": "04:42", "contains": "04:42"},
+  {"button": "Confirm profile", "contains": "profile is active"},
+  {"text": "/profile", "contains": "04:42"}
+]

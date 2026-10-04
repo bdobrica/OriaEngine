@@ -160,7 +160,8 @@ For local development, install:
 - a Telegram bot token from BotFather for live local testing;
 - access to a SecondContext instance for full conversational integration.
 
-CI and most automated tests do **not** require a real Telegram bot token.
+CI and all required automated tests need no real Telegram token or LLM credential.
+See [the isolated test harness](docs/testing.md).
 
 ## Install
 
@@ -350,7 +351,9 @@ Before opening a pull request:
 make verify
 ```
 
-`make verify` is intended to be the same command required by CI and includes formatting verification, linting, type checking, and all mandatory test lanes.
+`make verify` is the command required by CI and includes formatting verification,
+linting, type checking, and all four mandatory test lanes. See
+[test setup, replay coverage and limits](docs/testing.md).
 
 ## Telegram deployment model
 

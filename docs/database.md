@@ -101,8 +101,8 @@ boundary and never log exception strings or raw payloads.
 
 ## Verification
 
-`make test-integration` starts the same service definitions in a unique temporary
-Compose project with random credentials and ports, ignoring developer `.env`
+`make test-integration` starts [test service definitions](../deploy/compose.test.yaml)
+in a unique temporary Compose project with random credentials and ports, ignoring developer `.env`
 and service URLs. It removes only that project's containers and volumes afterward.
 Docker/Compose are required; unavailable Docker fails the lane rather than skipping it.
 An interrupted test process may leave an `oria-test-*` project for manual cleanup.
@@ -111,6 +111,7 @@ Tests cover empty/repeated upgrades, downgrade/re-upgrade, metadata drift,
 transaction commit/rollback/cancellation, independent concurrent sessions, and
 Redis loss without PostgreSQL data loss. `make verify` includes this lane in local
 development and CI. No live Telegram or SecondContext credentials are required.
+See [the test harness](testing.md) for dependency lifecycle and the replay lane.
 
 The async migration setup follows the
 [Alembic asyncio recipe](https://alembic.sqlalchemy.org/en/latest/cookbook.html#using-asyncio-with-alembic).

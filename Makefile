@@ -3,7 +3,7 @@ COMPOSE = docker compose --env-file .env -p oria-local -f deploy/compose.yaml
 
 .DEFAULT_GOAL := help
 
-.PHONY: worker help bootstrap env api run format lint typecheck test-unit test-integration verify clean infra-up infra-down infra-reset migrate migrate-down mcp mcp-local mcp-test test-contract webhook-set webhook-delete webhook-reset logs metrics
+.PHONY: worker help bootstrap env api run format lint typecheck test-unit test-integration test-e2e test verify clean infra-up infra-down infra-reset migrate migrate-down mcp mcp-local mcp-test test-contract webhook-set webhook-delete webhook-reset logs metrics
 
 help: ## Show available development commands
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -84,7 +84,12 @@ test-unit: ## Run the fast unit-test suite
 test-integration: ## Test migrations and transactions using isolated Docker services
 	$(UV) run pytest tests/integration
 
-verify: lint typecheck test-unit test-integration test-contract ## Run the required CI verification gate
+test-e2e: ## Replay Telegram conversations using isolated services and local HTTP fakes
+	$(UV) run pytest tests/e2e
+
+test: test-unit test-integration test-contract test-e2e ## Run all automated test lanes
+
+verify: lint typecheck test ## Run the required CI verification gate
 
 clean: ## Remove generated caches, coverage, and build artifacts
 	find . -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +

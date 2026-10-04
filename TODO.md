@@ -684,7 +684,7 @@ Wire the full production-like message loop.
 
 Implemented: [conversation worker](docs/conversation-worker.md). Synthetic live-model
 review and deterministic verification are recorded in [Stage 16 evidence](docs/evidence/stage-16.md).
-Next is Stage 22 E2E coverage; [profile/privacy controls](docs/profile-commands.md) are available.
+Next is Stage 23 containerized local development; [profile/privacy controls](docs/profile-commands.md) are available.
 
 ### Tasks
 
@@ -752,7 +752,7 @@ coordinates/timezone. [Confirmed account deletion](docs/deletion.md) is availabl
 
 ## Stage 18 — End-to-end deletion workflow
 
-Implemented: [deletion and retention](docs/deletion.md). Next is Stage 22 E2E coverage.
+Implemented: [deletion and retention](docs/deletion.md). Next is Stage 23 containerized local development.
 
 ### Goal
 
@@ -792,7 +792,7 @@ Make user deletion complete, durable, and retryable across services.
 ## Stage 19 — Production Telegram webhook
 
 Implemented: [webhook setup](docs/telegram-webhook.md) and the
-[ingress v1 contract](contracts/telegram/webhook-v1.md). Next is Stage 22 E2E coverage.
+[ingress v1 contract](contracts/telegram/webhook-v1.md). Next is Stage 23 containerized local development.
 Live registration/TLS validation awaits an operator-provided
 public HTTPS endpoint; see [verification evidence](docs/evidence/stage-19.md).
 
@@ -831,7 +831,7 @@ Switch production ingress from polling to secure HTTPS webhooks.
 
 ## Stage 20 — Rate limiting and abuse controls
 
-Implemented: [abuse controls](docs/abuse-controls.md). Next is Stage 22 E2E coverage.
+Implemented: [abuse controls](docs/abuse-controls.md). Next is Stage 23 containerized local development.
 See [verification evidence](docs/evidence/stage-20.md).
 
 ### Goal
@@ -860,7 +860,7 @@ Protect costs, service availability, and user isolation.
 ## Stage 21 — Observability and operational readiness
 
 Implemented: [operator guide](docs/operations.md) and
-[telemetry v1](contracts/operations/v1.md). Next is Stage 22 integration/E2E coverage.
+[telemetry v1](contracts/operations/v1.md). Next is Stage 23 containerized local development.
 See [verification evidence](docs/evidence/stage-21.md).
 
 ### Goal
@@ -892,35 +892,38 @@ Make failures diagnosable without logging private profile data.
 
 ## Stage 22 — Integration and E2E test harness
 
+Implemented: [isolated replay harness](docs/testing.md). Next is Stage 23 containerized
+local development. See [verification evidence](docs/evidence/stage-22.md).
+
 ### Goal
 
 Make the entire MVP reproducibly testable without a real Telegram account or production LLM dependency.
 
 ### Tasks
 
-- [ ] Add isolated test Docker Compose file/profile.
-- [ ] Add PostgreSQL/Redis lifecycle to `make test-integration`.
-- [ ] Add fake Telegram outbound server/client fixture.
-- [ ] Add fake SecondContext fixture service.
-- [ ] Run real Astrology MCP container for contract/E2E tests.
-- [ ] Add sanitized Telegram update fixture files.
-- [ ] Add conversation replay harness.
-- [ ] Add exact-time onboarding replay.
-- [ ] Add unknown-time onboarding replay.
-- [ ] Add ambiguous-place replay.
-- [ ] Add duplicate-update replay.
-- [ ] Add profile-edit replay.
-- [ ] Add PII-policy replay.
-- [ ] Add high-stakes request replay.
-- [ ] Add deletion replay.
-- [ ] Add `make test-contract`.
-- [ ] Add `make test-e2e`.
-- [ ] Make `make verify` include all mandatory test lanes.
+- [x] Add isolated test Docker Compose file/profile.
+- [x] Add PostgreSQL/Redis lifecycle to `make test-integration`.
+- [x] Add fake Telegram outbound server/client fixture.
+- [x] Add fake SecondContext fixture service.
+- [x] Run real Astrology MCP container for contract/E2E tests.
+- [x] Add sanitized Telegram update fixture files.
+- [x] Add conversation replay harness.
+- [x] Add exact-time onboarding replay.
+- [x] Add unknown-time onboarding replay.
+- [x] Add ambiguous-place replay.
+- [x] Add duplicate-update replay.
+- [x] Add profile-edit replay.
+- [x] Add PII-policy replay.
+- [x] Add high-stakes request replay.
+- [x] Add deletion replay.
+- [x] Add `make test-contract`.
+- [x] Add `make test-e2e`.
+- [x] Make `make verify` include all mandatory test lanes.
 
 ### Acceptance criteria
 
-- [ ] CI runs the same top-level verification command documented for developers.
-- [ ] No real Telegram token is required by CI.
+- [x] CI runs the same top-level verification command documented for developers.
+- [x] No real Telegram token is required by CI.
 
 ---
 

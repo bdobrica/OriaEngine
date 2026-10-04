@@ -1,0 +1,10 @@
+{
+  "update_id": 100,
+  "message": {
+    "message_id": 100,
+    "date": 946684800,
+    "chat": {"id": 42, "type": "private"},
+    "from": {"id": 42, "is_bot": false, "first_name": "Synthetic", "username": "synthetic_fixture"},
+    "text": "/start"
+  }
+}

@@ -1,0 +1,9 @@
+[
+  {"text": "/start"},
+  {"button": "agree"},
+  {"text": "1990-04-13"},
+  {"button": "Unknown time", "contains": "city"},
+  {"text": "Cluj-Napoca, Romania"},
+  {"button": "Cluj-Napoca", "contains": "Local time: unknown"},
+  {"button": "Confirm profile", "contains": "unavailable"}
+]

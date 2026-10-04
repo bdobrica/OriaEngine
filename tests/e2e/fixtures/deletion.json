@@ -1,0 +1,4 @@
+[
+  {"text": "/delete_me", "contains": "cannot be undone"},
+  {"button": "Yes, delete my account", "delivered": false}
+]

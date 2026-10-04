@@ -1,0 +1,16 @@
+{
+  "update_id": 100,
+  "callback_query": {
+    "id": "synthetic-callback",
+    "chat_instance": "synthetic",
+    "from": {"id": 42, "is_bot": false, "first_name": "Synthetic"},
+    "message": {
+      "message_id": 100,
+      "date": 946684800,
+      "chat": {"id": 42, "type": "private"},
+      "from": {"id": 123456, "is_bot": true, "first_name": "Synthetic bot"},
+      "text": "Synthetic bot reply"
+    },
+    "data": "runtime-selected-button"
+  }
+}

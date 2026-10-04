@@ -1221,7 +1221,10 @@ effects are at least once across ambiguous failures; committed replies are reuse
 and [production webhook ingress](docs/telegram-webhook.md) are implemented.
 [Rate limiting and abuse controls](docs/abuse-controls.md) are implemented.
 [Observability and operational readiness](docs/operations.md) is implemented.
-Next is Stage 22 integration and E2E replay coverage; live TLS/Telegram validation
+The [isolated integration and E2E replay harness](docs/testing.md) now runs all four
+mandatory test lanes through `make verify`, including real MCP and local HTTP
+Telegram/SecondContext fakes without provider credentials.
+Next is Stage 23 containerized local development; live TLS/Telegram validation
 requires the operator's public HTTPS endpoint.
 See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
 Confirmed deletion stops processing and durably retries local, SecondContext and Redis cleanup. The disclosure uses
@@ -1347,6 +1350,11 @@ The required CI command should be:
 make verify
 ```
 
+The [implemented harness](docs/testing.md) runs unit, integration, contract and
+replay lanes; test Compose owns dependency startup/cleanup. Replays use explicit
+Redis dispatch into the real event worker, not the threaded worker CLI or live
+SecondContext/model. Optional live smoke checks remain separate.
+
 CI should fail on:
 
 - formatting drift;
@@ -1356,6 +1364,7 @@ CI should fail on:
 - migration failure;
 - integration-test failure;
 - contract-test failure;
+- E2E replay failure;
 - privacy/policy invariant failure.
 
 A GitHub Actions workflow can install Docker Compose and uv, then invoke the Make target so CI behavior matches local verification.

@@ -20,5 +20,5 @@ jobs:
           python-version: "3.12"
       - name: Bootstrap dependencies
         run: make bootstrap
-      - name: Verify
+      - name: Verify formatting, types and all four test lanes
         run: make verify

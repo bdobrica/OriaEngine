@@ -1,0 +1,9 @@
+[
+  {"text": "/start", "contains": "AI"},
+  {"button": "agree", "contains": "birth date"},
+  {"text": "1990-04-13", "contains": "birth time"},
+  {"text": "03:42", "contains": "city"},
+  {"text": "Cluj-Napoca, Romania", "contains": "Select your birthplace"},
+  {"button": "Cluj-Napoca", "contains": "Please confirm"},
+  {"button": "Confirm profile", "contains": "profile is active"}
+]
