@@ -8,6 +8,7 @@ from dramatiq.middleware import Retries
 from redis import Redis
 
 from oria_engine.config import Settings
+from oria_engine.observability import measurement
 
 
 class Publisher:
@@ -22,6 +23,10 @@ class Publisher:
         )
 
     def send(self, event_id: str) -> None:
+        with measurement("queue_publish"):
+            self._send(event_id)
+
+    def _send(self, event_id: str) -> None:
         event_id = str(UUID(event_id))
         key = f"oria:event:{event_id}:publication"
         token = str(uuid4())

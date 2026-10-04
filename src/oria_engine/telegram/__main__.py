@@ -13,7 +13,7 @@ from oria_engine.config import (
     validate_telegram_ingress,
 )
 from oria_engine.db.session import Database
-from oria_engine.observability import configure_logging
+from oria_engine.observability import configure_logging, startup_summary
 from oria_engine.privacy.encryption import ProfileEncryption
 from oria_engine.queue.broker import Publisher
 from oria_engine.queue.events import EventIngress
@@ -48,6 +48,7 @@ async def run_polling(settings: Settings) -> None:
             ),
             publisher=publisher,
         )
+        startup_summary(settings, "polling")
         logger.info("application_started")
         await dispatcher.start_polling(
             bot,

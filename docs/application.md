@@ -76,7 +76,9 @@ credentials and encryption keys are never logged. Do not pass these values to a
 logger, even at DEBUG. Do not log request bodies, headers, URLs or query strings.
 
 The JSON formatter emits only timestamp, level, a known static event,
-correlation/update IDs, and numeric status/latency fields. Unknown messages
+correlation/update/job IDs, numeric status/latency fields, fixed metric names,
+outcomes/error categories and a bounded startup summary. See
+[operator telemetry](operations.md) for the exact format. Unknown messages
 (including third-party library messages) become `log_record`; arbitrary extras,
 format arguments, traceback/exception strings and stack text are discarded.
 This deliberately limits third-party diagnostics until safe event adapters exist.

@@ -16,6 +16,7 @@ from oria_engine.context.contracts import (
     ConversationRequest,
     MemoryKind,
 )
+from oria_engine.observability import observed
 from oria_engine.persona.prompts import build_instructions
 
 
@@ -103,6 +104,7 @@ class SecondContextProvider:
             raise ContextUnavailable("Conversation context temporarily unavailable") from None
         raise ContextUnavailable("Conversation context temporarily unavailable")
 
+    @observed("second_context_respond")
     async def respond(self, scope: ContextScope, request: ConversationRequest) -> ContextReply:
         payload = {
             "model": "context-agent-1",
@@ -131,6 +133,7 @@ class SecondContextProvider:
         except (ValidationError, ValueError):
             raise ContextUnavailable("Invalid conversation context response") from None
 
+    @observed("second_context_remember")
     async def remember(self, scope: ContextScope, kind: MemoryKind) -> None:
         # Only fixed application-owned phrases may enter semantic memory. There is
         # deliberately no raw_text parameter or arbitrary metadata escape hatch.
@@ -157,6 +160,7 @@ class SecondContextProvider:
         except (ValidationError, ValueError):
             raise ContextUnavailable("Invalid conversational memory response") from None
 
+    @observed("second_context_purge")
     async def purge(self, user_id: UUID) -> None:
         subject = self.subject(user_id)
         data = await self._post("v1/subjects/purge", {"user": subject})

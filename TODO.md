@@ -684,7 +684,7 @@ Wire the full production-like message loop.
 
 Implemented: [conversation worker](docs/conversation-worker.md). Synthetic live-model
 review and deterministic verification are recorded in [Stage 16 evidence](docs/evidence/stage-16.md).
-Next is Stage 21 observability; [profile/privacy controls](docs/profile-commands.md) are available.
+Next is Stage 22 E2E coverage; [profile/privacy controls](docs/profile-commands.md) are available.
 
 ### Tasks
 
@@ -752,7 +752,7 @@ coordinates/timezone. [Confirmed account deletion](docs/deletion.md) is availabl
 
 ## Stage 18 — End-to-end deletion workflow
 
-Implemented: [deletion and retention](docs/deletion.md). Next is Stage 21 observability.
+Implemented: [deletion and retention](docs/deletion.md). Next is Stage 22 E2E coverage.
 
 ### Goal
 
@@ -792,7 +792,7 @@ Make user deletion complete, durable, and retryable across services.
 ## Stage 19 — Production Telegram webhook
 
 Implemented: [webhook setup](docs/telegram-webhook.md) and the
-[ingress v1 contract](contracts/telegram/webhook-v1.md). Next is Stage 21 observability.
+[ingress v1 contract](contracts/telegram/webhook-v1.md). Next is Stage 22 E2E coverage.
 Live registration/TLS validation awaits an operator-provided
 public HTTPS endpoint; see [verification evidence](docs/evidence/stage-19.md).
 
@@ -831,8 +831,8 @@ Switch production ingress from polling to secure HTTPS webhooks.
 
 ## Stage 20 — Rate limiting and abuse controls
 
-Implemented: [abuse controls](docs/abuse-controls.md). Next is Stage 21 observability
-and operational readiness. See [verification evidence](docs/evidence/stage-20.md).
+Implemented: [abuse controls](docs/abuse-controls.md). Next is Stage 22 E2E coverage.
+See [verification evidence](docs/evidence/stage-20.md).
 
 ### Goal
 
@@ -859,30 +859,34 @@ Protect costs, service availability, and user isolation.
 
 ## Stage 21 — Observability and operational readiness
 
+Implemented: [operator guide](docs/operations.md) and
+[telemetry v1](contracts/operations/v1.md). Next is Stage 22 integration/E2E coverage.
+See [verification evidence](docs/evidence/stage-21.md).
+
 ### Goal
 
 Make failures diagnosable without logging private profile data.
 
 ### Tasks
 
-- [ ] Add structured request/job IDs.
-- [ ] Add queue metrics.
-- [ ] Add worker latency/error metrics.
-- [ ] Add MCP latency/error metrics.
-- [ ] Add SecondContext latency/error metrics.
-- [ ] Add Telegram API latency/error metrics.
-- [ ] Add consent funnel metrics.
-- [ ] Add onboarding completion metrics.
-- [ ] Add policy-block counter.
-- [ ] Add deletion workflow metrics.
-- [ ] Ensure metrics contain no raw profile values/message text.
-- [ ] Add startup configuration summary with secrets omitted.
-- [ ] Add Docker health checks.
-- [ ] Add `make logs`.
+- [x] Add structured request/job IDs.
+- [x] Add queue metrics.
+- [x] Add worker latency/error metrics.
+- [x] Add MCP latency/error metrics.
+- [x] Add SecondContext latency/error metrics.
+- [x] Add Telegram API latency/error metrics (outbound send boundary).
+- [x] Add consent funnel metrics (latest retained decisions).
+- [x] Add onboarding completion metrics (retained profile/cache gauges).
+- [x] Add policy-block counter.
+- [x] Add deletion workflow metrics.
+- [x] Ensure metrics contain no raw profile values/message text.
+- [x] Add startup configuration summary with secrets omitted.
+- [x] Add Docker health checks (existing PostgreSQL, Redis and MCP checks reused).
+- [x] Add `make logs`.
 
 ### Acceptance criteria
 
-- [ ] An operator can distinguish Telegram, queue, MCP, SecondContext, and database failures from logs/metrics without accessing user PII.
+- [x] An operator can distinguish Telegram, queue, MCP, SecondContext, and database failures from logs/metrics without accessing user PII.
 
 ---
 

@@ -12,6 +12,7 @@ from oria_engine.context.contracts import (
 )
 from oria_engine.db.conversation_sessions import ConversationSessionRepository
 from oria_engine.domain.policy import SAFETY_REPLY, guard_reply, is_high_stakes
+from oria_engine.observability import count
 from oria_engine.queue.limits import UNAVAILABLE_REPLY
 
 
@@ -32,9 +33,12 @@ class ConversationContext:
             user_id
         )
         if is_high_stakes(request.filtered_message):
+            count("policy_high_stakes")
             return ContextReply(response_id="oria-policy", text=SAFETY_REPLY)
         draft = await self.provider.respond(scope, request)
         text = guard_reply(draft.text)
+        if text != draft.text:
+            count("policy_output_block")
         if len(text.encode("utf-16-le")) // 2 > 4096:
             text = "That reading was too long to send. Please ask for a shorter reading."
         return ContextReply(response_id=draft.response_id, text=text)

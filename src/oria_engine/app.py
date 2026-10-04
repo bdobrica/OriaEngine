@@ -15,7 +15,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from oria_engine.config import Settings, load_settings
 from oria_engine.db.session import Database
-from oria_engine.observability import configure_logging, correlation_scope
+from oria_engine.observability import configure_logging, correlation_scope, startup_summary
 from oria_engine.queue.broker import Publisher
 from oria_engine.queue.events import EventIngress
 from oria_engine.queue.limits import InboundLimits
@@ -121,6 +121,7 @@ def create_app(
                 gateway = app.state.webhook_gateway
                 checks.update(database=gateway.database_ready, redis=gateway.redis_ready)
             app.state.started = True
+            startup_summary(settings, "gateway")
             logger.info("application_started")
             try:
                 yield

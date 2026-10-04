@@ -22,7 +22,7 @@ from aiogram.types import (
 from oria_engine.db.repositories import UserUnavailableError
 from oria_engine.domain.channel import ChannelButton, ChannelClient, ChannelMessage
 from oria_engine.domain.consent import ConsentFlow
-from oria_engine.observability import correlation_scope
+from oria_engine.observability import correlation_scope, count, measurement, observed
 from oria_engine.queue.broker import Publisher
 from oria_engine.queue.events import EventIngress
 from oria_engine.queue.limits import AdmissionRejected
@@ -58,6 +58,7 @@ class TelegramChannelClient:
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
+    @observed("telegram_send")
     async def send_text(
         self, provider_chat_id: str, text: str, *, buttons: tuple[ChannelButton, ...] = ()
     ) -> None:
@@ -122,7 +123,8 @@ class PrivateMessageMiddleware(BaseMiddleware):
                 return None
             data["channel_message"] = normalized
             try:
-                result = await handler(event, data)
+                with measurement("telegram_update"):
+                    result = await handler(event, data)
             except Exception:
                 # Never pass aiogram exceptions (which can contain request bodies) to logging.
                 logger.error("update_failed")
@@ -158,6 +160,7 @@ def create_dispatcher(
                     logger.info("update_completed")
                     return None
                 except AdmissionRejected as exc:
+                    count("inbound_limited")
                     logger.info("inbound_limited")
                     if not webhook and exc.reply:
                         await client.send_text(channel_message.provider_chat_id, exc.reply)
@@ -167,6 +170,7 @@ def create_dispatcher(
                         raise
                     logger.error("update_failed")
                     await asyncio.sleep(1)
+            logger.info("job_admitted", extra={"job_id": identifier})
             if publisher is not None and await ingress.publishable(identifier):
                 try:
                     await asyncio.to_thread(publisher.send, str(identifier))

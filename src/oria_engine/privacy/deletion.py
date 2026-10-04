@@ -25,6 +25,7 @@ from oria_engine.db.repositories import UserRepository, UserUnavailableError
 from oria_engine.db.session import Database
 from oria_engine.domain.channel import ChannelButton, ChannelClient, ChannelMessage
 from oria_engine.domain.consent import ConsentReply, OnboardingState
+from oria_engine.observability import correlation_scope, count, measurement
 from oria_engine.privacy.encryption import ProfileEncryption
 
 logger = logging.getLogger(__name__)
@@ -150,10 +151,15 @@ class DeletionWorker:
         await asyncio.gather(*(self.process(i) for i in identifiers))
 
     async def process(self, identifier: UUID) -> None:
+        with correlation_scope(internal_job_id=identifier):
+            await self._process(identifier)
+
+    async def _process(self, identifier: UUID) -> None:
         try:
-            async with asyncio.timeout(60):
-                while await self.step(identifier):
-                    pass
+            with measurement("deletion_process"):
+                async with asyncio.timeout(60):
+                    while await self.step(identifier):
+                        pass
         except Exception:
             async with self.database.transaction() as session:
                 job = await session.scalar(
@@ -167,6 +173,7 @@ class DeletionWorker:
                     job.next_attempt_at = datetime.now(UTC) + timedelta(
                         seconds=min(5 * 2 ** min(job.attempts, 10), 3600)
                     )
+            count("deletion_retry")
             logger.warning("deletion_retry")
 
     async def step(self, identifier: UUID) -> bool:

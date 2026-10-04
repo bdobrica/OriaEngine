@@ -21,6 +21,7 @@ from oria_engine.domain.consent import OnboardingState as State
 from oria_engine.domain.onboarding_data import OnboardingDraft, parse_birth_date, parse_birth_time
 from oria_engine.domain.places import PlaceResolutionUnavailable, PlaceResolver, TooManyPlaces
 from oria_engine.domain.policy import PRIVACY_REPLY
+from oria_engine.observability import count
 from oria_engine.privacy.encryption import ProfileEncryption
 from oria_engine.privacy.messages import private_active_input
 
@@ -279,6 +280,7 @@ class OnboardingFlow:
                 ).get(user_id)
                 if natal is not None:
                     if self.context is not None and private_active_input(message.text):
+                        count("policy_input_block")
                         return ConsentReply(State.ACTIVE, PRIVACY_REPLY)
                     try:
                         facts = await prepare_active(
@@ -303,6 +305,8 @@ class OnboardingFlow:
                                 ),
                             )
                             return ConsentReply(State.ACTIVE, response.text)
+                        if facts.intent.kind == "unsupported_high_stakes":
+                            count("policy_high_stakes")
                         return ConsentReply(State.ACTIVE, render_active(facts))
                     except AstrologyUnavailable:
                         if self.context is not None:

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import DeclarativeBase
 
 from oria_engine.config import Settings
+from oria_engine.observability import measurement
 
 
 class Base(DeclarativeBase):
@@ -36,8 +37,9 @@ class Database:
     @asynccontextmanager
     async def transaction(self) -> AsyncIterator[AsyncSession]:
         """Commit on success; roll back on failure/cancellation; always close."""
-        async with self.sessions.begin() as session:
-            yield session
+        with measurement("database_transaction"):
+            async with self.sessions.begin() as session:
+                yield session
 
     async def close(self) -> None:
         """Dispose the pool after in-flight operations have drained."""

@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from oria_engine.db.repositories import ConsentRepository, SocialIdentityRepository
 from oria_engine.db.session import Database
 from oria_engine.domain.channel import HELP_TEXT, ChannelButton, ChannelMessage
+from oria_engine.observability import count
 
 if TYPE_CHECKING:
     from oria_engine.domain.onboarding import OnboardingFlow
@@ -105,6 +106,7 @@ class ConsentFlow:
         )
 
     def disclosure(self, state: OnboardingState = OnboardingState.CONSENT_REQUIRED) -> ConsentReply:
+        count("consent_disclosure")
         return ConsentReply(state, f"Policy {self.policy_version}\n\n{DISCLAIMER}", self.buttons)
 
     async def handle(self, message: ChannelMessage, *, command: str | None = None) -> ConsentReply:

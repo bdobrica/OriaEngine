@@ -9,6 +9,7 @@ from fastmcp.client.transports import StreamableHttpTransport
 from oria_engine.astrology.contracts import NatalRequest, NatalResult
 from oria_engine.astrology.http import bounded_http_client
 from oria_engine.astrology.transits import TransitRequest, TransitResult
+from oria_engine.observability import observed
 
 
 class AstrologyUnavailable(Exception):
@@ -29,6 +30,7 @@ class FastMCPAstrologyClient:
     def transport(self) -> StreamableHttpTransport:
         return StreamableHttpTransport(self.url, httpx_client_factory=bounded_http_client)
 
+    @observed("mcp_transits")
     async def calculate_transits(self, request: TransitRequest) -> TransitResult:
         try:
             async with asyncio.timeout(self.timeout):
@@ -48,6 +50,7 @@ class FastMCPAstrologyClient:
         except Exception:
             raise AstrologyUnavailable("Transit calculation temporarily unavailable") from None
 
+    @observed("mcp_natal")
     async def calculate_natal_chart(self, request: NatalRequest) -> NatalResult:
         try:
             async with asyncio.timeout(self.timeout):

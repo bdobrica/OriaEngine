@@ -20,7 +20,7 @@ from oria_engine.db.session import Database
 from oria_engine.domain.consent import ConsentFlow
 from oria_engine.domain.onboarding import OnboardingFlow
 from oria_engine.domain.places import LocalPlaceResolver
-from oria_engine.observability import configure_logging, correlation_scope
+from oria_engine.observability import configure_logging, correlation_scope, startup_summary
 from oria_engine.privacy.deletion import DeletionWorker
 from oria_engine.privacy.encryption import ProfileEncryption
 from oria_engine.queue.broker import Publisher
@@ -117,6 +117,7 @@ def run(settings: Settings) -> None:
     worker = Worker(publisher.broker, worker_threads=4)
     try:
         worker.start()
+        startup_summary(settings, "worker")
         logger.info("application_started")
         while not stop.is_set():
             try:

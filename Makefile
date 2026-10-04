@@ -3,7 +3,7 @@ COMPOSE = docker compose --env-file .env -p oria-local -f deploy/compose.yaml
 
 .DEFAULT_GOAL := help
 
-.PHONY: worker help bootstrap env api run format lint typecheck test-unit test-integration verify clean infra-up infra-down infra-reset migrate migrate-down mcp mcp-local mcp-test test-contract webhook-set webhook-delete webhook-reset
+.PHONY: worker help bootstrap env api run format lint typecheck test-unit test-integration verify clean infra-up infra-down infra-reset migrate migrate-down mcp mcp-local mcp-test test-contract webhook-set webhook-delete webhook-reset logs metrics
 
 help: ## Show available development commands
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -19,6 +19,12 @@ api: ## Run the local HTTP gateway on http://127.0.0.1:8001
 
 worker: ## Run Redis workers and durable event recovery
 	$(UV) run python -m oria_engine.queue
+
+logs: env ## Follow the last 100 lines from local PostgreSQL, Redis and MCP services
+	$(COMPOSE) --profile astrology logs --follow --tail 100
+
+metrics: ## Print a private aggregate queue/consent/onboarding/deletion snapshot
+	@$(UV) run python -m oria_engine.operations
 
 run: ## Run the development Telegram bot using long polling
 	$(UV) run python -m oria_engine.telegram

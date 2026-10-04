@@ -20,6 +20,7 @@ from oria_engine.db.repositories import ConsentRepository, SocialIdentityReposit
 from oria_engine.db.session import Database
 from oria_engine.domain.channel import ChannelButton, ChannelClient, ChannelMessage
 from oria_engine.domain.consent import ConsentFlow
+from oria_engine.observability import correlation_scope, count, measurement, observed
 from oria_engine.privacy.deletion import admission_lock
 from oria_engine.privacy.encryption import ProfileEncryption
 from oria_engine.queue.limits import (
@@ -98,6 +99,7 @@ class EventIngress:
                 )
             )
 
+    @observed("queue_admission")
     async def accept(self, message: ChannelMessage, *, command: str | None = None) -> UUID:
         async with self.database.transaction() as session:
             await admission_lock(session, message.provider, message.provider_user_id)
@@ -108,6 +110,7 @@ class EventIngress:
                 )
             )
             if existing_id is not None:
+                count("update_deduplicated")
                 return existing_id
             try:
                 oversized = len(message.text.encode("utf-16-le")) // 2 > 4096
@@ -142,6 +145,7 @@ class EventIngress:
                 )
             )
             if existing is not None:
+                count("update_deduplicated")
                 return existing.id
             if self.limits is not None:
                 backlog = await session.scalar(
@@ -219,6 +223,10 @@ class EventWorker:
         self.client = client
 
     async def process(self, event_id: UUID) -> None:
+        with correlation_scope(internal_job_id=event_id), measurement("worker_dispatch"):
+            await self._process(event_id)
+
+    async def _process(self, event_id: UUID) -> None:
         async with self.database.transaction() as session:
             event = await session.get(InboundEvent, event_id)
             if event is None or event.status in TERMINAL or event.user_id is None:
@@ -239,8 +247,9 @@ class EventWorker:
                     return
                 claimed = True
                 try:
-                    await self.calculate(event_id, user_id)
-                    await self.deliver(event_id, user_id)
+                    with measurement("worker_process"):
+                        await self.calculate(event_id, user_id)
+                        await self.deliver(event_id, user_id)
                 except Exception:
                     await self.failed(event_id, user_id)
         except TimeoutError:
@@ -397,6 +406,7 @@ class EventWorker:
                 return
             if event.attempts >= MAX_ATTEMPTS:
                 terminal(event, "dead", "attempts_exhausted")
+                count("worker_dead")
                 logger.error("worker_dead")
             else:
                 event.status = "ready" if event.encrypted_reply is not None else "pending"
@@ -404,6 +414,7 @@ class EventWorker:
                 event.next_attempt_at = datetime.now(UTC) + timedelta(
                     seconds=min(5 * 2**event.attempts, 120)
                 )
+                count("worker_retry")
                 logger.warning("worker_retry")
 
 

@@ -1148,6 +1148,16 @@ Useful initial metrics:
 - policy-blocked responses;
 - delete workflow success/failure.
 
+The implemented [operator baseline](docs/operations.md) emits fixed-name JSON
+counter/timing samples with component error categories and durable job IDs.
+`make metrics` reads aggregate queue, latest-consent, onboarding and deletion gauges
+from canonical PostgreSQL metadata, independently checks Redis, and reports unknown
+values on database failure. Funnel gauges describe retained current state rather
+than lifetime/cohort conversion. Log aggregation remains operator-owned and best
+effort. Startup summaries omit secrets/URLs; `make logs` follows local Compose services.
+Existing PostgreSQL, Redis and MCP Docker health checks remain in use; application
+container health wiring follows in Stage 23. No public telemetry endpoint is added.
+
 ---
 
 ## 28. Configuration and secrets
@@ -1210,7 +1220,8 @@ effects are at least once across ambiguous failures; committed replies are reuse
 [Profile/privacy controls](docs/profile-commands.md), [end-to-end deletion](docs/deletion.md)
 and [production webhook ingress](docs/telegram-webhook.md) are implemented.
 [Rate limiting and abuse controls](docs/abuse-controls.md) are implemented.
-Next is Stage 21 observability and operational readiness; live TLS/Telegram validation
+[Observability and operational readiness](docs/operations.md) is implemented.
+Next is Stage 22 integration and E2E replay coverage; live TLS/Telegram validation
 requires the operator's public HTTPS endpoint.
 See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
 Confirmed deletion stops processing and durably retries local, SecondContext and Redis cleanup. The disclosure uses
