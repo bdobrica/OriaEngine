@@ -385,6 +385,13 @@ The gateway must:
 5. enqueue work;
 6. return a successful HTTP response quickly.
 
+The implemented [webhook ingress](docs/telegram-webhook.md) bounds admission to five
+seconds and returns controlled failures for safe provider retries. PostgreSQL worker
+scans recover committed events even if Redis publication fails. The
+[versioned ingress contract](contracts/telegram/webhook-v1.md) records authentication,
+response semantics and compatibility. Registration/deletion remain explicit operator
+commands; production startup never changes bot registration or drops pending updates.
+
 Private chats are the only supported chat type in the MVP.
 
 ---
@@ -1188,7 +1195,10 @@ The [complete conversation worker](docs/conversation-worker.md) now connects
 SecondContext through the guarded service, with conservative inbound filtering,
 updated consent disclosure and a synthetic live tone review. External transcript
 effects are at least once across ambiguous failures; committed replies are reused.
-[Profile/privacy controls](docs/profile-commands.md) and [end-to-end deletion](docs/deletion.md) are implemented. Next is Stage 19 production webhooks.
+[Profile/privacy controls](docs/profile-commands.md), [end-to-end deletion](docs/deletion.md)
+and [production webhook ingress](docs/telegram-webhook.md) are implemented.
+Next is Stage 20 rate limiting and abuse controls; live TLS/Telegram validation
+requires the operator's public HTTPS endpoint.
 See [worker queue](docs/worker-queue.md) for retries, privacy, ordering and limits.
 Confirmed deletion stops processing and durably retries local, SecondContext and Redis cleanup. The disclosure uses
 policy version 2026-10-03.2. Activation and edits check consent under the user lock. See [onboarding](docs/onboarding.md),
@@ -1207,6 +1217,9 @@ Expected commands:
 | `make infra-down` | Stop local infrastructure |
 | `make migrate` | Apply database migrations |
 | `make api` | Run the HTTP gateway locally |
+| `make webhook-set` | Register the configured HTTPS webhook, preserving pending updates |
+| `make webhook-delete` | Remove webhook registration, preserving pending updates |
+| `make webhook-reset` | Reapply webhook URL, secret and allowed update types |
 | `make mcp` | Run the astrology MCP service |
 | `make run` | Run Telegram bot in local polling mode |
 | `make worker` | Run worker process |

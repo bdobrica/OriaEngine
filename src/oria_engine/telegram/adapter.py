@@ -9,6 +9,7 @@ from typing import Any
 from aiogram import BaseMiddleware, Bot, Dispatcher, Router
 from aiogram.enums import ChatType
 from aiogram.filters import Command, CommandObject
+from aiogram.methods import AnswerCallbackQuery
 from aiogram.types import (
     CallbackQuery,
     InlineKeyboardButton,
@@ -26,6 +27,7 @@ from oria_engine.queue.broker import Publisher
 from oria_engine.queue.events import EventIngress
 
 logger = logging.getLogger(__name__)
+ALLOWED_UPDATES = ["message", "callback_query"]
 
 
 def normalize_update(update: Update) -> ChannelMessage | None:
@@ -102,6 +104,9 @@ def normalize_callback(update: Update, bot_id: int) -> ChannelMessage | None:
 
 
 class PrivateMessageMiddleware(BaseMiddleware):
+    def __init__(self, *, webhook: bool = False) -> None:
+        self.webhook = webhook
+
     async def __call__(
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
@@ -120,6 +125,8 @@ class PrivateMessageMiddleware(BaseMiddleware):
             except Exception:
                 # Never pass aiogram exceptions (which can contain request bodies) to logging.
                 logger.error("update_failed")
+                if self.webhook:
+                    raise
                 return None
             logger.info("update_completed")
             return result
@@ -131,9 +138,10 @@ def create_dispatcher(
     *,
     ingress: EventIngress | None = None,
     publisher: Publisher | None = None,
+    webhook: bool = False,
 ) -> Dispatcher:
     dispatcher = Dispatcher(disable_fsm=True)
-    dispatcher.update.outer_middleware(PrivateMessageMiddleware())
+    dispatcher.update.outer_middleware(PrivateMessageMiddleware(webhook=webhook))
     router = Router(name="private_messages")
 
     async def respond(channel_message: ChannelMessage, command: str | None = None) -> None:
@@ -149,6 +157,8 @@ def create_dispatcher(
                     logger.info("update_completed")
                     return
                 except Exception:
+                    if webhook:
+                        raise
                     logger.error("update_failed")
                     await asyncio.sleep(1)
             if publisher is not None:
@@ -156,6 +166,8 @@ def create_dispatcher(
                     await asyncio.to_thread(publisher.send, str(identifier))
                 except Exception:
                     logger.warning("queue_unavailable")  # Durable worker scan closes enqueue gap.
+                    if webhook:
+                        raise
             return
         assert flow is not None
         reply = await flow.handle(channel_message, command=command)
@@ -184,11 +196,17 @@ def create_dispatcher(
         await respond(channel_message)
 
     @router.callback_query()
-    async def consent_handler(callback: CallbackQuery, channel_message: ChannelMessage) -> None:
+    async def consent_handler(
+        callback: CallbackQuery, channel_message: ChannelMessage
+    ) -> AnswerCallbackQuery | None:
+        if webhook:
+            await respond(channel_message)
+            return AnswerCallbackQuery(callback_query_id=callback.id)
         try:
             await respond(channel_message)
         finally:
             await callback.answer()
+        return None
 
     dispatcher.include_router(router)
     return dispatcher

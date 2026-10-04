@@ -119,6 +119,23 @@ class ConfigurationError(RuntimeError):
     """Safe diagnostic for the process entrypoint."""
 
 
+def validate_telegram_ingress(settings: Settings) -> None:
+    if not settings.telegram_bot_token.get_secret_value():
+        raise ConfigurationError("Telegram ingress requires TELEGRAM_BOT_TOKEN")
+    if settings.oria_policy_version in {
+        "2026-09-01",
+        "2026-09-28",
+        "2026-09-28.1",
+        "2026-09-28.2",
+        "2026-09-28.3",
+        "2026-10-03",
+        "2026-10-03.1",
+    }:
+        raise ConfigurationError(
+            "Set ORIA_POLICY_VERSION=2026-10-03.2 for the conversation storage disclosure"
+        )
+
+
 def load_settings() -> Settings:
     try:
         return Settings()

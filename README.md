@@ -12,6 +12,7 @@ OriaEngine is designed to build on [SecondContext](https://github.com/bdobrica/S
 > now connects calculated natal/transit facts to SecondContext interpretation,
 > with consent, input filtering and output policy checks. [Profile/privacy commands](docs/profile-commands.md)
 > support inspection, deterministic edits and withdrawal. [Account deletion](docs/deletion.md) is implemented with durable cross-service recovery.
+> [Production webhook ingress](docs/telegram-webhook.md) is available with explicit setup commands; polling remains for development.
 >
 > Astrology is used here as an interpretive framework. Oria should not be treated as a source of scientific prediction, medical advice, legal advice, financial advice, or other high-stakes professional guidance.
 

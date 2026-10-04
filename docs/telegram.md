@@ -27,7 +27,7 @@
    For a separate synthetic user, try `2020-11-01`, `01:30`, `New York City, US`:
    selecting the city should ask for the first/second occurrence or unknown time.
    `/privacy` lets you decline even after acceptance.
-   Use synthetic data for this smoke test; deletion is not implemented yet.
+   Use synthetic data for this smoke test; [confirmed deletion](deletion.md) is available.
 5. Restart the process and send `/start`: consent and collected fields should survive. Changing
    `ORIA_POLICY_VERSION` and restarting should require fresh consent; an old policy's
    button should show the current disclosure without accepting it.
@@ -79,7 +79,8 @@ The worker commits domain changes and an encrypted pending reply together, then 
 Retries do not repeat consent/profile mutations. Replies can duplicate if a process dies
 after Telegram accepts a send but before PostgreSQL records it. See [worker queue](worker-queue.md)
 for ordering, bounded retries, dead-letter visibility and encrypted payload retention.
-Production webhook hosting remains a later stage.
+Production ingress uses the [HTTPS webhook gateway](telegram-webhook.md); polling
+remains development-only.
 
 ## Verification
 

@@ -684,7 +684,7 @@ Wire the full production-like message loop.
 
 Implemented: [conversation worker](docs/conversation-worker.md). Synthetic live-model
 review and deterministic verification are recorded in [Stage 16 evidence](docs/evidence/stage-16.md).
-Next is Stage 19 production webhooks; [profile/privacy controls](docs/profile-commands.md) are available.
+Next is Stage 20 rate limiting; [profile/privacy controls](docs/profile-commands.md) are available.
 
 ### Tasks
 
@@ -752,7 +752,7 @@ coordinates/timezone. [Confirmed account deletion](docs/deletion.md) is availabl
 
 ## Stage 18 — End-to-end deletion workflow
 
-Implemented: [deletion and retention](docs/deletion.md). Next is Stage 19 production webhooks.
+Implemented: [deletion and retention](docs/deletion.md). Next is Stage 20 rate limiting.
 
 ### Goal
 
@@ -791,36 +791,41 @@ Make user deletion complete, durable, and retryable across services.
 
 ## Stage 19 — Production Telegram webhook
 
+Implemented: [webhook setup](docs/telegram-webhook.md) and the
+[ingress v1 contract](contracts/telegram/webhook-v1.md). Next is Stage 20 rate limiting
+and abuse controls. Live registration/TLS validation awaits an operator-provided
+public HTTPS endpoint; see [verification evidence](docs/evidence/stage-19.md).
+
 ### Goal
 
 Switch production ingress from polling to secure HTTPS webhooks.
 
 ### Tasks
 
-- [ ] Add webhook route.
-- [ ] Configure allowed update types.
-- [ ] Validate Telegram webhook secret header.
-- [ ] Reject missing/incorrect secret.
-- [ ] Persist/deduplicate before enqueueing.
-- [ ] Return 2xx quickly after accepted enqueue.
-- [ ] Add webhook setup command/script.
-- [ ] Add webhook delete/reset command/script.
-- [ ] Add `make webhook-set`.
-- [ ] Add `make webhook-delete`.
-- [ ] Document reverse-proxy/TLS requirement.
-- [ ] Keep polling mode for development only.
+- [x] Add webhook route.
+- [x] Configure allowed update types.
+- [x] Validate Telegram webhook secret header.
+- [x] Reject missing/incorrect secret.
+- [x] Persist/deduplicate before enqueueing.
+- [x] Return 2xx quickly after accepted enqueue.
+- [x] Add webhook setup command/script.
+- [x] Add webhook delete/reset command/script.
+- [x] Add `make webhook-set`.
+- [x] Add `make webhook-delete`.
+- [x] Document reverse-proxy/TLS requirement.
+- [x] Keep polling mode for development only.
 
 ### Tests
 
-- [ ] Valid webhook secret.
-- [ ] Invalid/missing webhook secret.
-- [ ] Duplicate update.
-- [ ] Unsupported update type.
-- [ ] Enqueue failure returns controlled failure behavior.
+- [x] Valid webhook secret.
+- [x] Invalid/missing webhook secret.
+- [x] Duplicate update.
+- [x] Unsupported update type.
+- [x] Enqueue failure returns controlled failure behavior.
 
 ### Acceptance criteria
 
-- [ ] Production deployment can receive Telegram updates without long polling.
+- [x] Production deployment can receive Telegram updates without long polling.
 
 ---
 

@@ -8,7 +8,7 @@ separate bots require separate databases until provider-account scoping is added
 
 ```mermaid
 flowchart LR
-    T[Telegram polling] --> P[(PostgreSQL inbound event)]
+    T[Telegram polling or webhook] --> P[(PostgreSQL inbound event)]
     P --> R[Redis / Dramatiq UUID]
     R --> W[Conversation worker]
     W --> C[Consent / onboarding / astrology]
@@ -40,7 +40,9 @@ deletion attempt is bounded to 60 seconds and can extend the scan interval.
 No dependency was added. Each job owns its event loop, database pool, Redis connection
 and Telegram session; these close after processing. SIGINT/SIGTERM stop recovery and
 drain workers. Restarting the worker recovers pending events from PostgreSQL.
-The HTTP skeleton and future webhook deployment remain separate.
+The [webhook gateway](telegram-webhook.md) uses this same admission and worker path.
+Ingress commits before publishing; controlled HTTP failures allow provider retries
+while worker recovery also closes the commit/publication gap.
 
 ## Canonical state, retries and ordering
 

@@ -28,7 +28,7 @@ platform; do not deploy a development `.env` or commit secrets.
 | `SECOND_CONTEXT_BEARER_TOKEN` | Empty; optional bearer authentication |
 | `SECOND_CONTEXT_SUBJECT_NAMESPACE` | Empty for legacy scopes; e.g. `oria` enables service subject headers and requires a bearer token |
 | `ASTROLOGY_MCP_URL` | `http://localhost:8000/mcp`; HTTP(S) |
-| `ORIA_POLICY_VERSION` | `2026-09-28.1`; nonempty version identifier |
+| `ORIA_POLICY_VERSION` | `2026-10-03.2`; nonempty version identifier |
 
 HTTP URLs reject embedded credentials, query strings and fragments. Authentication
 belongs in the dedicated secret settings. Version identifiers use letters, digits,
@@ -54,10 +54,13 @@ validation error dictionaries, which can include inputs.
 Register named async checks with `create_app(readiness_checks={...})`. Checks run
 concurrently, each with a two-second timeout, and return booleans. Errors and
 timeouts become `false`; exception details never enter responses. Check names are
-static application identifiers, never user inputs. Stage 1 registers no external
-checks: readiness currently means the skeleton has started, not that PostgreSQL,
-Redis or downstream services are reachable. Their owning integration stages add
-the checks and lifecycle resources. Cancellation propagates on shutdown.
+static application identifiers, never user inputs. Without a webhook secret, the
+local skeleton registers no external checks. With webhook ingress enabled, lifespan
+owns PostgreSQL, Redis publisher and Telegram session resources, and readiness
+includes database/Redis connectivity. Downstream services, workers, schema, Telegram
+credentials and TLS are not verified by these checks. Cancellation propagates on
+shutdown. See [webhook setup](telegram-webhook.md) and the
+[ingress contract](../contracts/telegram/webhook-v1.md).
 
 Responses carry a generated UUID-based `X-Request-ID`; caller-provided IDs are not
 trusted or echoed. The same ID appears in request logs. Future Telegram handlers
