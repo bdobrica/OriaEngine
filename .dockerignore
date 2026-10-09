@@ -12,3 +12,4 @@
 !migrations/**
 **/__pycache__/
 **/*.pyc
+**/.bumpversion.cfg

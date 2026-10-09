@@ -10,6 +10,11 @@ The next stage is **Stage 25 — MVP release gate**; use the unchecked gate belo
 to track remaining validation. Setup and known limits live in [README](README.md)
 and [the limitations reference](docs/limitations.md).
 
+Before the first [container image release](docs/image-publishing.md), configure
+both Quay repositories and the GitHub `QUAY_AUTH` secret, push the initial version
+baseline to `main`, then manually increase the desired image version. Image
+publication does not complete Stage 25 or deploy the application.
+
 The stages are intentionally ordered so each stage leaves the repository in a testable state and provides the foundation required by the next stage. Avoid implementing post-MVP features until the MVP completion gate at the end of this document passes.
 
 ```mermaid

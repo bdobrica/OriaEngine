@@ -1336,7 +1336,16 @@ CI should fail on:
 - E2E replay failure;
 - privacy/policy invariant failure.
 
-A GitHub Actions workflow can install Docker Compose and uv, then invoke the Make target so CI behavior matches local verification.
+The verification workflow installs uv and invokes the Make target so CI behavior
+matches local verification. `make test-releases` also tests image release selection
+against disposable Git histories and is included in `make verify`.
+
+The separate [image publishing workflow](docs/image-publishing.md) releases the
+application and Astrology MCP images independently to `quay.io/bdobrica` when a
+push to `main` increases their committed image versions. Initial version files
+establish a baseline; publication requires a later manual bump and configured
+Quay repositories/GitHub `QUAY_AUTH` secret. This does not deploy services or
+complete the MVP release gate. Application verification runs independently.
 
 ---
 

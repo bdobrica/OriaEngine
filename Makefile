@@ -4,7 +4,7 @@ DEV_COMPOSE = $(COMPOSE) -f deploy/compose.dev.yaml --profile dev --profile astr
 
 .DEFAULT_GOAL := help
 
-.PHONY: dev down
+.PHONY: dev down test-releases
 
 .PHONY: worker help bootstrap env api run format lint typecheck test-unit test-integration test-e2e test verify clean infra-up infra-down infra-reset migrate migrate-down mcp mcp-local mcp-test test-contract webhook-set webhook-delete webhook-reset logs metrics
 
@@ -96,7 +96,10 @@ test-integration: ## Test migrations and transactions using isolated Docker serv
 test-e2e: ## Replay Telegram conversations using isolated services and local HTTP fakes
 	$(UV) run pytest tests/e2e
 
-test: test-unit test-integration test-contract test-e2e ## Run all automated test lanes
+test-releases: ## Test image release selection using disposable Git histories
+	python3 -m unittest discover -s scripts -p 'test_docker_release_matrix.py'
+
+test: test-releases test-unit test-integration test-contract test-e2e ## Run all automated test lanes
 
 verify: lint typecheck test ## Run the required CI verification gate
 

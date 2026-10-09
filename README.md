@@ -89,6 +89,7 @@ and [deletion and retention](docs/deletion.md).
 | Storage, migrations and key management | [Database](docs/database.md), [encrypted profiles](docs/birth-profiles.md) |
 | BotFather, polling and HTTPS ingress | [Telegram](docs/telegram.md), [webhooks](docs/telegram-webhook.md) |
 | Calculation contracts and development | [Astrology MCP](docs/astrology-mcp.md) |
+| Versioned container images and Quay setup | [Image publishing](docs/image-publishing.md) |
 | Conversation dependency and policy | [SecondContext](docs/second-context.md), [worker pipeline](docs/conversation-worker.md) |
 | Logs, health, limits and recovery | [Operations](docs/operations.md), [abuse controls](docs/abuse-controls.md) |
 | Known gaps and live checks | [MVP limitations](docs/limitations.md) |
