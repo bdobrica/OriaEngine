@@ -1375,6 +1375,13 @@ Only the HTTPS gateway needs to be reachable by Telegram. PostgreSQL, Redis, wor
 
 For a first personal deployment, Docker Compose on a single host is acceptable. The architecture should not require Kubernetes.
 
+The [published-image deployment](docs/deployment.md) provides `make deploy-env`,
+`make deploy`, inspection/stop and explicit webhook commands. It uses production
+gateway/worker settings, a separate project/volume, private storage/MCP networks
+and successful migrations before application startup. SecondContext and HTTPS
+termination remain separately managed; selecting published versions, configuring
+secrets, backups and exercising live continuity/purge/TLS remain operator work.
+
 ---
 
 ## 33. Security baseline

@@ -85,6 +85,8 @@ The existing [development stack](development.md) continues building local images
 setting `ORIA_APP_IMAGE` changes its local tag and does not switch it to pulling
 registry images. Gateway is the application image's default command; worker uses
 `python -m oria_engine.queue`, and migration uses `python -m alembic upgrade head`.
+Use the separate [published-image deployment stack](deployment.md) with
+`make deploy-env` and `make deploy` to pull releases and run Oria-owned services.
 An operator deployment must preserve the [private networks and ownership boundaries](architecture.md),
 explicit migration ordering, runtime secrets and service-specific health probes.
 Resolve the existing [Swiss Ephemeris/binding licensing requirements](astrology-mcp.md#dependency-and-licensing-notes)

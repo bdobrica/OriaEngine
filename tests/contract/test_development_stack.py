@@ -10,11 +10,13 @@ from pathlib import Path
 from uuid import uuid4
 
 import httpx
+import pytest
 
 from oria_engine.config import Settings
 
 
-def test_development_stack(tmp_path):
+@pytest.mark.parametrize("published_images", [False, True], ids=["development", "image-deployment"])
+def test_development_stack(tmp_path, published_images):
     root = Path(__file__).resolve().parents[2]
     project = f"oria-dev-test-{uuid4().hex[:12]}"
     env = os.environ.copy()
@@ -33,8 +35,12 @@ def test_development_stack(tmp_path):
         ORIA_APP_IMAGE="oria-engine:development-test",
         # Deliberately unavailable: startup/probes must not call an external provider.
         SECOND_CONTEXT_DOCKER_URL="http://127.0.0.1:9",
+        SECOND_CONTEXT_BASE_URL="http://127.0.0.1:9",
+        SECOND_CONTEXT_BEARER_TOKEN=secrets.token_hex(24),
+        TELEGRAM_WEBHOOK_BASE_URL="https://oria.example.invalid",
+        ORIA_ASTROLOGY_IMAGE="oria-astrology:deployment-test",
     )
-    command = [
+    development_command = [
         "docker",
         "compose",
         "--env-file",
@@ -50,6 +56,25 @@ def test_development_stack(tmp_path):
         "--profile",
         "astrology",
     ]
+    command = development_command
+    if published_images:
+        # Build fixtures locally, then start the exact deployment file without builds/pulls.
+        # No assumption that an image has already been published or registry credentials exist.
+        overlay = tmp_path / "fixture-images.json"
+        overlay.write_text(
+            json.dumps({"services": {"astrology-mcp": {"image": env["ORIA_ASTROLOGY_IMAGE"]}}})
+        )
+        development_command = [*development_command, "-f", str(overlay)]
+        command = [
+            "docker",
+            "compose",
+            "--env-file",
+            "/dev/null",
+            "-p",
+            project,
+            "-f",
+            str(root / "deploy/compose.images.yaml"),
+        ]
 
     def compose(*args, timeout=180):
         result = subprocess.run(
@@ -85,8 +110,23 @@ def test_development_stack(tmp_path):
             & config["migrate"]["environment"].keys()
         )
         assert "environment" not in config["astrology-mcp"]
-        compose("build", timeout=1800)
-        compose("up", "-d", "--wait", "--wait-timeout", "120")
+        if published_images:
+            assert all("build" not in service for service in config.values())
+            for service in ("gateway", "worker"):
+                assert config[service]["environment"]["APP_ENV"] == "production"
+                assert config[service]["environment"]["SECOND_CONTEXT_SUBJECT_NAMESPACE"] == "oria"
+            result = subprocess.run(
+                [*development_command, "build"],
+                env=env,
+                cwd=tmp_path,
+                capture_output=True,
+                text=True,
+                timeout=1800,
+            )
+            assert result.returncode == 0, "Isolated deployment fixture build failed"
+        else:
+            compose("build", timeout=1800)
+        compose("up", "--no-build", "-d", "--wait", "--wait-timeout", "120")
         for service in ("gateway", "worker", "astrology-mcp"):
             identifier = compose("ps", "-q", service)
             details = json.loads(
@@ -128,6 +168,8 @@ def test_development_stack(tmp_path):
                 "checks": {"database": True, "redis": True},
             }
             assert client.post("/telegram/webhook", json={}).status_code == 403
+            if published_images:
+                assert client.get("/openapi.json").status_code == 404
         execute(
             "worker", "from pathlib import Path; assert Path('/tmp/oria-worker.health').exists()"
         )
@@ -206,7 +248,7 @@ def test_development_stack(tmp_path):
         )
         # Reapplying the normal workflow repeats migrations safely and preserves the volume.
         compose("down", "--remove-orphans")
-        compose("up", "-d", "--wait", "--wait-timeout", "120")
+        compose("up", "--no-build", "-d", "--wait", "--wait-timeout", "120")
         assert (
             compose(
                 "exec",

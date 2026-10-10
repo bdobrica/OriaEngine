@@ -1,10 +1,14 @@
 UV ?= uv
 COMPOSE = docker compose --env-file .env -p oria-local -f deploy/compose.yaml
 DEV_COMPOSE = $(COMPOSE) -f deploy/compose.dev.yaml --profile dev --profile astrology
+DEPLOY_ENV ?= deploy/.env
+DEPLOY_PROJECT ?= oria-deploy
+DEPLOY_COMPOSE = docker compose --env-file "$(DEPLOY_ENV)" -p "$(DEPLOY_PROJECT)" -f deploy/compose.images.yaml
 
 .DEFAULT_GOAL := help
 
 .PHONY: dev down test-releases
+.PHONY: deploy-env deploy-check deploy deploy-down deploy-logs deploy-webhook-set deploy-webhook-delete
 
 .PHONY: worker help bootstrap env api run format lint typecheck test-unit test-integration test-e2e test verify clean infra-up infra-down infra-reset migrate migrate-down mcp mcp-local mcp-test test-contract webhook-set webhook-delete webhook-reset logs metrics
 
@@ -28,6 +32,29 @@ dev: env ## Build, migrate and start the complete local application stack
 
 down: env ## Stop the complete local stack, preserving PostgreSQL data
 	$(DEV_COMPOSE) -f deploy/compose.polling.yaml down --remove-orphans
+
+deploy-env: ## Create private deployment configuration without replacing it
+	@test -e "$(DEPLOY_ENV)" || (umask 077; cp deploy/.env.example "$(DEPLOY_ENV)" && chmod 600 "$(DEPLOY_ENV)")
+
+deploy-check: ## Validate published-image Compose configuration without printing secrets
+	$(DEPLOY_COMPOSE) config --quiet
+
+deploy: deploy-check ## Pull published images, migrate and start the deployment stack
+	$(DEPLOY_COMPOSE) pull
+	$(DEPLOY_COMPOSE) stop gateway worker
+	$(DEPLOY_COMPOSE) up --no-build -d --wait --wait-timeout 120
+
+deploy-down: ## Stop the deployment stack, preserving its PostgreSQL data
+	$(DEPLOY_COMPOSE) down
+
+deploy-logs: ## Follow deployment logs (keep these private)
+	$(DEPLOY_COMPOSE) logs --follow --tail 100
+
+deploy-webhook-set: ## Register the deployment webhook, preserving pending updates
+	$(DEPLOY_COMPOSE) exec -T gateway python -m oria_engine.telegram.webhook_admin set
+
+deploy-webhook-delete: ## Remove the deployment webhook, preserving pending updates
+	$(DEPLOY_COMPOSE) exec -T gateway python -m oria_engine.telegram.webhook_admin delete
 
 logs: env ## Follow local infrastructure, gateway, worker and migration logs
 	$(DEV_COMPOSE) logs --follow --tail 100

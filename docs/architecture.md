@@ -72,6 +72,9 @@ network and the default network for external SecondContext and Telegram access.
 Host polling can feed this stack without another worker. The alternative host
 workflow publishes MCP only on loopback with `make mcp-local`.
 
+The [published-image deployment stack](deployment.md) starts Oria-owned services
+with production settings, private storage/MCP networks and explicit migration
+ordering; it pulls release images rather than building source.
 SecondContext is externally managed. Production HTTPS termination and webhook
 registration are explicit operator actions; the development Compose overlay is not
 a production deployment definition. Health and telemetry are private, bounded
