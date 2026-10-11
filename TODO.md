@@ -15,8 +15,10 @@ both Quay repositories and the GitHub `QUAY_AUTH` secret, push the initial versi
 baseline to `main`, then manually increase the desired image version. Image
 publication does not complete Stage 25 or deploy the application.
 Use the [published-image deployment](docs/deployment.md) to configure a separate
-stack and run `make deploy`. A compatible, migrated SecondContext service, runtime
-secrets, published image references and public HTTPS remain operator prerequisites;
+stack and run `make deploy`. It now includes SecondContext with its own migrations
+and separate PostgreSQL/Qdrant storage; select a published gateway image containing
+the migration assets (`0.1.1` or compatible later). External mode remains available.
+Runtime secrets, published image references and public HTTPS remain operator prerequisites;
 live validation and backup/restore still belong to Stage 25.
 
 The stages are intentionally ordered so each stage leaves the repository in a testable state and provides the foundation required by the next stage. Avoid implementing post-MVP features until the MVP completion gate at the end of this document passes.

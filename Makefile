@@ -3,7 +3,11 @@ COMPOSE = docker compose --env-file .env -p oria-local -f deploy/compose.yaml
 DEV_COMPOSE = $(COMPOSE) -f deploy/compose.dev.yaml --profile dev --profile astrology
 DEPLOY_ENV ?= deploy/.env
 DEPLOY_PROJECT ?= oria-deploy
+DEPLOY_SECOND_CONTEXT ?= true
 DEPLOY_COMPOSE = docker compose --env-file "$(DEPLOY_ENV)" -p "$(DEPLOY_PROJECT)" -f deploy/compose.images.yaml
+ifeq ($(DEPLOY_SECOND_CONTEXT),true)
+DEPLOY_COMPOSE += -f deploy/compose.secondcontext.yaml
+endif
 
 .DEFAULT_GOAL := help
 
@@ -42,6 +46,9 @@ deploy-check: ## Validate published-image Compose configuration without printing
 deploy: deploy-check ## Pull published images, migrate and start the deployment stack
 	$(DEPLOY_COMPOSE) pull
 	$(DEPLOY_COMPOSE) stop gateway worker
+ifeq ($(DEPLOY_SECOND_CONTEXT),true)
+	$(DEPLOY_COMPOSE) stop secondcontext
+endif
 	$(DEPLOY_COMPOSE) up --no-build -d --wait --wait-timeout 120
 
 deploy-down: ## Stop the deployment stack, preserving its PostgreSQL data

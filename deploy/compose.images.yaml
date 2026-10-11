@@ -1,4 +1,4 @@
-# Published-image deployment. SecondContext is a separately managed HTTP service.
+# Oria-owned services; compose.secondcontext.yaml adds the bundled HTTP provider.
 x-application: &application
   image: ${ORIA_APP_IMAGE:?Set ORIA_APP_IMAGE to a published version or digest}
   read_only: true
@@ -21,7 +21,7 @@ x-environment: &environment
   PROFILE_ENCRYPTION_KEY: ${PROFILE_ENCRYPTION_KEY:?Set a stable PROFILE_ENCRYPTION_KEY}
   PROFILE_ENCRYPTION_KEY_VERSION: ${PROFILE_ENCRYPTION_KEY_VERSION:-v1}
   ORIA_POLICY_VERSION: ${ORIA_POLICY_VERSION:-2026-10-03.2}
-  SECOND_CONTEXT_BASE_URL: ${SECOND_CONTEXT_BASE_URL:?Set a container-reachable SecondContext URL}
+  SECOND_CONTEXT_BASE_URL: ${SECOND_CONTEXT_BASE_URL:-http://secondcontext:8080}
   SECOND_CONTEXT_BEARER_TOKEN: ${SECOND_CONTEXT_BEARER_TOKEN:?Set the scoped SecondContext service token}
   SECOND_CONTEXT_SUBJECT_NAMESPACE: oria
   INBOUND_RATE_PER_MINUTE: ${INBOUND_RATE_PER_MINUTE:-20}

@@ -74,8 +74,12 @@ workflow publishes MCP only on loopback with `make mcp-local`.
 
 The [published-image deployment stack](deployment.md) starts Oria-owned services
 with production settings, private storage/MCP networks and explicit migration
-ordering; it pulls release images rather than building source.
-SecondContext is externally managed. Production HTTPS termination and webhook
+ordering; it pulls release images rather than building source. Its default overlay
+also starts SecondContext, its own migration job, PostgreSQL and Qdrant. Only the
+worker joins its private API network; no Oria process joins its storage network.
+SecondContext remains an independent storage owner reached over HTTP. External
+deployment remains available with `DEPLOY_SECOND_CONTEXT=false`, and development
+still uses an externally managed instance. Production HTTPS termination and webhook
 registration are explicit operator actions; the development Compose overlay is not
 a production deployment definition. Health and telemetry are private, bounded
 diagnostics, not proof of end-to-end delivery or release readiness. See

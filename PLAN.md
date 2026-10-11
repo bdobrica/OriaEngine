@@ -1378,9 +1378,14 @@ For a first personal deployment, Docker Compose on a single host is acceptable. 
 The [published-image deployment](docs/deployment.md) provides `make deploy-env`,
 `make deploy`, inspection/stop and explicit webhook commands. It uses production
 gateway/worker settings, a separate project/volume, private storage/MCP networks
-and successful migrations before application startup. SecondContext and HTTPS
-termination remain separately managed; selecting published versions, configuring
-secrets, backups and exercising live continuity/purge/TLS remain operator work.
+and successful migrations before application startup. Its default SecondContext
+overlay uses a migration-enabled published gateway image, independent PostgreSQL
+and Qdrant storage, scoped service authentication and a private HTTP API network.
+Oria never connects to SecondContext's database. `DEPLOY_SECOND_CONTEXT=false`
+retains external deployment, and development remains externally configured.
+HTTPS termination, published image selection, secrets, backup/restore and live
+continuity/purge/TLS validation remain operator work. Moving existing SecondContext
+storage into the bundle requires an explicit owning-service data migration.
 
 ---
 

@@ -1,0 +1,104 @@
+# Adapted from SecondContext b1a58486218df138af456126fe7514a9f5b60cdd.
+# Use with compose.images.yaml. Each owner migrates only its own database.
+x-secondcontext: &secondcontext
+  image: ${SECOND_CONTEXT_IMAGE:?Set SECOND_CONTEXT_IMAGE to a published gateway version or digest}
+  user: "65532:65532"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+
+x-secondcontext-postgres: &secondcontext-postgres
+  POSTGRES_ENABLED: "true"
+  POSTGRES_HOST: secondcontext-postgres
+  POSTGRES_PORT: "5432"
+  POSTGRES_USER: secondcontext
+  POSTGRES_PASSWORD: ${SECOND_CONTEXT_POSTGRES_PASSWORD:?Set a dedicated SecondContext database password}
+  POSTGRES_DB: secondcontext
+  POSTGRES_SSLMODE: disable
+
+services:
+  secondcontext-postgres:
+    image: postgres:16.13-alpine
+    restart: unless-stopped
+    networks: [secondcontext-storage]
+    environment:
+      POSTGRES_USER: secondcontext
+      POSTGRES_DB: secondcontext
+      POSTGRES_PASSWORD: ${SECOND_CONTEXT_POSTGRES_PASSWORD:?Set a dedicated SecondContext database password}
+    volumes: ["secondcontext_postgres_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U secondcontext -d secondcontext"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  secondcontext-qdrant:
+    image: qdrant/qdrant:v1.15.5
+    restart: unless-stopped
+    networks: [secondcontext-storage]
+    volumes: ["secondcontext_qdrant_data:/qdrant/storage"]
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ': >/dev/tcp/127.0.0.1/6333'"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  secondcontext-migrate:
+    <<: *secondcontext
+    restart: "no"
+    networks: [secondcontext-storage]
+    command: ["/app/migrate", "up"]
+    environment: *secondcontext-postgres
+    depends_on:
+      secondcontext-postgres:
+        condition: service_healthy
+  secondcontext:
+    <<: *secondcontext
+    restart: unless-stopped
+    networks: [secondcontext-api, secondcontext-storage, secondcontext-egress]
+    environment:
+      <<: *secondcontext-postgres
+      APP_ENV: production
+      HTTP_ADDR: :8080
+      HTTP_TRUSTED_PROXY_CIDRS: ""
+      AUTH_ENABLED: "true"
+      AUTH_SERVICE_TOKENS: "oria:=${SECOND_CONTEXT_BEARER_TOKEN:?Set the scoped SecondContext service token}"
+      QDRANT_URL: http://secondcontext-qdrant:6333
+      QDRANT_COLLECTION: memory_items
+      QDRANT_VECTOR_SIZE: ${SECOND_CONTEXT_VECTOR_SIZE:-1536}
+      OPENAI_BASE_URL: ${SECOND_CONTEXT_OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_API_KEY: ${SECOND_CONTEXT_OPENAI_API_KEY:?Set the SecondContext provider key}
+      OPENAI_CHAT_MODEL: ${SECOND_CONTEXT_CHAT_MODEL:-gpt-4.1-mini}
+      OPENAI_EMBEDDING_MODEL: ${SECOND_CONTEXT_EMBEDDING_MODEL:-text-embedding-3-small}
+      KNOWLEDGE_ENABLED: "false"
+    depends_on:
+      secondcontext-migrate:
+        condition: service_completed_successfully
+      secondcontext-qdrant:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+  gateway:
+    environment:
+      SECOND_CONTEXT_BASE_URL: http://secondcontext:8080
+    depends_on:
+      secondcontext:
+        condition: service_healthy
+  worker:
+    networks: [storage, astrology, egress, secondcontext-api]
+    environment:
+      SECOND_CONTEXT_BASE_URL: http://secondcontext:8080
+    depends_on:
+      secondcontext:
+        condition: service_healthy
+volumes:
+  secondcontext_postgres_data:
+  secondcontext_qdrant_data:
+networks:
+  secondcontext-api:
+    internal: true
+  secondcontext-storage:
+    internal: true
+  secondcontext-egress: {}
