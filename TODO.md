@@ -15,9 +15,12 @@ both Quay repositories and the GitHub `QUAY_AUTH` secret, push the initial versi
 baseline to `main`, then manually increase the desired image version. Image
 publication does not complete Stage 25 or deploy the application.
 Use the [published-image deployment](docs/deployment.md) to configure a separate
-stack and run `make deploy`. It now includes SecondContext with its own migrations
-and separate PostgreSQL/Qdrant storage; select a published gateway image containing
-the migration assets (`0.1.1` or compatible later). External mode remains available.
+stack and run `make deploy`. Choose standalone Oria or the default full
+Oria/SecondContext Compose entry point.
+The full stack shares one PostgreSQL server with separate restricted database owners
+and migrations; Qdrant remains SecondContext-owned. Select a published gateway image
+containing migration assets (`0.1.1` or compatible later). Existing separate-server
+data needs an explicit backup/restore migration before switching.
 Runtime secrets, published image references and public HTTPS remain operator prerequisites;
 live validation and backup/restore still belong to Stage 25.
 

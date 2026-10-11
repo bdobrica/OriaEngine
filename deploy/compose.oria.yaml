@@ -1,4 +1,4 @@
-# Oria-owned services; compose.secondcontext.yaml adds the bundled HTTP provider.
+# Standalone OriaEngine; configure an externally managed SecondContext HTTP API.
 x-application: &application
   image: ${ORIA_APP_IMAGE:?Set ORIA_APP_IMAGE to a published version or digest}
   read_only: true

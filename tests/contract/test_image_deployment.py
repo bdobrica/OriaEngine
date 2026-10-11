@@ -6,6 +6,7 @@ import os
 import secrets
 import subprocess
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 
@@ -32,6 +33,7 @@ def deployment_env():
         "ORIA_APP_IMAGE": "quay.io/bdobrica/oria-engine:9.8.7",
         "ORIA_ASTROLOGY_IMAGE": "quay.io/bdobrica/oria-astrology-mcp@sha256:" + "a" * 64,
         "POSTGRES_PASSWORD": secrets.token_hex(24),
+        "POSTGRES_ADMIN_PASSWORD": secrets.token_hex(24),
         "POSTGRES_PASSWORD_URLENCODED": "",
         "GATEWAY_PORT": "8001",
         "LOG_LEVEL": "INFO",
@@ -57,7 +59,7 @@ def deployment_env():
 
 
 def render(environment, *, bundled=False):
-    overlay = ["-f", str(ROOT / "deploy/compose.secondcontext.yaml")] if bundled else []
+    filename = "compose.full.yaml" if bundled else "compose.oria.yaml"
     return subprocess.run(
         [
             "docker",
@@ -67,8 +69,7 @@ def render(environment, *, bundled=False):
             "-p",
             "oria-deployment-config-test",
             "-f",
-            str(ROOT / "deploy/compose.images.yaml"),
-            *overlay,
+            str(ROOT / "deploy" / filename),
             "config",
             "--format",
             "json",
@@ -150,7 +151,6 @@ def test_bundled_secondcontext_ownership_and_credentials(deployment_env):
         "worker",
         "secondcontext",
         "secondcontext-migrate",
-        "secondcontext-postgres",
         "secondcontext-qdrant",
     }
     for name, service in services.items():
@@ -172,7 +172,7 @@ def test_bundled_secondcontext_ownership_and_credentials(deployment_env):
         "POSTGRES_DB",
         "POSTGRES_SSLMODE",
     }
-    assert context["environment"]["POSTGRES_HOST"] == "secondcontext-postgres"
+    assert context["environment"]["POSTGRES_HOST"] == "postgres"
     assert context["environment"]["POSTGRES_PASSWORD"] != deployment_env["POSTGRES_PASSWORD"]
     assert context["environment"]["AUTH_ENABLED"] == "true"
     assert context["environment"]["AUTH_SERVICE_TOKENS"] == (
@@ -190,13 +190,21 @@ def test_bundled_secondcontext_ownership_and_credentials(deployment_env):
         assert "secondcontext-storage" not in services[name]["networks"]
     assert "secondcontext-api" in services["worker"]["networks"]
     assert set(migration["networks"]) == {"secondcontext-storage"}
-    for name in ("secondcontext-postgres", "secondcontext-qdrant"):
-        assert set(services[name]["networks"]) == {"secondcontext-storage"}
+    assert set(services["secondcontext-qdrant"]["networks"]) == {"secondcontext-storage"}
+    assert set(services["postgres"]["networks"]) == {"storage", "secondcontext-storage"}
+    assert services["postgres"]["environment"]["POSTGRES_USER"] == "postgres"
+    assert (
+        services["postgres"]["environment"]["POSTGRES_PASSWORD"]
+        == deployment_env["POSTGRES_ADMIN_PASSWORD"]
+    )
+    assert len([s for s in services.values() if s["image"].startswith("postgres:")]) == 1
+    for name in ("gateway", "worker", "migrate", "secondcontext", "secondcontext-migrate"):
+        assert "POSTGRES_ADMIN_PASSWORD" not in services[name].get("environment", {})
+        assert deployment_env["POSTGRES_ADMIN_PASSWORD"] not in str(services[name])
     assert config["networks"]["secondcontext-storage"]["internal"]
     assert config["networks"]["secondcontext-api"]["internal"]
     assert set(config["volumes"]) == {
-        "postgres_data",
-        "secondcontext_postgres_data",
+        "shared_postgres_data",
         "secondcontext_qdrant_data",
     }
     assert not {"TELEGRAM_BOT_TOKEN", "PROFILE_ENCRYPTION_KEY", "QUAY_AUTH"} & (
@@ -207,6 +215,7 @@ def test_bundled_secondcontext_ownership_and_credentials(deployment_env):
 @pytest.mark.parametrize(
     "missing",
     [
+        "POSTGRES_ADMIN_PASSWORD",
         "SECOND_CONTEXT_IMAGE",
         "SECOND_CONTEXT_POSTGRES_PASSWORD",
         "SECOND_CONTEXT_OPENAI_API_KEY",
@@ -223,6 +232,7 @@ def test_missing_bundled_configuration_fails_closed(deployment_env, missing):
 
 def test_external_mode_needs_no_bundled_credentials(deployment_env):
     for name in (
+        "POSTGRES_ADMIN_PASSWORD",
         "SECOND_CONTEXT_IMAGE",
         "SECOND_CONTEXT_POSTGRES_PASSWORD",
         "SECOND_CONTEXT_OPENAI_API_KEY",
@@ -236,3 +246,86 @@ def test_external_mode_needs_no_bundled_credentials(deployment_env):
         config["services"]["worker"]["environment"]["SECOND_CONTEXT_BASE_URL"]
         == (deployment_env["SECOND_CONTEXT_BASE_URL"])
     )
+
+
+def test_shared_postgres_database_isolation_and_restart(deployment_env):
+    # Exercise the production bootstrap with quoted passwords, not copied schemas.
+    deployment_env["POSTGRES_PASSWORD"] += "'\\$"
+    deployment_env["SECOND_CONTEXT_POSTGRES_PASSWORD"] += "'\\$"
+    command = [
+        "docker",
+        "compose",
+        "--env-file",
+        "/dev/null",
+        "-p",
+        "oria-shared-db-test-" + uuid4().hex[:12],
+        "-f",
+        str(ROOT / "deploy/compose.full.yaml"),
+    ]
+
+    def compose(*args):
+        result = subprocess.run(
+            [*command, *args], env=deployment_env, capture_output=True, text=True, timeout=180
+        )
+        assert result.returncode == 0, "Isolated shared PostgreSQL command failed"
+        return result.stdout
+
+    def query(role, database, sql, *, allowed=True, password_override=None):
+        password = deployment_env[
+            "POSTGRES_PASSWORD" if role == "oria" else "SECOND_CONTEXT_POSTGRES_PASSWORD"
+        ]
+        result = subprocess.run(
+            [
+                *command,
+                "exec",
+                "-T",
+                "-e",
+                "PGPASSWORD=" + (password_override or password),
+                "postgres",
+                "psql",
+                "-h",
+                "postgres",
+                "-U",
+                role,
+                "-d",
+                database,
+                "-v",
+                "ON_ERROR_STOP=1",
+                "-Atc",
+                sql,
+            ],
+            env=deployment_env,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+        assert (result.returncode == 0) == allowed, "Database ownership boundary failed"
+        return result.stdout.strip()
+
+    try:
+        compose("up", "-d", "--wait", "--wait-timeout", "90", "postgres")
+        for role in ("oria", "secondcontext"):
+            assert (
+                query(
+                    role,
+                    role,
+                    "SELECT rolsuper, rolcreatedb, rolcreaterole, rolreplication, rolbypassrls "
+                    "FROM pg_roles WHERE rolname=current_user",
+                )
+                == "f|f|f|f|f"
+            )
+            query(
+                role,
+                role,
+                "CREATE TABLE bootstrap_probe (id integer); INSERT INTO bootstrap_probe VALUES (1)",
+            )
+            other = "secondcontext" if role == "oria" else "oria"
+            query(role, other, "SELECT 1", allowed=False)
+            query(role, role, "SET ROLE " + other, allowed=False)
+        query("oria", "oria", "SELECT 1", allowed=False, password_override=secrets.token_hex(24))
+        compose("down")
+        compose("up", "-d", "--wait", "--wait-timeout", "90", "postgres")
+        for role in ("oria", "secondcontext"):
+            assert query(role, role, "SELECT id FROM bootstrap_probe") == "1"
+    finally:
+        compose("down", "--volumes", "--remove-orphans")

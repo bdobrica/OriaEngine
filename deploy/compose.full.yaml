@@ -1,5 +1,6 @@
 # Adapted from SecondContext b1a58486218df138af456126fe7514a9f5b60cdd.
-# Use with compose.images.yaml. Each owner migrates only its own database.
+# Full entry point: OriaEngine + SecondContext with one PostgreSQL server.
+# Each application owns a separate database and runs only its own migrations.
 x-secondcontext: &secondcontext
   image: ${SECOND_CONTEXT_IMAGE:?Set SECOND_CONTEXT_IMAGE to a published gateway version or digest}
   user: "65532:65532"
@@ -9,7 +10,7 @@ x-secondcontext: &secondcontext
 
 x-secondcontext-postgres: &secondcontext-postgres
   POSTGRES_ENABLED: "true"
-  POSTGRES_HOST: secondcontext-postgres
+  POSTGRES_HOST: postgres
   POSTGRES_PORT: "5432"
   POSTGRES_USER: secondcontext
   POSTGRES_PASSWORD: ${SECOND_CONTEXT_POSTGRES_PASSWORD:?Set a dedicated SecondContext database password}
@@ -17,20 +18,27 @@ x-secondcontext-postgres: &secondcontext-postgres
   POSTGRES_SSLMODE: disable
 
 services:
-  secondcontext-postgres:
+  postgres:
+    extends: {file: compose.oria.yaml, service: postgres}
     image: postgres:16.13-alpine
-    restart: unless-stopped
-    networks: [secondcontext-storage]
+    networks: [storage, secondcontext-storage]
     environment:
-      POSTGRES_USER: secondcontext
-      POSTGRES_DB: secondcontext
-      POSTGRES_PASSWORD: ${SECOND_CONTEXT_POSTGRES_PASSWORD:?Set a dedicated SecondContext database password}
-    volumes: ["secondcontext_postgres_data:/var/lib/postgresql/data"]
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Set a dedicated PostgreSQL bootstrap administrator password}
+      ORIA_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      SECOND_CONTEXT_POSTGRES_PASSWORD: ${SECOND_CONTEXT_POSTGRES_PASSWORD:?Set a dedicated SecondContext database password}
+    volumes:
+      - shared_postgres_data:/var/lib/postgresql/data
+      - ./postgres/init-app-databases.sh:/docker-entrypoint-initdb.d/10-app-databases.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U secondcontext -d secondcontext"]
-      interval: 2s
-      timeout: 5s
-      retries: 30
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d postgres"]
+  redis:
+    extends: {file: compose.oria.yaml, service: redis}
+  astrology-mcp:
+    extends: {file: compose.oria.yaml, service: astrology-mcp}
+  migrate:
+    extends: {file: compose.oria.yaml, service: migrate}
   secondcontext-qdrant:
     image: qdrant/qdrant:v1.15.5
     restart: unless-stopped
@@ -48,7 +56,7 @@ services:
     command: ["/app/migrate", "up"]
     environment: *secondcontext-postgres
     depends_on:
-      secondcontext-postgres:
+      postgres:
         condition: service_healthy
   secondcontext:
     <<: *secondcontext
@@ -81,12 +89,14 @@ services:
       retries: 12
       start_period: 5s
   gateway:
+    extends: {file: compose.oria.yaml, service: gateway}
     environment:
       SECOND_CONTEXT_BASE_URL: http://secondcontext:8080
     depends_on:
       secondcontext:
         condition: service_healthy
   worker:
+    extends: {file: compose.oria.yaml, service: worker}
     networks: [storage, astrology, egress, secondcontext-api]
     environment:
       SECOND_CONTEXT_BASE_URL: http://secondcontext:8080
@@ -94,9 +104,14 @@ services:
       secondcontext:
         condition: service_healthy
 volumes:
-  secondcontext_postgres_data:
+  shared_postgres_data:
   secondcontext_qdrant_data:
 networks:
+  storage:
+    internal: true
+  astrology:
+    internal: true
+  egress: {}
   secondcontext-api:
     internal: true
   secondcontext-storage:

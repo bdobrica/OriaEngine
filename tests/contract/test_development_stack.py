@@ -73,7 +73,7 @@ def test_development_stack(tmp_path, published_images):
             "-p",
             project,
             "-f",
-            str(root / "deploy/compose.images.yaml"),
+            str(root / "deploy/compose.oria.yaml"),
         ]
 
     def compose(*args, timeout=180):

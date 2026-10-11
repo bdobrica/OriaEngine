@@ -45,10 +45,11 @@ The owning repository's [README](https://github.com/bdobrica/SecondContext) supp
 its deployment/provider setup. `make dev` does not start that service. The
 [published-image deployment](deployment.md) includes it by default using the
 migration-enabled gateway image from commit `b1a58486218df138af456126fe7514a9f5b60cdd`
-(release `0.1.1` or compatible later). Its own migration job, PostgreSQL and Qdrant
-stay separate from Oria storage. Set `DEPLOY_SECOND_CONTEXT=false` for an existing
-external instance. Neither mode requires its source checkout at runtime. OpenAI
-credentials stay in its runtime environment.
+(release `0.1.1` or compatible later). Its own migration job uses the
+`secondcontext` database and restricted role on the shared PostgreSQL server;
+Qdrant remains separately owned. Select `DEPLOY_FILE=deploy/compose.oria.yaml`
+for an existing external instance. Neither mode requires its source checkout at
+runtime. OpenAI credentials stay in its runtime environment.
 
 The namespace is opt-in: leaving it empty preserves existing plain UUID scopes
 and ordinary subject-bound token behavior. With `oria`, the external subject is

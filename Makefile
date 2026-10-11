@@ -4,10 +4,12 @@ DEV_COMPOSE = $(COMPOSE) -f deploy/compose.dev.yaml --profile dev --profile astr
 DEPLOY_ENV ?= deploy/.env
 DEPLOY_PROJECT ?= oria-deploy
 DEPLOY_SECOND_CONTEXT ?= true
-DEPLOY_COMPOSE = docker compose --env-file "$(DEPLOY_ENV)" -p "$(DEPLOY_PROJECT)" -f deploy/compose.images.yaml
-ifeq ($(DEPLOY_SECOND_CONTEXT),true)
-DEPLOY_COMPOSE += -f deploy/compose.secondcontext.yaml
+DEPLOY_FILE ?= deploy/compose.full.yaml
+# Compatibility with existing Make callers; explicit DEPLOY_FILE takes precedence.
+ifeq ($(DEPLOY_SECOND_CONTEXT),false)
+DEPLOY_FILE = deploy/compose.oria.yaml
 endif
+DEPLOY_COMPOSE = docker compose --env-file "$(DEPLOY_ENV)" -p "$(DEPLOY_PROJECT)" -f "$(DEPLOY_FILE)"
 
 .DEFAULT_GOAL := help
 
@@ -46,7 +48,7 @@ deploy-check: ## Validate published-image Compose configuration without printing
 deploy: deploy-check ## Pull published images, migrate and start the deployment stack
 	$(DEPLOY_COMPOSE) pull
 	$(DEPLOY_COMPOSE) stop gateway worker
-ifeq ($(DEPLOY_SECOND_CONTEXT),true)
+ifeq ($(notdir $(DEPLOY_FILE)),compose.full.yaml)
 	$(DEPLOY_COMPOSE) stop secondcontext
 endif
 	$(DEPLOY_COMPOSE) up --no-build -d --wait --wait-timeout 120

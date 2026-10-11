@@ -74,11 +74,14 @@ workflow publishes MCP only on loopback with `make mcp-local`.
 
 The [published-image deployment stack](deployment.md) starts Oria-owned services
 with production settings, private storage/MCP networks and explicit migration
-ordering; it pulls release images rather than building source. Its default overlay
-also starts SecondContext, its own migration job, PostgreSQL and Qdrant. Only the
-worker joins its private API network; no Oria process joins its storage network.
-SecondContext remains an independent storage owner reached over HTTP. External
-deployment remains available with `DEPLOY_SECOND_CONTEXT=false`, and development
+ordering; it pulls release images rather than building source. Two complete entry
+points select standalone Oria or Oria plus SecondContext. The default full stack
+uses one PostgreSQL server with separate databases and restricted owner roles;
+each component runs its own migrations. Only the worker joins SecondContext's
+private API network; Oria has no access to its Qdrant network or database credentials.
+The shared server joins both storage networks, while database grants preserve
+ownership. See [ADR 0001](adr/0001-shared-deployment-postgres.md).
+Standalone deployment uses `DEPLOY_FILE=deploy/compose.oria.yaml`; development
 still uses an externally managed instance. Production HTTPS termination and webhook
 registration are explicit operator actions; the development Compose overlay is not
 a production deployment definition. Health and telemetry are private, bounded

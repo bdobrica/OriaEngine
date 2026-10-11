@@ -2,7 +2,7 @@
 
 ## Scope
 
-[The deployment overlay](../../deploy/compose.secondcontext.yaml) follows
+[The deployment overlay](https://github.com/bdobrica/OriaEngine/blob/c9093bb/deploy/compose.secondcontext.yaml) follows
 SecondContext commit `b1a58486218df138af456126fe7514a9f5b60cdd`. `make deploy`
 includes it by default; `DEPLOY_SECOND_CONTEXT=false` preserves the external mode
 for every deployment Make command. Development remains unchanged.
