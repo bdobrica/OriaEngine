@@ -1037,7 +1037,7 @@ Do not call the project MVP-complete until every item below passes.
 - [ ] Per-user concurrent message tests pass.
 - [ ] PII solicitation policy tests pass.
 - [ ] High-stakes astrology policy tests pass.
-- [ ] Webhook secret validation passes.
+- [x] Webhook secret validation passes ([live HTTPS evidence](docs/evidence/live-test-2026-10-29.md)).
 
 ### Reliability
 
