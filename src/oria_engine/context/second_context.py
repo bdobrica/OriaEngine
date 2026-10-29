@@ -111,7 +111,9 @@ class SecondContextProvider:
             "user": self.subject(scope.user_id),
             "input": request.filtered_message,
             "instructions": build_instructions(
-                natal_facts=request.natal_facts, transit_facts=request.transit_facts
+                natal_facts=request.natal_facts,
+                transit_facts=request.transit_facts,
+                reference_time_utc=request.reference_time_utc,
             ),
             "stream": False,
             "metadata": {

@@ -105,7 +105,7 @@ async def test_dependency_failure_retries_then_send_reuses_reply(conversation, d
     [
         ("My email is synthetic@example.invalid", PRIVACY_REPLY),
         ("Will I die today?", SAFETY_REPLY),
-        ("transits tomorrow", "YYYY-MM-DD"),
+        ("transits tomorrow", "/timezone"),
     ],
 )
 async def test_local_boundaries_never_call_context(conversation, text, expected):

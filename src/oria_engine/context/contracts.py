@@ -1,9 +1,10 @@
 """Oria's adapter interface; downstream wire compatibility is documented separately."""
 
+from datetime import UTC, datetime
 from typing import Literal, Protocol
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from oria_engine.astrology.contracts import NatalResult, WireModel
 from oria_engine.astrology.transits import TransitResult
@@ -51,6 +52,16 @@ class ConversationRequest(WireModel):
     )
     natal_facts: NatalResult | None = None
     transit_facts: TransitResult | None = None
+    reference_time_utc: datetime | None = None
+
+    @field_validator("reference_time_utc")
+    @classmethod
+    def aware_reference(cls, value: datetime | None) -> datetime | None:
+        if value is not None:
+            if value.utcoffset() is None:
+                raise ValueError("Reference time must be timezone aware")
+            return value.astimezone(UTC)
+        return None
 
 
 class ContextReply(WireModel):

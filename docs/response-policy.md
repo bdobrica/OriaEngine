@@ -26,6 +26,18 @@ relationship failure. The fixed reply declines astrology-based decisions and
 offers low-stakes chart reflection and appropriate professional support. Cancer
 as a zodiac sign remains allowed; common diagnostic phrases involving it do not.
 
+Ordinary career/work reflection is supported. The word `trade-offs` is not a
+financial transaction. A narrow vocabulary of verb phrases such as `address any
+challenges` is distinct from asking for a private address; other identifying
+terms and address requests elsewhere in the draft remain checked. The exact standalone application-owned reminder
+“A friendly reminder: please use appropriate professional support for medical,
+legal or financial decisions.” is excluded from safety matching only; the rest
+of the draft is still checked in full. Unsafe claims before or after that sentence
+remain blocked. The original reminder stays in the delivered reply. No arbitrary
+disclaimer, negation, quotation or category-wide exemption is allowed. Persona
+guidance answers ordinary career questions directly and avoids repeating onboarding
+disclosures; the original substantive high-stakes restrictions remain in force.
+
 Matching normalizes Unicode compatibility forms, case, whitespace and invisible
 format characters. It conservatively blocks category mentions even in quotations,
 negations or otherwise benign drafts. There is no negation escape hatch. A blocked

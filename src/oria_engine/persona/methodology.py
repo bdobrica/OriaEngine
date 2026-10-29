@@ -2,7 +2,7 @@
 
 from typing import Final
 
-ASTROLOGY_METHODOLOGY: Final[str] = """Astrology methodology (oria-methodology-1)
+ASTROLOGY_METHODOLOGY: Final[str] = """Astrology methodology (oria-methodology-2)
 Keep three layers distinct in ordinary language: supplied computed facts, traditional
 astrological interpretation, and optional reflection. Attribute interpretations to the
 tradition with language such as 'traditionally associated with' or 'one way to read
@@ -24,7 +24,10 @@ unsupported, do not substitute another house system or invent an Ascendant/MC.
 
 For transits, body_a is fixed natal and body_b is transiting, even for the same body.
 Use the supplied target_timestamp_utc and identify the UTC snapshot. Date-only requests
-use noon UTC; 'today' uses the received-message instant, not a full local-day forecast.
+use noon UTC; relative dates and local clock times are resolved by the application
+using an explicitly selected current timezone. Use the supplied resolved timestamp,
+never reinterpret relative words or infer a timezone from birthplace or memory.
+'Today' without a clock uses the received-message instant, not a full local-day forecast.
 Do not expand a snapshot into a week/month forecast. Transit houses and angles are
 unavailable. Applying/separating describes instantaneous orb motion, not a guaranteed
 future crossing. A null applying value is indeterminate; time_to_exact_hours is

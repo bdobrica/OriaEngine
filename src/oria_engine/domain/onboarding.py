@@ -12,7 +12,7 @@ from oria_engine.db.astrology_profiles import AstrologyProfileRepository
 from oria_engine.db.birth_profiles import BirthProfileRepository, ConsentRequiredError
 from oria_engine.db.onboarding import OnboardingRepository
 from oria_engine.db.repositories import ConsentRepository, UserRepository, UserUnavailableError
-from oria_engine.domain.active import prepare_active, render_active
+from oria_engine.domain.active import prepare_active, render_active, route_active
 from oria_engine.domain.birth_profile import BirthPlace
 from oria_engine.domain.birth_time import birth_zone, utc_candidates
 from oria_engine.domain.channel import ChannelButton, ChannelMessage
@@ -184,7 +184,12 @@ class OnboardingFlow:
             and latest.status in {"declined", "revoked"}
         ):
             state = State.CLOSED
-        sections = [f"Current policy: {self.policy_version}"]
+        user = await UserRepository(session).get(user_id)
+        assert user is not None
+        sections = [
+            f"Current policy: {self.policy_version}",
+            f"Current timezone: {user.current_timezone or 'not set'}; use /timezone to change it.",
+        ]
         sections.append(
             f"Latest consent: {latest.status} (policy {latest.policy_version})"
             if latest
@@ -256,11 +261,16 @@ class OnboardingFlow:
         *,
         command: str | None = None,
     ) -> ConsentReply:
-        if await UserRepository(session).get(user_id, for_update=True) is None:
+        user = await UserRepository(session).get(user_id, for_update=True)
+        if user is None:
             raise UserUnavailableError("User unavailable")
         consent = await ConsentRepository(session).current(user_id, self.policy_version)
         if consent is None:
             raise ConsentRequiredError("Current consent required")
+        if command == "timezone":
+            from oria_engine.domain.timezone import timezone_reply
+
+            return timezone_reply(user, message)
         drafts = OnboardingRepository(session, self.encryption, self.policy_version)
         profiles = BirthProfileRepository(
             session, self.encryption, policy_version=self.policy_version
@@ -279,7 +289,14 @@ class OnboardingFlow:
                     session, policy_version=self.policy_version
                 ).get(user_id)
                 if natal is not None:
-                    if self.context is not None and private_active_input(message.text):
+                    intent = route_active(
+                        message.text,
+                        received_at=message.received_at,
+                        current_timezone=user.current_timezone,
+                    )
+                    if self.context is not None and private_active_input(
+                        message.text, resolved_clock=intent.target_timestamp_utc is not None
+                    ):
                         count("policy_input_block")
                         return ConsentReply(State.ACTIVE, PRIVACY_REPLY)
                     try:
@@ -288,11 +305,13 @@ class OnboardingFlow:
                             received_at=message.received_at,
                             natal=natal,
                             client=self.astrology,
+                            current_timezone=user.current_timezone,
                         )
                         if (
                             self.context is not None
                             and facts.intent.kind != "unsupported_high_stakes"
                             and facts.intent.kind != "clarify_date"
+                            and facts.intent.kind != "clarify_timezone"
                         ):
                             response = await self.context.respond(
                                 session,
@@ -302,9 +321,24 @@ class OnboardingFlow:
                                     goal=facts.intent.kind,
                                     natal_facts=natal,
                                     transit_facts=facts.transits,
+                                    reference_time_utc=message.received_at,
                                 ),
                             )
-                            return ConsentReply(State.ACTIVE, response.text)
+                            text = response.text
+                            if facts.transits is not None and user.current_timezone is not None:
+                                local_target = facts.transits.target_timestamp_utc.astimezone(
+                                    birth_zone(user.current_timezone)
+                                )
+                                text = (
+                                    f"Snapshot: {local_target:%Y-%m-%d %H:%M %z} "
+                                    f"({user.current_timezone}).\n\n" + text
+                                )
+                                if len(text.encode("utf-16-le")) // 2 > 4096:
+                                    text = (
+                                        "That reading was too long. "
+                                        "Please ask for a shorter reading."
+                                    )
+                            return ConsentReply(State.ACTIVE, text)
                         if facts.intent.kind == "unsupported_high_stakes":
                             count("policy_high_stakes")
                         return ConsentReply(State.ACTIVE, render_active(facts))
@@ -495,4 +529,8 @@ class OnboardingFlow:
                 text += " Chart facts use your approximate birth time."
             if not result.availability.houses:
                 text += " Houses and angles are unavailable for this calculation."
-        return ConsentReply(State.ACTIVE, text + " Use /edit_profile to change birth details.")
+        return ConsentReply(
+            State.ACTIVE,
+            text + " Use /edit_profile to change birth details. "
+            "Set your current timezone with /timezone to ask about tomorrow or local clock times.",
+        )

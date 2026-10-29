@@ -11,7 +11,9 @@ chat. Onboarding, callbacks and profile/privacy commands remain deterministic an
 never reach SecondContext. Active chat uses the scoped cache without decrypting
 the birth profile. Follow-ups include current natal facts; date/current-transit
 requests additionally calculate transit facts. Missing transit facts cannot be
-reconstructed from memory. Ambiguous dates and recognized high-stakes requests
+reconstructed from memory. Relative targets use the explicit current timezone
+preference and recorded ingress timestamp. Missing timezone preferences, ambiguous
+dates and recognized high-stakes requests
 receive local replies. The optional context-free flow remains useful for tests
 and deterministic consumers; the production worker always injects context.
 

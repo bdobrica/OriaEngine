@@ -15,6 +15,7 @@ from oria_engine.domain.birth_profile import BirthProfilePayload
 from oria_engine.domain.policy import (
     ONBOARDING_FIELDS,
     PRIVACY_REPLY,
+    PROFESSIONAL_REMINDER,
     SAFETY_REPLY,
     guard_reply,
     is_high_stakes,
@@ -87,6 +88,7 @@ def test_common_solicitations(field):
         "Birth time is unknown: houses and angles are unavailable.",
         "Use /edit_profile to correct your birth details.",
         "Your approximate birth time makes this placement uncertain.",
+        "Use the work reading to address any challenges and consider trade-offs calmly.",
     ],
 )
 def test_allowed_reflection_and_uncertainty(draft):
@@ -117,3 +119,28 @@ async def test_allowed_service_reply_preserves_text_and_id():
             AsyncMock(), scope.user_id, ConversationRequest(filtered_message="Explain my chart")
         )
     assert result == provider.respond.return_value
+
+
+@pytest.mark.parametrize("suffix", ["", " " + PROFESSIONAL_REMINDER])
+def test_career_reflection_and_exact_professional_reminder_are_allowed(suffix):
+    draft = (
+        "For career reflection, consider the trade-offs in how you communicate at work." + suffix
+    )
+    assert guard_reply(draft) == draft
+    assert not is_high_stakes("Yup, do career, please!")
+
+
+@pytest.mark.parametrize(
+    "claim", ["You will die tomorrow.", "Invest all your savings.", "Your relationship will fail."]
+)
+def test_reminder_never_licenses_high_stakes_predictions(claim):
+    assert guard_reply(claim + " " + PROFESSIONAL_REMINDER) == SAFETY_REPLY
+    assert guard_reply(PROFESSIONAL_REMINDER + " " + claim) == SAFETY_REPLY
+
+
+def test_only_the_exact_standalone_reminder_is_exempt():
+    assert guard_reply("Not financial advice, but trade these stocks.") == SAFETY_REPLY
+    assert guard_reply("An investment tip: " + PROFESSIONAL_REMINDER) == SAFETY_REPLY
+    assert guard_reply("Send your email. " + PROFESSIONAL_REMINDER) == PRIVACY_REPLY
+    assert guard_reply("Please send your address.") == PRIVACY_REPLY
+    assert guard_reply("Address your concerns, then send your home address.") == PRIVACY_REPLY

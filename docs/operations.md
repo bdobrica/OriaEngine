@@ -80,6 +80,14 @@ Telemetry identifies components, not every provider error subtype. Retry/deadlin
 behavior is unchanged. See [abuse controls](abuse-controls.md),
 [queue recovery](worker-queue.md) and [deletion](deletion.md).
 
+Conversation text and generated drafts are deliberately absent from logs, including
+development logs. Successfully delivered Oria event payloads have been erased;
+SecondContext owns retained active-chat transcripts. Its delegated service contract
+does not offer transcript reading, so Oria operators must not bypass that boundary
+with database queries. For reproducible reply bugs, use user-provided excerpts and
+synthetic replay/provider checks; any future private transcript inspector needs an
+owning-service authenticated read contract and explicit access/retention rules.
+
 ## Health and deployment
 
 Existing Compose PostgreSQL (`pg_isready`) and Redis (`PING`) health checks gate

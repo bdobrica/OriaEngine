@@ -20,21 +20,24 @@ there is no guessed previous transit date or implicit tool authorization.
 | --- | --- |
 | `natal_explanation` | Reuse the valid derived natal cache; no MCP call |
 | `current_transits` | Calculate a snapshot at the inbound message's UTC timestamp |
-| `transits_for_date` | One explicit `YYYY-MM-DD`, at 12:00 UTC |
+| `transits_for_date` | Explicit ISO date at 12:00 UTC, or one resolved relative/local instant |
 | `follow_up` | Current natal facts and context; no new calculation |
 | `unsupported_high_stakes` | Fixed bounded response; no calculation or model call |
-| `clarify_date` | Request one ISO date or “today”; no calculation |
+| `clarify_date` | Ask for one unambiguous supported target; no calculation |
+| `clarify_timezone` | Ask the user to set `/timezone`; no calculation |
 
 Current snapshots use the persisted message timestamp, so queue delays and retries
 do not silently select another instant. “Today” is a snapshot, not a local-day
 forecast. Date-only requests explicitly display the noon-UTC convention; it is
-not an approximation of the user's birth time. No current location/timezone is
-collected or inferred from birthplace. Supported target years are 1800–2399.
+not an approximation of the user's birth time. An optional current timezone is
+explicitly selected using `/timezone`, independently of birthplace; it is never
+inferred. See [current time](current-time.md) for supported relative expressions,
+clock-change behavior and snapshot conventions. Supported target years are 1800–2399.
 
 Slash commands and onboarding callbacks retain their existing handlers. The
 router gives recognized high-stakes requests priority over dates and chart terms.
 Multiple, invalid, slash-formatted or incomplete dates and unsupported relative
-dates/times ask for clarification. The user can reply with a complete ISO date;
+expressions ask for clarification. The user can reply with a complete ISO date;
 no separate pending clarification state is needed. This bounded rule vocabulary
 is not a general natural-language parser. High-stakes detection now shares the
 Stage 15 policy vocabulary and fixed boundary reply.

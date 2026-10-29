@@ -1,5 +1,6 @@
 import asyncio
 import json
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -72,6 +73,36 @@ def provider(handler, **kwargs):
 
 def scope():
     return ContextScope(user_id=uuid4(), session_id=uuid4())
+
+
+async def test_request_clock_reference_is_utc_instruction_data_without_new_wire_fields():
+    stub = SecondContextStub()
+    client = provider(stub)
+    clock = datetime(2026, 10, 30, 1, 30, tzinfo=timezone(timedelta(hours=2)))
+    try:
+        await client.respond(
+            scope(),
+            ConversationRequest(
+                filtered_message="Reflect on work",
+                reference_time_utc=clock,
+            ),
+        )
+        body = json.loads(stub.requests[0].content)
+        assert "2026-10-29T23:30:00+00:00" in body["instructions"]
+        assert body["input"] == "Reflect on work"
+        assert "reference_time_utc" not in body and "timezone" not in body["metadata"]
+        with pytest.raises(ValidationError):
+            ConversationRequest(
+                filtered_message="Reflect", reference_time_utc=clock.replace(tzinfo=None)
+            )
+        assert (
+            ConversationRequest(
+                filtered_message="Reflect", reference_time_utc=clock
+            ).reference_time_utc.tzinfo
+            == UTC
+        )
+    finally:
+        await client.aclose()
 
 
 async def test_continuity_scoping_auth_and_no_profile_memory():

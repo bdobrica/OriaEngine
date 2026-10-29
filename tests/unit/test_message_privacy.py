@@ -42,3 +42,12 @@ def test_ordinary_chat(text):
 
 def test_disclosure_fits_telegram():
     assert len(("Policy " + "v" * 64 + "\n\n" + DISCLAIMER).encode("utf-16-le")) // 2 <= 4096
+
+
+def test_validated_transit_clock_is_not_birth_collection_permission():
+    assert private_active_input("tomorrow at 15:30")
+    assert not private_active_input("tomorrow at 15:30", resolved_clock=True)
+    assert private_active_input("My birth time is at 15:30", resolved_clock=True)
+    assert private_active_input(
+        "Email person@example.invalid tomorrow at 15:30", resolved_clock=True
+    )

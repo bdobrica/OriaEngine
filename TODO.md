@@ -581,7 +581,8 @@ Stage 16 connects the adapter to the Telegram worker through persona and policy 
 
 Support useful personalized astrology conversations after onboarding.
 
-Implemented: [transit tool and deterministic fact replies](docs/transits-and-routing.md).
+Implemented: [transit tool and deterministic fact replies](docs/transits-and-routing.md),
+including [explicit current timezone and relative-time resolution](docs/current-time.md).
 LLM interpretation and contextual follow-ups are connected in Stage 16;
 the deterministic router still requires no classifier call.
 
@@ -1052,11 +1053,11 @@ Do not call the project MVP-complete until every item below passes.
 
 - [ ] `make bootstrap` works from clean checkout.
 - [ ] `make dev` works with documented configuration.
-- [ ] `make test-unit` passes.
-- [ ] `make test-integration` passes.
-- [ ] `make test-contract` passes.
-- [ ] `make test-e2e` passes.
-- [ ] `make verify` passes.
+- [x] `make test-unit` passes.
+- [x] `make test-integration` passes.
+- [x] `make test-contract` passes.
+- [x] `make test-e2e` passes.
+- [x] `make verify` passes ([verification evidence](docs/evidence/relative-time-and-career.md)).
 - [ ] GitHub Actions invokes `make verify` successfully.
 
 ---

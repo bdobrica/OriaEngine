@@ -11,6 +11,12 @@ from oria_engine.astrology.client import AstrologyClient, AstrologyUnavailable
 from oria_engine.astrology.contracts import NatalResult, WireModel
 from oria_engine.astrology.transits import TransitRequest, TransitResult, validate_target
 from oria_engine.domain.policy import SAFETY_REPLY, is_high_stakes
+from oria_engine.domain.relative_time import (
+    HINT,
+    TimeClarification,
+    TimezoneRequired,
+    resolve_relative,
+)
 
 IntentKind = Literal[
     "natal_explanation",
@@ -19,6 +25,7 @@ IntentKind = Literal[
     "follow_up",
     "unsupported_high_stakes",
     "clarify_date",
+    "clarify_timezone",
 ]
 
 
@@ -53,12 +60,25 @@ NATAL = re.compile(
 )
 
 
-def route_active(text: str, *, received_at: datetime) -> ActiveIntent:
+def route_active(
+    text: str, *, received_at: datetime, current_timezone: str | None = None
+) -> ActiveIntent:
     """English demo grammar. Unrecognized language never authorizes a tool call."""
     if is_high_stakes(text):
         return ActiveIntent(kind="unsupported_high_stakes")
+    if received_at.utcoffset() is None:
+        raise ValueError("Message time must be timezone aware")
     dates = ISO_DATE.findall(text)
     remainder = ISO_DATE.sub("", text)
+    if not dates and (DATE_HINT.search(text) or HINT.search(text)):
+        try:
+            target = resolve_relative(text, received_at, current_timezone)
+            if target is not None:
+                return ActiveIntent(kind="transits_for_date", target_timestamp_utc=target)
+        except TimezoneRequired:
+            return ActiveIntent(kind="clarify_timezone")
+        except (TimeClarification, ValueError, OverflowError):
+            return ActiveIntent(kind="clarify_date")
     if dates or DATE_HINT.search(text):
         # Reject multiple dates, other date/time hints and mixed relative/absolute targets.
         if (
@@ -93,10 +113,15 @@ class ActiveFacts(WireModel):
 
 
 async def prepare_active(
-    text: str, *, received_at: datetime, natal: NatalResult, client: AstrologyClient
+    text: str,
+    *,
+    received_at: datetime,
+    natal: NatalResult,
+    client: AstrologyClient,
+    current_timezone: str | None = None,
 ) -> ActiveFacts:
     """Accept only the caller's consent-scoped, current derived cache, never raw profile data."""
-    intent = route_active(text, received_at=received_at)
+    intent = route_active(text, received_at=received_at, current_timezone=current_timezone)
     if intent.kind == "natal_explanation":
         return ActiveFacts(intent=intent, natal=natal)
     if intent.target_timestamp_utc is not None:
@@ -119,10 +144,18 @@ def render_active(facts: ActiveFacts) -> str:
     """Bounded factual demo output until the persona/policy/LLM stages are connected."""
     if facts.intent.kind == "unsupported_high_stakes":
         return SAFETY_REPLY
+    if facts.intent.kind == "clarify_timezone":
+        return (
+            "Which timezone should I use for your day? Set it with /timezone Europe/Bucharest "
+            "(use your own IANA timezone), then resend your question. "
+            "Your current timezone can differ from your birthplace."
+        )
     if facts.intent.kind == "clarify_date":
         return (
-            "Please send one target date as YYYY-MM-DD (1800–2399), or ask for transits today. "
-            "Date-only requests use 12:00 UTC as a snapshot, not your local day or birth time."
+            "Please choose one time: for example tomorrow, in 3 hours, next Friday, "
+            "or YYYY-MM-DD (1800–2399). Set /timezone for local dates. "
+            "For a local clock time, try tomorrow at 15:30. I calculate a snapshot, "
+            "not a forecast covering a whole period. Clock-change times may need clarification."
         )
     if facts.intent.kind == "follow_up":
         return (
@@ -138,7 +171,7 @@ def render_active(facts: ActiveFacts) -> str:
             "Transit snapshot: "
             + facts.transits.target_timestamp_utc.strftime("%Y-%m-%d %H:%M:%S UTC")
             + (
-                " (date-only requests use noon UTC)."
+                " (one resolved instant; ISO date-only requests use noon UTC)."
                 if facts.intent.kind == "transits_for_date"
                 else " (message time, not a local-day forecast)."
             )

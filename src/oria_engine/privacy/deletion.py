@@ -200,6 +200,9 @@ class DeletionWorker:
                 ):
                     await session.execute(delete(model).where(model.user_id == job.user_id))
                 await session.execute(
+                    update(User).where(User.id == job.user_id).values(current_timezone=None)
+                )
+                await session.execute(
                     update(InboundEvent)
                     .where(InboundEvent.user_id == job.user_id)
                     .values(

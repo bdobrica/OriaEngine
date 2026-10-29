@@ -12,7 +12,7 @@ SENSITIVE = re.compile(
 )
 
 
-def private_active_input(text: str) -> bool:
+def private_active_input(text: str, *, resolved_clock: bool = False) -> bool:
     """Reject obvious volunteered identifiers/birth values, with intentional false positives.
 
     One ISO transit date is excluded from numeric matching. Arbitrary unlabeled names,
@@ -20,4 +20,8 @@ def private_active_input(text: str) -> bool:
     """
     value = normalize(text)
     value = re.sub(r"(?<![\w-])\d{4}-\d{2}-\d{2}(?![\w-])", "[date]", value)
+    if resolved_clock:
+        # Only after deterministic routing resolves one clock-based transit request.
+        # Other PII and birth phrases are still checked over the entire message.
+        value = re.sub(r"\bat\s+\d{1,2}:\d{2}\b", "[target time]", value)
     return bool(PII.search(value) or SENSITIVE.search(value))

@@ -110,11 +110,15 @@ async def assert_local_erased(worker, user_id, *, completed):
             )
         else:
             assert user.deleted_at is not None
+            assert user.current_timezone is None
 
 
 async def test_complete_deletion_http_purge_replay_and_fresh_account(deletion):
     ingress, worker, runner, stub = deletion
     await confirm(worker.flow)
+    await worker.process(
+        await ingress.accept(message(text="/timezone Europe/Bucharest"), command="timezone")
+    )
     original = message(text="Explain my chart")
     old_event = await ingress.accept(original)
     await worker.process(old_event)

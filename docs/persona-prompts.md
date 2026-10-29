@@ -6,8 +6,8 @@ there are no prompt files to mount, new dependencies, settings or migrations.
 
 | Layer | Responsibility |
 | --- | --- |
-| `policy.py`, `oria-policy-1` | AI identity, consent/application authority, privacy, no fabricated facts, high-stakes limits and untrusted-input rules |
-| `methodology.py`, `oria-methodology-1` | Separate computed facts, traditional interpretation and reflection; respect natal/transit v1 availability and uncertainty |
+| `policy.py`, `oria-policy-2` | AI identity, consent/application authority, privacy, no fabricated facts, high-stakes limits, ordinary career reflection and untrusted-input rules |
+| `methodology.py`, `oria-methodology-2` | Separate computed facts, interpretation and reflection; respect natal/transit availability and application-resolved relative targets |
 | `voice.py`, `oria-voice-1` | Calm warmth, plain language, concise structure and optional non-identifying follow-up |
 
 Policy is immutable **to runtime inputs**: it is source-controlled `Final` text,

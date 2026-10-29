@@ -210,6 +210,14 @@ Before the profile is persisted as active, the user sees a summary and explicitl
 
 Once onboarding succeeds, Oria behaves as a persistent astrology personality.
 
+An optional, explicit current timezone preference is managed with `/timezone`
+and displayed by `/profile`. It is independent of birthplace, remains local to
+Oria and is cleared during account deletion. Relative requests use recorded
+message arrival time and deterministic resolution; see [current time](docs/current-time.md).
+Ordinary career/work reflection receives a direct interpretation without repeated
+onboarding disclaimers. A professional-support reminder does not authorize
+high-stakes predictions or advice.
+
 Typical supported requests include:
 
 - “What stands out in my natal chart?”

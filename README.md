@@ -75,7 +75,7 @@ switching, [host polling](docs/telegram.md) for the host-worker alternative, and
   Filtered active messages and generated replies can be retained by SecondContext
   and its AI provider; filtering has documented limits.
 
-Commands include `/profile`, `/edit_profile`, `/retry_profile`, `/privacy` and
+Commands include `/profile`, `/edit_profile`, `/retry_profile`, `/timezone`, `/privacy` and
 `/delete_me`. Decline stops processing but retains previous data; deletion requires
 confirmation and durable cleanup across services. See [profile commands](docs/profile-commands.md)
 and [deletion and retention](docs/deletion.md).

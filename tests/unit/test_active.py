@@ -41,8 +41,6 @@ def test_routes(text, kind):
     "text",
     [
         "transits on 04/05/2026",
-        "transits tomorrow",
-        "next Friday",
         "May 2",
         "2026-02-30",
         "2026-02-01 or 2026-02-02",
@@ -51,16 +49,19 @@ def test_routes(text, kind):
         "2400-01-01",
         "2026-01-01 at 15:30",
         "2026-1-2",
-        "transits next month",
         "2026-01-01T12:00:00Z",
         "2026-01-01 at 5pm",
         "transits for the 5th",
         "transits next spring",
-        "transits this evening",
     ],
 )
 def test_ambiguous_or_unsupported_dates(text):
     assert route_active(text, received_at=NOW).kind == "clarify_date"
+
+
+@pytest.mark.parametrize("text", ["transits tomorrow", "next Friday", "next month", "this evening"])
+def test_relative_calendar_dates_need_explicit_timezone(text):
+    assert route_active(text, received_at=NOW).kind == "clarify_timezone"
 
 
 def test_intent_invariants():

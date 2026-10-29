@@ -193,6 +193,7 @@ def create_dispatcher(
             "profile",
             "edit_profile",
             "retry_profile",
+            "timezone",
             "delete_me",
             "delete-me",
         )

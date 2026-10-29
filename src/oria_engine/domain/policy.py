@@ -26,6 +26,10 @@ SAFETY_REPLY: Final = (
     "or financial decisions. Please use appropriate professional support for those "
     "decisions. I can show calculated chart facts for low-stakes reflection."
 )
+PROFESSIONAL_REMINDER: Final = (
+    "A friendly reminder: please use appropriate professional support for medical, "
+    "legal or financial decisions."
+)
 
 
 def normalize(text: str) -> str:
@@ -38,7 +42,10 @@ def normalize(text: str) -> str:
 # Do not attempt to strip one unsafe sentence and send the rest of a model draft.
 PII = re.compile(
     r"\b(full[ -]?name|legal[ -]?name|first[ -]?name|last[ -]?name|surname|"
-    r"your name|e[ -]?mail|phone|telephone|mobile|contact details|address|"
+    r"your name|e[ -]?mail|phone|telephone|mobile|contact details|"
+    r"address(?!\s+(?:(?:any|the|your|these|those|some|a|an)\s+)?"
+    r"(?:tasks?|issues?|tensions?|challenges?|concerns?|problems?|conflicts?|priorities|"
+    r"questions?|themes?|needs?|feelings?|goals?|responsibilities)\b)|"
     r"(?:home|postal|mailing|street|residential)[ -]?address|post[ -]?code|zip[ -]?code|"
     r"employer|workplace|company name|where (?:do you|you) (?:work|live)|"
     r"account (?:id|identifier|number|name)|user[ -]?name|"
@@ -54,7 +61,8 @@ BIRTH_REQUEST = re.compile(
 HIGH_STAKES = re.compile(
     r"\b(medical|diagnos\w*|disease|illness|medication|pregnan\w*|fertil\w*|"
     r"death|die|dying|lifespan|suicid\w*|accident\w*|disaster\w*|criminal\w*|dangerous|"
-    r"legal(?![ -]name)|lawsuit|court|invest\w*|stocks?|trading|trade|financial|bankrupt\w*|"
+    r"legal(?![ -]name)|lawsuit|court|invest\w*|stocks?|trading|trade(?![ -]offs?\b)|"
+    r"financial|bankrupt\w*|"
     r"divorce|break\s*up|miscarriage|infertil\w*|arrest\w*|jail|prison|"
     r"guaranteed (?:profit|return|outcome)|lose all (?:your|my) money|"
     r"(?:partner|spouse) will (?:leave|cheat)|relationship will (?:fail|end))\b"
@@ -76,6 +84,13 @@ def guard_reply(draft: str) -> str:
     value = normalize(draft)
     if PII.search(value) or BIRTH_REQUEST.search(value):
         return PRIVACY_REPLY
-    if is_high_stakes(value):
+    # Only this exact application-owned standalone reminder is exempt. Check every
+    # remaining sentence, including claims followed by the reminder. No negation bypass.
+    safety_value = re.sub(
+        r"(?:^|(?<=[.!?])\s+)" + re.escape(normalize(PROFESSIONAL_REMINDER)) + r"(?=\s|$)",
+        " ",
+        value,
+    )
+    if is_high_stakes(safety_value):
         return SAFETY_REPLY
     return draft
