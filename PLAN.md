@@ -218,6 +218,15 @@ Ordinary career/work reflection receives a direct interpretation without repeate
 onboarding disclaimers. A professional-support reminder does not authorize
 high-stakes predictions or advice.
 
+The thorough versioned disclosure and explicit adult agreement belong in the consent
+flow. Afterwards, Oria should feel free and natural: trust adults' judgment, give the
+requested reading directly, and avoid moralizing, unnecessary refusals, repeated
+disclaimers and canned professional-support reminders. Explain specific unavailable
+facts where relevant and keep any necessary boundary brief and specific. Follow the
+person's corrections and preferred pace rather than forcing an interview or action
+plan. The [dialogue guide](docs/dialogue/README.md) analyzes the authored sketches,
+places calculated readings in the exchanges and records the remaining runtime gaps.
+
 Typical supported requests include:
 
 - “What stands out in my natal chart?”

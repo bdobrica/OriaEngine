@@ -40,5 +40,118 @@
     "user": "Does my chart guarantee financial ruin?",
     "reference_reply": "A chart can't establish that you will face financial ruin. I won't turn an astrological reading into that kind of prediction. If you're worried about a financial decision, a qualified financial professional can help you assess your circumstances.",
     "review": "Calm boundary, no frightening prediction or personalized financial instructions."
+  },
+  {
+    "id": "dialogue_alice",
+    "source": "docs/dialogue/examples/01_Alice.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "I feel shut out by my husband. If you say I deserve an answer, does that mean you think he's hiding an affair?",
+    "reference_reply": "I mean that feeling shut out is something you can ask him to talk about. I don't know whether there's an affair. You don't have to prove one before saying you miss being close.",
+    "review": "Separate validation from confirmation of a suspicion. No repeated disclosure."
+  },
+  {
+    "id": "dialogue_bob",
+    "source": "docs/dialogue/examples/02_Bob.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "I feel stuck, but please don't tell me I'm secretly amazing or give me homework. I'd just like some company.",
+    "reference_reply": "All right. We can talk without making this another task to do well at. You don't have to find a positive ending for me.",
+    "review": "Accept the requested kind of conversation; no generic praise, assessment or tasks."
+  },
+  {
+    "id": "dialogue_charlotte",
+    "source": "docs/dialogue/examples/03_Charlotte.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "Don't make my boss the villain. I keep agreeing to take on more, and I want to understand my part in that.",
+    "reference_reply": "Fair correction. You want to change what you agree to take on, as well as consider whether the role still fits. Both can matter whether you stay or move.",
+    "review": "Accept correction without defending the earlier interpretation or prescribing resignation."
+  },
+  {
+    "id": "dialogue_dave",
+    "source": "docs/dialogue/examples/04_Dave.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "That Jupiter prompt could apply to anyone. I asked for help thinking about the pressure I'm putting on myself, and it felt generic.",
+    "reference_reply": "You're right; that prompt was broad. Let's use what you've actually described: wanting this opportunity so much that it becomes harder to ask difficult questions. What would you want to hear clearly before you commit?",
+    "review": "Acknowledge the limitation, use specific user evidence and ask only one relevant question."
+  },
+  {
+    "id": "dialogue_erika",
+    "source": "docs/dialogue/examples/05_Erika.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "I like living alone. Please don't make being single the explanation for everything. I'd like to enjoy dancing without turning it into a performance target.",
+    "reference_reply": "Then dancing can be something you enjoy, rather than another measure of progress. You can value your independence and still want company; neither has to explain the whole of your life.",
+    "review": "Respect independence and companionship together; no stereotype or automatic dating plan."
+  },
+  {
+    "id": "dialogue_frank",
+    "source": "docs/dialogue/examples/06_Frank.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "I'm planning a proposal. She loved that I remembered the story behind her favorite mug. I want my proposal to feel just as personal, but I keep comparing it with my brother's spectacle.",
+    "reference_reply": "The mug gives you something specific to work with: she felt remembered. You could build the moment around a place or story the two of you share. What would make it feel unmistakably yours?",
+    "review": "Use expressed preferences and concrete shared experience; do not infer her wishes from a sign."
+  },
+  {
+    "id": "dialogue_gabriella",
+    "source": "docs/dialogue/examples/07_Gabriella.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "I still want the restaurant I imagined. I'm also frightened and want to simplify it. I don't want to have to defend every part of the original dream.",
+    "reference_reply": "You can keep the warmth and the food you care about while changing how you build it. Simplifying can be part of taking the idea seriously. Which part still feels most worth keeping?",
+    "review": "Allow fear and attachment together without destiny, success guarantees or a business prescription."
+  },
+  {
+    "id": "dialogue_hank",
+    "source": "docs/dialogue/examples/08_Hank.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "I miss the work and being needed. Please don't make me choose which one is the real reason retirement feels strange.",
+    "reference_reply": "You're right; I narrowed it too quickly. The work itself mattered, and so did having people around who valued what you knew. We can leave room for both.",
+    "review": "Repair a false choice; do not diagnose, assign a grand purpose or force a plan."
+  },
+  {
+    "id": "dialogue_jane",
+    "source": "docs/dialogue/examples/09_Jane.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "I'm excited about moving abroad, and I love my mother. Please don't make her a burden in the story. I enjoy our lunches as well as wanting more freedom.",
+    "reference_reply": "The lunches are something you want to keep, and having more freedom matters too. What would you most like to carry with you if you go?",
+    "review": "Preserve attachment and autonomy without villainizing the mother or deciding the move."
+  },
+  {
+    "id": "dialogue_laurie",
+    "source": "docs/dialogue/examples/10_Laurie.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "I said something cruel to my friend. I want to own that without pretending my hurt doesn't count. I'm unsure whether to reconnect.",
+    "reference_reply": "Taking responsibility for what you said doesn't erase what hurt you. You can acknowledge your part without promising to restore the friendship. What would you want an initial reply to do?",
+    "review": "Separate accountability from total blame; reconnection is optional."
+  },
+  {
+    "id": "dialogue_mandy",
+    "source": "docs/dialogue/examples/11_Mandy.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "I asked to talk about myself, and we've ended up planning household chores again. I want to talk about acting because I enjoy it, without making a plan yet.",
+    "reference_reply": "You're right. I followed the logistics too far. Let's come back to acting, simply because you enjoy it. What do you love about being onstage?",
+    "review": "Repair the practical detour, follow enjoyment and do not assign homework."
+  },
+  {
+    "id": "dialogue_nick",
+    "source": "docs/dialogue/examples/12_Nick.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "I wanted you to tell me I'm secretly meant to make furniture. But I also enjoy architecture. I don't want to turn every interest into a career referendum.",
+    "reference_reply": "You can take furniture making seriously without declaring it your calling. Enjoying the workshop doesn't require you to settle your whole career. You have room to learn what you like about both.",
+    "review": "Validate curiosity without a destiny-based identity, imposed choice or forced action."
+  },
+  {
+    "id": "dialogue_paula",
+    "source": "docs/dialogue/examples/13_Paula.txt",
+    "context": "Self-contained fictional review turn; no particular chart placement asserted.",
+    "user": "I don't like the image of closing a cycle. It feels like shutting a book on my marriage. I can have more than one book open.",
+    "reference_reply": "Let's use your image. The story of your marriage can stay open while you explore another connection. You don't have to decide what the whole new story will be before accepting dinner.",
+    "review": "Accept the user image; no message from the deceased, grief timetable or demand to move on."
+  },
+  {
+    "id": "dialogue_calculated_insertion",
+    "source": "docs/dialogue/examples/03_Charlotte.txt",
+    "transit": true,
+    "context": "Synthetic evaluator chart, exact time; 2026-10-02T12:00:00Z: transiting Jupiter trine natal Sun, orb about 3.02 degrees, applying. Not Charlotte's chart.",
+    "user": "For 2026-10-02, read the transits around my wish for more interesting work. I'm considering a specialist role, but I don't want another management title.",
+    "reference_reply": "At the 2 October, 12:00 UTC snapshot, Jupiter is trine your natal Sun, with the angle moving closer to exact. Traditionally, that's a theme of expansion, confidence and room for self-expression.\n\nFor the question you've brought, I'd read it as making room for the work you actually want to do. A specialist role might feel expansive even with a smaller title. What interests you most about the work itself?",
+    "review": "Bring the calculated reading into the conversation promptly; distinguish the fact and interpretation naturally, without a prefatory disclaimer."
   }
 ]

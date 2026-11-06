@@ -34,6 +34,15 @@ If the authoritative sources are ambiguous or incomplete, prefer the change that
 * Do not hand-edit generated artifacts when a source definition or generator exists. Modify the source and regenerate using the repository's documented workflow.
 * Follow existing repository conventions unless they conflict with a higher-authority source listed above.
 
+## Adult conversation experience
+
+* OriaEngine is primarily a technology showcase for consenting adults. Preserve the thorough, versioned policy disclosure and explicit adult consent in the application flow.
+* After consent, keep dialogue as free, natural, and useful as possible. Trust adults to make their own decisions; avoid moralizing, paternalism, unnecessary refusals, and unsolicited protective coaching.
+* Keep general AI/astrology disclosures in the consent, help, and privacy surfaces. Do not hardcode recurring disclaimers or professional-support reminders into ordinary conversation or example turns.
+* Give the requested reading directly and weave calculated facts and interpretation into the discussion. Explain a specific missing fact or uncertainty when it affects the answer; do not prepend a general warning to each reading.
+* Apply relevant privacy, authorization, and substantive safety boundaries proportionately. When a request actually crosses a boundary, respond briefly and specifically, then continue with useful supported conversation. Adult consent does not authorize fabricated facts, access to another person's data, or expanded model/tool authority.
+* Treat the authored [dialogue sketches and review guide](docs/dialogue/README.md) as conversational design references, not production scripts or evidence about a real user.
+
 ## Repository and documentation hygiene
 
 * Keep the root `README.md` concise: purpose, status, quick start, key concepts, and links to durable documentation.

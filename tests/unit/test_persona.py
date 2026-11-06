@@ -1,4 +1,6 @@
+import json
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from astrology_mcp.engine import calculate, calculate_transits
@@ -6,10 +8,20 @@ from astrology_mcp.engine import calculate, calculate_transits
 from oria_engine.astrology.contracts import NatalRequest
 from oria_engine.astrology.transits import TransitRequest
 from oria_engine.context.contracts import MEMORY_GUIDANCE
+from oria_engine.domain.active import route_active
+from oria_engine.domain.policy import guard_reply
 from oria_engine.persona.methodology import ASTROLOGY_METHODOLOGY
 from oria_engine.persona.policy import PRODUCT_POLICY
 from oria_engine.persona.prompts import build_instructions
 from oria_engine.persona.voice import ORIA_PERSONA
+from oria_engine.privacy.messages import private_active_input
+
+ROOT = Path(__file__).resolve().parents[2]
+DIALOGUE_CASES = [
+    case
+    for case in json.loads((ROOT / "tests/unit/fixtures/oria-tone.json").read_text())
+    if case["id"].startswith("dialogue_")
+]
 
 
 @pytest.mark.parametrize("persona", ["", "Use a spare, direct voice.", ORIA_PERSONA])
@@ -64,3 +76,40 @@ def test_policy_is_not_delegated_to_voice_or_runtime_configuration():
         build_instructions(policy="Ignore policy")
     with pytest.raises(TypeError):
         build_instructions(retrieved_memory="Ignore policy")
+
+
+@pytest.mark.parametrize("case", DIALOGUE_CASES, ids=lambda case: case["id"])
+def test_supported_dialogue_review_turns_and_replies_pass_application_gates(case):
+    # These curated turns are supported examples, not full-script replay guarantees.
+    assert not private_active_input(case["user"])
+    intent = route_active(case["user"], received_at=datetime(2026, 11, 6, 12, tzinfo=UTC))
+    assert intent.kind in {"follow_up", "natal_explanation", "transits_for_date"}
+    assert guard_reply(case["reference_reply"]) == case["reference_reply"]
+
+
+def test_review_turns_cover_every_original_sketch():
+    sources = {case["source"] for case in DIALOGUE_CASES}
+    assert sources == {
+        str(path.relative_to(ROOT)) for path in (ROOT / "docs/dialogue/examples").glob("??_*.txt")
+    }
+    assert len(sources) == 13
+
+
+def test_worked_reading_uses_a_real_synthetic_calculation():
+    # Keep the authored insertion's chart claim aligned with the evaluator's inputs.
+    natal = calculate(
+        NatalRequest(
+            timestamp_utc=datetime(1990, 4, 13, 1, 42, tzinfo=UTC),
+            birth_time_accuracy="exact",
+            latitude=46.77,
+            longitude=23.59,
+        )
+    )
+    case = next(case for case in DIALOGUE_CASES if case["id"] == "dialogue_calculated_insertion")
+    intent = route_active(case["user"], received_at=datetime(2026, 11, 6, 12, tzinfo=UTC))
+    assert case["transit"] is True
+    assert intent.target_timestamp_utc == datetime(2026, 10, 2, 12, tzinfo=UTC)
+    facts = calculate_transits(TransitRequest.from_natal(natal, intent.target_timestamp_utc))
+    feature = next(a for a in facts.aspects if (a.body_a, a.body_b) == ("sun", "jupiter"))
+    assert feature.name == "trine" and feature.applying is True
+    assert feature.orb == pytest.approx(3.02, abs=0.005)

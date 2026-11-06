@@ -4,6 +4,7 @@ OriaEngine runs **Oria**, an AI astrology personality for private Telegram chats
 Users explicitly consent, create an encrypted birth profile, and receive
 interpretations of deterministic natal and transit calculations with conversational
 continuity through [SecondContext](https://github.com/bdobrica/SecondContext).
+The project showcases natural, ongoing conversations with consenting adults.
 
 **Status:** the demo pipeline, privacy commands, deletion, webhook ingress and
 Docker development stack are implemented. The [Stage 25 release gate](TODO.md#stage-25--mvp-release-gate)
@@ -92,6 +93,7 @@ and [deletion and retention](docs/deletion.md).
 | Versioned container images and Quay setup | [Image publishing](docs/image-publishing.md) |
 | Deploy published images with Compose | [Deployment](docs/deployment.md) |
 | Conversation dependency and policy | [SecondContext](docs/second-context.md), [worker pipeline](docs/conversation-worker.md) |
+| Adult conversation experience and authored examples | [Dialogue guide](docs/dialogue/README.md), [persona prompts](docs/persona-prompts.md) |
 | Logs, health, limits and recovery | [Operations](docs/operations.md), [abuse controls](docs/abuse-controls.md) |
 | Known gaps and live checks | [MVP limitations](docs/limitations.md) |
 | Implementation intent and remaining release work | [PLAN.md](PLAN.md), [TODO.md](TODO.md) |

@@ -76,7 +76,9 @@ natal chart, transits today, or a target date after completing onboarding.
 
 `uv run python scripts/evaluate_conversation.py` is an optional paid live review
 against the configured SecondContext. It uses only synthetic calculated facts and
-the Stage 14 questions, prints synthetic draft/guard results for human review, and
+the tone questions and short review turns from the [dialogue sketches](dialogue/README.md),
+prints synthetic draft/guard results for human review, and
 attempts authenticated cleanup of its disposable subjects. Local privacy/safety
 cases never call the model. No live provider is required for CI. See
 [Stage 16 evidence](evidence/stage-16.md) for verification and the reviewed sample.
+This evaluator reviews isolated turns, not complete multi-turn conversation replays.

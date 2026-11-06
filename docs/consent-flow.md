@@ -22,6 +22,13 @@ SecondContext and AI-provider processing, retained filtered messages/replies/con
 facts quoted in replies, limited filtering, blocked drafts and deletion limitations.
 See [conversation worker](conversation-worker.md).
 
+This thorough disclosure is the place for general policy explanation and affirmative
+adult agreement. After consent, ordinary dialogue should be free and natural, without
+recurring disclaimers or canned professional-support reminders. Respect adults' own
+judgment; explain a specific limitation only where it affects the actual request.
+The [dialogue guide](dialogue/README.md) describes that experience. This does not alter
+the disclosure, consent version, data uses or application authorization checks.
+
 Keep each deployed version associated with its disclosure in source history. Bump
 `ORIA_POLICY_VERSION` when the copy/data use changes and deploy consistently to all
 ingress processes. Changing copy without bumping the version does not invalidate

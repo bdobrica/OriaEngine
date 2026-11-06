@@ -6,9 +6,9 @@ there are no prompt files to mount, new dependencies, settings or migrations.
 
 | Layer | Responsibility |
 | --- | --- |
-| `policy.py`, `oria-policy-2` | AI identity, consent/application authority, privacy, no fabricated facts, high-stakes limits, ordinary career reflection and untrusted-input rules |
-| `methodology.py`, `oria-methodology-2` | Separate computed facts, interpretation and reflection; respect natal/transit availability and application-resolved relative targets |
-| `voice.py`, `oria-voice-1` | Calm warmth, plain language, concise structure and optional non-identifying follow-up |
+| `policy.py`, `oria-policy-3` | AI identity, consent/application authority, privacy, substantive safety limits, adult agency and untrusted-input rules |
+| `methodology.py`, `oria-methodology-3` | Weave relevant calculated readings into dialogue; separate facts and interpretation and respect availability and resolved targets |
+| `voice.py`, `oria-voice-2` | Natural adult conversation, specificity, acceptance of corrections, optional questions and user control of pace |
 
 Policy is immutable **to runtime inputs**: it is source-controlled `Final` text,
 not a request, settings, memory or persona field. Python constants and prompt wording
@@ -48,15 +48,31 @@ retention and scoping boundary.
 
 ## Tone review and verification
 
+OriaEngine's thorough policy disclosure and explicit adult agreement belong in the
+application consent flow. Ongoing dialogue should feel free and natural: answer the
+requested reading, respect adult judgment and avoid moralizing, unnecessary refusals,
+repeated disclaimers and canned professional-support reminders. A specific missing
+fact can be explained where it affects the answer. A substantive boundary remains
+brief and relevant to the actual request; it is not a reason to add routine warnings.
+
+The [dialogue review guide](dialogue/README.md) analyzes all thirteen authored sketches,
+identifies reading insertion points and includes a synthetic calculated example.
+It also records runtime routing/guard/continuity gaps that prompt changes cannot fix.
+Original scenes remain review artifacts; their consulting-room setting and background
+biographies do not become runtime instructions or evidence about a user.
+
 The [conversation fixtures](../tests/unit/fixtures/oria-tone.json) are authored,
 synthetic reference replies for natal reflection, unknown/approximate time, a transit
-snapshot, AI identity/privacy and a high-stakes boundary. Their illustrative facts
+snapshot, AI identity/privacy, a high-stakes boundary and a short turn from each new
+sketch. Their illustrative facts
 are not engine reference fixtures. Review voice changes against the same rubric:
 
-- answer directly with calm, plain language;
+- answer the immediate request with calm, specific, plain language;
 - distinguish supplied facts, traditional meaning and optional reflection;
 - put relevant uncertainty before interpretation;
-- preserve agency, with at most one non-identifying follow-up;
+- accept corrections, preserve adult agency and ask at most one non-identifying
+  follow-up, without requiring a question or an action plan in every reply;
+- bring requested readings into the conversation without recurring boilerplate;
 - use a short, warm boundary when a reading cannot answer the request.
 
 Examples are review artifacts, never injected into production requests. Automated

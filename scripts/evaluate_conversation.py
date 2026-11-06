@@ -55,7 +55,7 @@ async def main() -> None:
                 calculate_transits(
                     TransitRequest.from_natal(natal, datetime(2026, 10, 2, 12, tzinfo=UTC))
                 )
-                if fixture["id"] == "transit_snapshot"
+                if fixture.get("transit", fixture["id"] == "transit_snapshot")
                 else None
             )
             scope = ContextScope(user_id=uuid4(), session_id=uuid4())

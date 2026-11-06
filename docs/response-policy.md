@@ -29,7 +29,8 @@ as a zodiac sign remains allowed; common diagnostic phrases involving it do not.
 Ordinary career/work reflection is supported. The word `trade-offs` is not a
 financial transaction. A narrow vocabulary of verb phrases such as `address any
 challenges` is distinct from asking for a private address; other identifying
-terms and address requests elsewhere in the draft remain checked. The exact standalone application-owned reminder
+terms and address requests elsewhere in the draft remain checked. The existing
+exact standalone application-owned reminder
 “A friendly reminder: please use appropriate professional support for medical,
 legal or financial decisions.” is excluded from safety matching only; the rest
 of the draft is still checked in full. Unsafe claims before or after that sentence
@@ -37,6 +38,11 @@ remain blocked. The original reminder stays in the delivered reply. No arbitrary
 disclaimer, negation, quotation or category-wide exemption is allowed. Persona
 guidance answers ordinary career questions directly and avoids repeating onboarding
 disclosures; the original substantive high-stakes restrictions remain in force.
+The prompt no longer directs the model to emit that exact reminder. Its narrow
+guard allowance remains compatible with existing replies, rather than prescribing
+conversation copy. The thorough disclosure belongs in the explicit adult consent
+flow; ordinary conversation should respect adult judgment and avoid recurring
+warnings, unnecessary refusals and moralizing. See the [dialogue guide](dialogue/README.md).
 
 Matching normalizes Unicode compatibility forms, case, whitespace and invisible
 format characters. It conservatively blocks category mentions even in quotations,

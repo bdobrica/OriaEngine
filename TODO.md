@@ -1089,6 +1089,16 @@ These tasks should not block v0.1.
 - [ ] Additional aspect families.
 - [ ] Synastry with explicit consent/privacy model for every person's data.
 
+## Dialogue quality
+
+The [authored-sketch review](docs/dialogue/README.md) guides natural adult conversation
+after the existing thorough consent disclosure. Current voice prompts and isolated
+review turns are available; the following runtime and live validation work remains.
+
+- [ ] Distinguish ordinary narrative time mentions from transit/date requests while preserving supported explicit requests and clarification behavior.
+- [ ] Review benign narrative mentions caught by lexical guards; test request-versus-mention handling without category-wide exemptions or loss of substantive boundaries.
+- [ ] Verify multi-turn corrections, reading continuity and natural pacing through the owning SecondContext contract; do not assume stable sessions imply transcript replay or current transit facts.
+
 ## Product learning
 
 - [ ] Structured “was this useful?” feedback.
