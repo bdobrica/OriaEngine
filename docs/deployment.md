@@ -151,6 +151,36 @@ synthetic users before public use.
 
 ## Inspect and stop
 
+### Existing MVP server
+
+The existing MVP uses project `oria-live-test`, `deploy/.env` and
+`deploy/compose.full.yaml`. Despite the project name, this is the active Telegram
+deployment; do not start a second project for the same bot. Its application
+containers are `oria-live-test-gateway-1` and `oria-live-test-worker-1`; the
+remaining services support them. Restrict inspection and maintenance to this
+project on the shared host:
+
+```sh
+docker compose --env-file deploy/.env -p oria-live-test -f deploy/compose.full.yaml ps -a
+```
+
+After the selected images have been published, set their version/digest references
+privately in the existing env file and use the same project for upgrades:
+
+```sh
+make deploy-check DEPLOY_PROJECT=oria-live-test
+make deploy DEPLOY_PROJECT=oria-live-test
+```
+
+Local image tags cannot be pulled by `make deploy`. Check that publication has
+completed before replacing them with Quay references. Preserve the existing
+env file, encryption key, webhook registration and data volumes. Do not use
+host-wide container/image/volume pruning on this shared server. See the
+[November 6 deployment record](evidence/live-update-2026-11-06.md) for the last
+verified state and pending registry release.
+
+### General commands
+
 ```sh
 make deploy-logs
 make deploy-down
