@@ -43,6 +43,12 @@ If the authoritative sources are ambiguous or incomplete, prefer the change that
 * Apply relevant privacy, authorization, and substantive safety boundaries proportionately. When a request actually crosses a boundary, respond briefly and specifically, then continue with useful supported conversation. Adult consent does not authorize fabricated facts, access to another person's data, or expanded model/tool authority.
 * Treat the authored [dialogue sketches and review guide](docs/dialogue/README.md) as conversational design references, not production scripts or evidence about a real user.
 
+## Shared-host operations
+
+* This server also runs unrelated projects. Restrict container maintenance to explicitly identified Oria Compose projects; the active MVP project is `oria-live-test`.
+* Never use host-wide container, image, network or volume pruning for Oria cleanup. Preserve live storage and secrets; remove only identified disposable Oria resources.
+* Prefer published, versioned Quay images pinned by digest for the MVP. Follow [deployment instructions](docs/deployment.md) and verify publication before changing live image references.
+
 ## Repository and documentation hygiene
 
 * Keep the root `README.md` concise: purpose, status, quick start, key concepts, and links to durable documentation.

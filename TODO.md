@@ -1058,7 +1058,7 @@ Do not call the project MVP-complete until every item below passes.
 - [x] `make test-contract` passes.
 - [x] `make test-e2e` passes.
 - [x] `make verify` passes ([verification evidence](docs/evidence/relative-time-and-career.md)).
-- [ ] GitHub Actions invokes `make verify` successfully.
+- [x] GitHub Actions invokes `make verify` successfully ([0.1.1 release evidence](docs/evidence/live-update-2026-11-06.md)).
 
 ---
 

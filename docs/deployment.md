@@ -176,8 +176,8 @@ Local image tags cannot be pulled by `make deploy`. Check that publication has
 completed before replacing them with Quay references. Preserve the existing
 env file, encryption key, webhook registration and data volumes. Do not use
 host-wide container/image/volume pruning on this shared server. See the
-[November 6 deployment record](evidence/live-update-2026-11-06.md) for the last
-verified state and pending registry release.
+[November 6 deployment record](evidence/live-update-2026-11-06.md) for the
+verified `0.1.1` Quay deployment and pinned image digests.
 
 ### General commands
 
