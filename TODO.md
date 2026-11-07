@@ -26,6 +26,20 @@ live validation and backup/restore still belong to Stage 25.
 
 The stages are intentionally ordered so each stage leaves the repository in a testable state and provides the foundation required by the next stage. Avoid implementing post-MVP features until the MVP completion gate at the end of this document passes.
 
+## Current priority — compatibility conversations
+
+[PLAN section 6.1](PLAN.md#61-voluntary-sharing-and-compatibility) makes voluntary
+sharing and partner compatibility part of the intended MVP experience. This work
+belongs in the current implementation path, alongside the remaining release gate.
+Users are responsible for what they share; a separate partner signup or consent
+flow is not a prerequisite. Existing runtime restrictions are implementation gaps.
+
+- [ ] Recognize compatibility requests and supplied partner dates before privacy rejection or transit routing; distinguish them from saved-profile edits.
+- [ ] Update input/output guards and product prompts to accept voluntary personal context and relevant partner birth inputs without privacy lectures or `/edit_profile` redirects.
+- [ ] Add calculated compatibility facts through versioned MCP/context contracts, including honest birthday-only and missing-time/place behavior; support requested interpretive ratings without fabricated precision.
+- [ ] Keep any retained partner inputs/results in the requesting user's scope and deletion lifecycle; preserve raw-birth exclusion from SecondContext fact payloads and explicit semantic memory.
+- [ ] Update the versioned disclosure if the implemented data use changes, and verify compatibility questions, optional follow-ups, account isolation and deletion through regression tests.
+
 ```mermaid
 flowchart LR
     A[Scaffold] --> B[Identity + Consent]
@@ -1087,7 +1101,6 @@ These tasks should not block v0.1.
 - [ ] Progressions.
 - [ ] Declination feature family.
 - [ ] Additional aspect families.
-- [ ] Synastry with explicit consent/privacy model for every person's data.
 
 ## Dialogue quality
 

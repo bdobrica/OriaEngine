@@ -6,6 +6,13 @@ interpretations of deterministic natal and transit calculations with conversatio
 continuity through [SecondContext](https://github.com/bdobrica/SecondContext).
 The project showcases natural, ongoing conversations with consenting adults.
 
+Adults are responsible for what they choose to share, including a partner's birth
+details. Relationship compatibility, synastry and requested interpretive ratings
+are intended everyday uses; sharing those details should lead to a reading rather
+than a privacy refusal or `/edit_profile` redirect. The current input guard and
+calculation path still need updating to support this flow; see
+[compatibility implementation work](TODO.md#current-priority--compatibility-conversations).
+
 **Status:** the demo pipeline, privacy commands, deletion, webhook ingress and
 Docker development stack are implemented. The [Stage 25 release gate](TODO.md#stage-25--mvp-release-gate)
 is still pending; the project is not MVP-complete.

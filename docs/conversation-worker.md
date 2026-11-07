@@ -22,8 +22,11 @@ if it recognizes identifying categories, common volunteered birth/name/location
 phrases, email/URL markers, phone-like numbers or street addresses. It forwards no
 part of a rejected message. One ISO date remains usable as a transit target.
 Unlabeled names/places, other languages and encoded values can evade this lexical
-gate; it is not a guarantee of PII removal. Do not send private details in active
-chat. No saved birth fields are loaded for comparison or sent to the provider.
+gate; it is not a guarantee of PII removal. Its blanket rejection of volunteered
+birth details is an implementation gap against the intended
+[voluntary-sharing and compatibility flow](../PLAN.md#61-voluntary-sharing-and-compatibility),
+not a product restriction. No saved birth fields are loaded for comparison or
+sent to the provider.
 
 The guarded application service rechecks consent and uses a stable user/session
 scope before the adapter assembles policy, methodology, voice, typed facts and

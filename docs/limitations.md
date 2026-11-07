@@ -36,8 +36,11 @@ not completion of operator checks or proof of model safety/astrological predicti
   checks do not prove chart truth or model resistance to prompt injection.
 - Raw saved birth fields are excluded from SecondContext requests and explicit
   memory ingestion, but filtered active text and generated replies are retained
-  remotely. Blocked drafts can already be in upstream history. Users should avoid
-  sharing private details in active chat; local replacement does not erase history.
+  remotely. Blocked drafts can already be in upstream history; local replacement
+  does not erase history. Current guards still reject volunteered birth details
+  and the calculation path has no compatibility facts. These are implementation
+  gaps against the [intended compatibility flow](../PLAN.md#61-voluntary-sharing-and-compatibility),
+  not a prohibition on users sharing partner information for a reading.
 - [Worker retries](worker-queue.md) are bounded and durable. Ambiguous remote context
   calls and Telegram sends can duplicate effects. There is no remote exactly-once
   guarantee, and dead encrypted payloads are erased rather than replayable.

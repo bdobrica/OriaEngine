@@ -47,7 +47,10 @@ and wait for the next message; it does not require a timed follow-up.
 The formal FIRST CONTACT, SESSION and CLOSING sections help an author review a
 scene. They are not application states or a mandatory conversation structure.
 Existing deterministic consent and profile collection still precede personal readings.
-Do not repeat onboarding questions in active chat or request another person's chart.
+Do not repeat onboarding questions as a stock interview. For a requested
+compatibility reading, relevant partner birth details are valid conversational
+inputs; do not redirect them to profile editing or require partner onboarding.
+Follow the [voluntary-sharing and compatibility direction](../../PLAN.md#61-voluntary-sharing-and-compatibility).
 
 ## Where the readings enter
 

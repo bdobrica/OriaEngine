@@ -38,9 +38,12 @@ If the authoritative sources are ambiguous or incomplete, prefer the change that
 
 * OriaEngine is primarily a technology showcase for consenting adults. Preserve the thorough, versioned policy disclosure and explicit adult consent in the application flow.
 * After consent, keep dialogue as free, natural, and useful as possible. Trust adults to make their own decisions; avoid moralizing, paternalism, unnecessary refusals, and unsolicited protective coaching.
+* Users are responsible for what they voluntarily share with Oria, including information about other people. Volunteered personal context is not itself a reason to refuse, lecture, or redirect the conversation to profile editing.
+* Relationship compatibility and synastry, including requested interpretive ratings using a partner's supplied birth details, are ordinary supported product use cases. Do not require the partner to register, complete onboarding, or separately accept Oria's policy. Ask only for calculation inputs that help the requested reading; work with partial information when possible.
+* Distinguish calculation inputs shared in conversation from changes to the user's saved profile. A partner's birthday is not an instruction to edit that profile or a transit target. Keep shared information within the requesting user's scope and deletion lifecycle; never create access to another account's records.
 * Keep general AI/astrology disclosures in the consent, help, and privacy surfaces. Do not hardcode recurring disclaimers or professional-support reminders into ordinary conversation or example turns.
 * Give the requested reading directly and weave calculated facts and interpretation into the discussion. Explain a specific missing fact or uncertainty when it affects the answer; do not prepend a general warning to each reading.
-* Apply relevant privacy, authorization, and substantive safety boundaries proportionately. When a request actually crosses a boundary, respond briefly and specifically, then continue with useful supported conversation. Adult consent does not authorize fabricated facts, access to another person's data, or expanded model/tool authority.
+* Apply relevant privacy, authorization, and substantive safety boundaries proportionately. When a request actually crosses a boundary, respond briefly and specifically, then continue with useful supported conversation. Adult consent does not authorize fabricated facts, access to another account's private records, or expanded model/tool authority.
 * Treat the authored [dialogue sketches and review guide](docs/dialogue/README.md) as conversational design references, not production scripts or evidence about a real user.
 
 ## Shared-host operations

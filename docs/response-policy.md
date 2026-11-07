@@ -1,5 +1,16 @@
 # Response policy guard
 
+## Intended compatibility behavior
+
+Users are responsible for what they voluntarily share. Ordinary partner
+compatibility, supplied birth details and relevant calculation questions are
+supported product uses, without a separate partner signup/consent gate or privacy
+lecture. See [PLAN section 6.1](../PLAN.md#61-voluntary-sharing-and-compatibility).
+The current guard and prompt restrictions described below still need updating;
+they describe implementation behavior, not a product prohibition to preserve.
+
+## Current implementation
+
 `domain/policy.py` owns the English demo guard and the allowed onboarding field
 set. Deterministic onboarding projects only these fields into the strict birth
 schema: date, local time, accuracy, normalized place and repeated-time occurrence.

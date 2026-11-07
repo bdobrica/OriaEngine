@@ -76,6 +76,7 @@ The MVP includes:
 - encrypted persistent birth-profile storage in PostgreSQL;
 - deterministic natal-chart generation;
 - deterministic transit/aspect calculation for a requested date or the current date;
+- relationship compatibility and synastry from voluntarily supplied partner birth details, including requested interpretive ratings (implementation pending);
 - astrology calculation service in a separate Docker container using FastMCP;
 - Redis-backed job processing and temporary state;
 - per-user processing locks;
@@ -99,7 +100,6 @@ The first version will not include:
 - payments or subscriptions;
 - multiple AI personas;
 - voice or image interactions;
-- relationship/synastry profiles involving another person's birth data;
 - custom predictive machine-learning models;
 - learning astrological rules from user outcomes;
 - automated ingestion of medical, financial, employment, relationship, or other life-event datasets;
@@ -234,6 +234,7 @@ Typical supported requests include:
 - “What themes are active for me this week?”
 - “What are the important transits today?”
 - “How would you interpret this period for career reflection?”
+- “Rate my compatibility with my girlfriend. Her birthday is YYYY-MM-DD.”
 - “Why does this month feel unusually intense?”
 - “What should I pay attention to around this date?”
 
@@ -246,6 +247,45 @@ The response pipeline must distinguish three layers:
 Oria must never fabricate a chart value that was not supplied by the calculation service.
 
 If a required fact is unavailable, Oria should say so. For example, if birth time is unknown, she should explicitly note that houses or ascendant-based interpretations are unavailable or unreliable.
+
+### 6.1 Voluntary sharing and compatibility
+
+Consenting adults are responsible for what they choose to share with Oria,
+including personal context and birth information about a partner. Volunteering
+information is not, by itself, grounds for refusal or a privacy lecture. Oria
+should use relevant supplied information to answer the actual question naturally.
+The existing consent flow and user-controlled deletion remain the product's
+disclosure and data-control surfaces.
+
+Compatibility and synastry are ordinary astrology requests, not a prohibited
+third-person data category. They do not require the partner to create an account,
+complete onboarding, separately accept Oria's policy, or provide proof of permission
+to Oria. A compatibility rating, when requested, is an interpretive assessment
+whose basis comes from available calculated features, not a calibrated probability
+of relationship success or knowledge of the partner's private feelings.
+
+Partner birth details are calculation inputs within the requesting user's scope.
+They neither change the user's saved birth profile nor authorize reading another
+account's records. Route them to compatibility rather than `/edit_profile` or a
+transit-date request. Use a birthday-only reading where supported, invite optional
+time/place details when they add useful precision, and avoid making completeness
+a condition for all discussion. Missing inputs remain unknown; do not invent chart
+positions, houses, aspects or precision. The current engine's unknown-time mode
+does not calculate natal positions, so birthday-only facts require implementation
+work rather than an invented noon birth time.
+
+Keep raw birth inputs in the application calculation path and provide typed
+calculated features to SecondContext through versioned contracts. Do not promote
+raw inputs into explicit semantic memory. Any retained inputs and derived results
+belong to the requesting user's existing deletion lifecycle, including partner
+information supplied in that conversation. This uses the same ownership and
+deletion responsibilities rather than introducing a separate partner account.
+
+This is intended product behavior. The current lexical input/output guards,
+prompt restrictions, date router and natal/transit-only fact contracts do not yet
+implement it. Their rejection of ordinary compatibility requests is an
+implementation gap to fix, not a policy to preserve. See the
+[current compatibility tasks](TODO.md#current-priority--compatibility-conversations).
 
 ---
 
@@ -698,7 +738,7 @@ Outputs:
 
 - `calculate_solar_return`;
 - `calculate_progressions`;
-- `calculate_synastry` only after a separate privacy design exists.
+- `calculate_synastry` for the compatibility flow in section 6.1, with versioned inputs/results and the requesting user's scope and deletion lifecycle.
 
 ### Tool design rules
 
@@ -808,6 +848,7 @@ A small router can classify each active message into categories such as:
 - natal explanation;
 - current transit interpretation;
 - transit interpretation for a specified date;
+- compatibility/synastry using partner birth details, distinguished from profile edits and transit targets (planned);
 - follow-up on previous interpretation;
 - profile management;
 - privacy/help;
@@ -855,11 +896,11 @@ At minimum it states that Oria:
 - identifies herself as an AI astrology personality when relevant and never claims to be human;
 - does not present astrology as scientifically established fact;
 - does not fabricate computed chart values;
-- does not solicit PII outside the explicit onboarding/profile workflow;
+- may ask for relevant birth calculation inputs for a requested compatibility reading; saved-profile changes remain in the explicit profile workflow;
 - does not request legal name, phone number, email address, home address, employer, account identifiers, passwords, government IDs, payment details, or similar unrelated information;
 - does not make deterministic high-impact predictions;
 - does not provide medical diagnosis, legal advice, personalized investment instructions, or emergency guidance based on astrology;
-- does not treat another person's private data as available merely because the current user mentions them;
+- accepts information the user voluntarily supplies about another person for the requested reading, without accessing another account's private records;
 - communicates uncertainty when birth time or calculation data is incomplete;
 - obeys deletion and consent state before persona goals.
 
@@ -884,7 +925,7 @@ Oria's persona can define:
 - preferred answer structure;
 - recurring stylistic motifs;
 - how she handles uncertainty;
-- how she asks follow-up questions that are not PII collection.
+- how she asks useful follow-up questions, including relevant calculation inputs for the requested reading.
 
 Persona iteration should not require changes to safety policy or domain code.
 
@@ -917,7 +958,13 @@ This should be enforced through multiple layers rather than only a system prompt
 7. logs never contain raw birth-profile payloads;
 8. profile data is not embedded into semantic/vector memory.
 
-Users can still voluntarily type information that was not requested. When that happens, Oria should avoid repeating or soliciting more of it, and the system should avoid promoting obviously unnecessary sensitive values into structured long-term memory where practical.
+Users are responsible for information they voluntarily share. Receiving personal
+context should not trigger a blanket refusal, lecture or profile-edit redirect.
+Relevant partner birth inputs may be requested for a compatibility reading under
+section 6.1; they are not unrelated PII or a saved-profile edit. The system should
+avoid promoting unnecessary sensitive values into structured long-term memory.
+Input and output guards should distinguish useful voluntary sharing and relevant
+calculation questions from unsolicited collection of unrelated identifiers.
 
 ---
 
@@ -1466,7 +1513,6 @@ After v0.1 validates the interaction model, possible extensions include:
 - scheduled opt-in daily/weekly readings;
 - controlled outbound messages with explicit notification consent;
 - richer astrology MCP feature families;
-- relationship/synastry mode with a separate consent/privacy model;
 - user-selectable Oria tone/intensity;
 - structured feedback on whether interpretations were useful;
 - prospective prediction experiments with locked timestamps and proper baselines;
