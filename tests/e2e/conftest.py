@@ -54,7 +54,7 @@ async def replay(database, infrastructure, astrology_container):
             redis_url=infrastructure[1],
             telegram_bot_token=token,
             telegram_webhook_secret=secret,
-            oria_policy_version="2026-11-08.3",
+            oria_policy_version="2026-11-08.4",
             profile_encryption_key=base64.b64encode(AESGCM.generate_key(bit_length=256)).decode(),
             second_context_base_url=context_url,
             second_context_bearer_token=context.stub.token,

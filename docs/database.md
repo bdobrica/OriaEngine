@@ -123,3 +123,13 @@ See [the test harness](testing.md) for dependency lifecycle and the replay lane.
 
 The async migration setup follows the
 [Alembic asyncio recipe](https://alembic.sqlalchemy.org/en/latest/cookbook.html#using-asyncio-with-alembic).
+
+
+## Linked context delivery
+
+Migration `0012` adds `context_projection_work`: owner-scoped encrypted desired
+projections, source revision metadata and payload-free retry/acknowledgement state.
+See [linked context](linked-context.md) for ordering, selective erasure, consent and
+account-purge behavior. SecondContext owns its separate migration/indexes; Oria never
+reads that database. A downgrade discards local delivery work and cannot erase or
+restore remote records; finish pending cleanup before a controlled rollback.

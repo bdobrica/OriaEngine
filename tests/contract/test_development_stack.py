@@ -159,7 +159,7 @@ def test_development_stack(tmp_path, published_images):
             "-Atc",
             "SELECT version_num FROM alembic_version",
         )
-        assert schema == "0011"
+        assert schema == "0012"
         address = compose("port", "gateway", "8001")
         assert address.startswith("127.0.0.1:")
         with httpx.Client(base_url=f"http://{address}", trust_env=False, timeout=5) as client:

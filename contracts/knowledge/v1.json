@@ -588,6 +588,66 @@
       }
     ]
   },
+  "capabilities": {
+    "additionalProperties": false,
+    "properties": {
+      "contract_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Contract Version",
+        "type": "integer"
+      },
+      "history_coverage": {
+        "const": "linked_sessions",
+        "title": "History Coverage",
+        "type": "string"
+      },
+      "implementation": {
+        "const": "linked-context-1",
+        "title": "Implementation",
+        "type": "string"
+      },
+      "index": {
+        "const": "postgres",
+        "title": "Index",
+        "type": "string"
+      },
+      "status": {
+        "const": "ready",
+        "title": "Status",
+        "type": "string"
+      },
+      "user": {
+        "pattern": "^(?:[a-z][a-z0-9_-]{0,31}:)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$",
+        "title": "User",
+        "type": "string"
+      }
+    },
+    "required": [
+      "user",
+      "implementation",
+      "history_coverage",
+      "index",
+      "status"
+    ],
+    "title": "ProjectionCapabilities",
+    "type": "object"
+  },
+  "capabilities_request": {
+    "additionalProperties": false,
+    "properties": {
+      "user": {
+        "pattern": "^(?:[a-z][a-z0-9_-]{0,31}:)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$",
+        "title": "User",
+        "type": "string"
+      }
+    },
+    "required": [
+      "user"
+    ],
+    "title": "ProjectionCapabilitiesRequest",
+    "type": "object"
+  },
   "projection_matches": {
     "$defs": {
       "ContextProjection": {
@@ -1129,5 +1189,5 @@
       }
     ]
   },
-  "status": "candidate; not enabled or supported by the current service"
+  "status": "v1; optional linked-context-1 service capability required"
 }

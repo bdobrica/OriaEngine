@@ -16,6 +16,16 @@ from oria_engine.context.contracts import (
     ConversationRequest,
     MemoryKind,
 )
+from oria_engine.knowledge.contracts import (
+    ProjectionCapabilities,
+    ProjectionDelete,
+    ProjectionMatches,
+    ProjectionQuery,
+    ProjectionReceipt,
+    ProjectionUpsert,
+    validate_matches,
+    validate_receipt,
+)
 from oria_engine.observability import observed
 from oria_engine.persona.prompts import build_instructions
 
@@ -57,6 +67,7 @@ class SecondContextProvider:
         transport: httpx.AsyncBaseTransport | None = None,
         timeout: float = 20,
     ) -> None:
+        self.knowledge_enabled = settings.second_context_knowledge_enabled
         self.timeout = timeout
         self.namespace = settings.second_context_subject_namespace
         token = settings.second_context_bearer_token.get_secret_value()
@@ -122,6 +133,10 @@ class SecondContextProvider:
                 "goal": request.goal,
             },
         }
+        if request.knowledge_refs:
+            payload["knowledge_refs"] = [
+                ref.model_dump(mode="json") for ref in request.knowledge_refs
+            ]
         data = await self._post("v1/responses", payload)
         try:
             result = _Response.model_validate_json(data)
@@ -172,3 +187,31 @@ class SecondContextProvider:
                 raise ValueError()
         except (ValidationError, ValueError):
             raise ContextUnavailable("Invalid subject purge response") from None
+
+    async def projection_capabilities(self, user_id: UUID) -> None:
+        data = await self._post("v1/knowledge/capabilities", {"user": self.subject(user_id)})
+
+        try:
+            result = ProjectionCapabilities.model_validate_json(data)
+            if result.user != self.subject(user_id):
+                raise ValueError()
+        except ValueError:
+            raise ContextUnavailable("Linked context capability unavailable") from None
+
+    async def project(self, request: ProjectionUpsert | ProjectionDelete) -> None:
+        data = await self._post(
+            f"v1/knowledge/{request.operation}", request.model_dump(mode="json")
+        )
+        try:
+            validate_receipt(request, ProjectionReceipt.model_validate_json(data))
+        except ValueError:
+            raise ContextUnavailable("Invalid projection acknowledgement") from None
+
+    async def query_projections(self, request: ProjectionQuery) -> ProjectionMatches:
+        data = await self._post("v1/knowledge/query", request.model_dump(mode="json"))
+        try:
+            result = ProjectionMatches.model_validate_json(data)
+            validate_matches(request, result)
+            return result
+        except ValueError:
+            raise ContextUnavailable("Invalid linked context response") from None

@@ -477,9 +477,22 @@ class KnowledgeConversation:
         ):
             return "This request was already processed; no additional records were removed."
         count = await self.repository.erase(user_id, saved.ref)
+        from oria_engine.db.projections import ProjectionRepository
+
+        pending = any(
+            row.deleted and row.pending
+            for row in await ProjectionRepository(
+                self.session, self.encryption, self.policy_version
+            ).rows(user_id)
+        )
         return (
             f"Removed {count} saved record(s) from your private profile. "
-            "Prior chat/provider copies have separate retention; "
+            + (
+                "SecondContext removal is queued and will retry until acknowledged. "
+                if pending
+                else ""
+            )
+            + "Prior chat/provider copies have separate retention; "
             "/delete_me removes the account history."
         )
 

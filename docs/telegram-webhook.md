@@ -36,7 +36,7 @@ sequenceDiagram
    existing queue supports one bot per database.
 2. Configure secrets privately through the deployment environment. Use
    `APP_ENV=production`, explicit service URLs, `TELEGRAM_BOT_TOKEN`,
-   `PROFILE_ENCRYPTION_KEY`, `ORIA_POLICY_VERSION=2026-11-08.3` (or your current
+   `PROFILE_ENCRYPTION_KEY`, `ORIA_POLICY_VERSION=2026-11-08.4` (or your current
    custom version), `TELEGRAM_WEBHOOK_BASE_URL=https://bot.example.com` and a random
    `TELEGRAM_WEBHOOK_SECRET`. The secret accepts 1–256 letters, digits, `_` or `-`;
    prefer at least 32 random bytes encoded as URL-safe text. Do not put values in

@@ -1,6 +1,6 @@
-"""Candidate knowledge v1 DTOs, not authorization, migrations or live endpoints.
+"""Versioned knowledge DTOs; schemas are never authorization.
 
-Canonical payloads stay in Oria. Only explicit projection DTOs may cross the future
+Canonical payloads stay in Oria. Only explicit projection DTOs may cross the scoped
 SecondContext boundary. Subject/owner selection always comes from authenticated code.
 """
 
@@ -193,6 +193,19 @@ class ContextProjection(WireModel):
         return self
 
 
+class ProjectionCapabilitiesRequest(WireModel):
+    user: Subject
+
+
+class ProjectionCapabilities(WireModel):
+    contract_version: Literal[1] = 1
+    user: Subject
+    implementation: Literal["linked-context-1"]
+    history_coverage: Literal["linked_sessions"]
+    index: Literal["postgres"]
+    status: Literal["ready"]
+
+
 class ProjectionUpsert(WireModel):
     contract_version: Literal[1] = 1
     operation: Literal["upsert"] = "upsert"
@@ -278,7 +291,9 @@ ProjectionRequest = Annotated[
 
 def schema_document() -> dict[str, object]:
     return {
-        "status": "candidate; not enabled or supported by the current service",
+        "status": "v1; optional linked-context-1 service capability required",
+        "capabilities_request": ProjectionCapabilitiesRequest.model_json_schema(),
+        "capabilities": ProjectionCapabilities.model_json_schema(),
         "canonical": TypeAdapter(CanonicalRecord).json_schema(),
         "projection_request": TypeAdapter(ProjectionRequest).json_schema(),
         "projection_receipt": ProjectionReceipt.model_json_schema(),

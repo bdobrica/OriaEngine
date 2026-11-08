@@ -318,3 +318,34 @@ class DeletionJob(Base):
     next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     attempts: Mapped[int] = mapped_column(default=0)
     failure_code: Mapped[str | None] = mapped_column(String(32))
+
+
+class ContextProjectionWork(Base):
+    """Encrypted desired state, replacing obsolete payloads; no raw values in retry state."""
+
+    __tablename__ = "context_projection_work"
+    __table_args__ = (
+        CheckConstraint("kind IN ('entity','event','reading')", name="kind"),
+        CheckConstraint("revision > 0 AND attempts >= 0", name="positive_revision"),
+        CheckConstraint(
+            "(deleted AND encrypted_payload IS NULL AND encryption_key_version IS NULL) OR "
+            "(NOT deleted AND encrypted_payload IS NOT NULL "
+            "AND octet_length(encrypted_payload) >= 29 "
+            "AND encryption_key_version IS NOT NULL)",
+            name="lifecycle",
+        ),
+    )
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(16))
+    revision: Mapped[int]
+    operation_id: Mapped[UUID]
+    encrypted_payload: Mapped[bytes | None]
+    encryption_key_version: Mapped[str | None] = mapped_column(String(64))
+    deleted: Mapped[bool]
+    pending: Mapped[bool]
+    attempts: Mapped[int] = mapped_column(default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

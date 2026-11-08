@@ -8,7 +8,7 @@ PII is a refusal category. General disclosures stay in consent/help/privacy.
 
 ## Runtime behavior
 
-`persona/policy.py` (`oria-policy-6`) and `methodology.py`
+`persona/policy.py` (`oria-policy-7`) and `methodology.py`
 (`oria-methodology-5`) distinguish actual harmful behavior, unsupported factual
 claims and relevant conversation. They also state current capabilities: natal and
 snapshot transit facts and local encrypted event/entity learning/CRUD. Remote
@@ -55,9 +55,10 @@ and [current disclosure](consent-flow.md).
 ## Contracts and limitations
 
 [ADR 0002](adr/0002-private-life-events-and-context-projections.md) defines ownership
-for the planned event/entity extension. Its [candidate contracts](../contracts/knowledge/v1.md)
-are typed and tested; canonical storage is [implemented locally](private-memory.md),
-while new HTTP routes and remote projection ingestion remain disabled. Existing
+for events/entities and optional [linked context](linked-context.md). Its
+[versioned contracts](../contracts/knowledge/v1.md) govern typed projections while
+canonical storage stays [local and encrypted](private-memory.md). Remote use needs
+verified capability, explicit enablement and current expanded disclosure. Existing
 [SecondContext v1](../contracts/second-context/v1.md) request shapes, subject scope,
 fixed memory ingestion and account purge remain compatible.
 

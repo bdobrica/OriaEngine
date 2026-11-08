@@ -16,6 +16,7 @@ from redis.asyncio import Redis
 
 from oria_engine.astrology.client import FastMCPAstrologyClient
 from oria_engine.config import ConfigurationError, Settings, load_settings
+from oria_engine.context.projections import recover_projections
 from oria_engine.context.second_context import SecondContextProvider
 from oria_engine.context.service import ConversationContext
 from oria_engine.db.session import Database
@@ -76,6 +77,9 @@ async def recover(settings: Settings, publisher: Publisher) -> None:
         await DeletionWorker(
             database, redis, ProfileEncryption(settings), context, TelegramChannelClient(bot)
         ).recover()
+        await recover_projections(
+            database, ProfileEncryption(settings), settings.oria_policy_version, context
+        )
         for identifier in await recoverable(database):
             await asyncio.to_thread(publisher.send, str(identifier))
     finally:
@@ -100,9 +104,10 @@ def run(settings: Settings, *, health_file: Path | None = None) -> None:
         "2026-10-03.2",
         "2026-11-08.1",
         "2026-11-08.2",
+        "2026-11-08.3",
     }:
         raise ConfigurationError(
-            "Set ORIA_POLICY_VERSION=2026-11-08.3 for the private event/entity memory disclosure"
+            "Set ORIA_POLICY_VERSION=2026-11-08.4 for the linked memory disclosure"
         )
     resolver = LocalPlaceResolver()
     if health_file is not None:

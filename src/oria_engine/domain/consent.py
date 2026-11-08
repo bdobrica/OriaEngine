@@ -16,77 +16,60 @@ from oria_engine.observability import count
 if TYPE_CHECKING:
     from oria_engine.domain.onboarding import OnboardingFlow
 
-# Collection disclosure uses the configured policy version (default 2026-11-08.3).
+# Collection disclosure uses the configured policy version (default 2026-11-08.4).
 # Change the configured version whenever the disclosure/data use changes.
 DISCLAIMER = (
-    "Hi — I'm Oria, an AI astrology personality for adults. Astrology is "
-    "interpretive, not a scientifically established forecast. My responses "
-    "are not medical, legal, financial or other professional advice.\n"
-    "\n"
-    "After you agree, OriaEngine encrypts your birth date, "
-    "exact/approximate/unknown time and birthplace for chart calculations. "
-    "You are responsible for what you voluntarily share about yourself, "
-    "people, pets, organizations and possessions. Oria is responsible for "
-    "secure storage, account isolation and the controls below.\n"
-    "\n"
-    "With an active profile, clearly disclosed meaningful events and "
-    "entities can be learned from bounded English conversation without a "
-    "separate save command. Labels, aliases, relationships, event "
-    "participants, supplied dates/times/places and source/date-resolution "
-    "provenance are encrypted locally. Unknown dates and times stay "
-    "unknown. Saved events can resolve later date references locally. Your "
-    "own birth remains in its confirmed profile, with revision references "
-    "rather than duplicate birth fields. Examples, hypotheticals and "
-    "recognized “don't remember this” requests do not create saved events. "
-    "Extraction is limited: inspect or correct anything misunderstood. A "
-    "save or change is acknowledged only with the application operation.\n"
-    "\n"
-    "Use /profile for confirmed birth details, unfinished edits, chart "
-    "status and consent. /edit_profile corrects your own birth details "
-    "after consent; selecting a birthplace sets coordinates/timezone. "
-    "/memories lists saved events/entities; ask what I remember, correct "
-    "an event or say “forget …”. Inspection and removal remain available "
-    "without current consent. Entity removal can also remove linked "
-    "events; I ask if the cascade is unclear. Forgotten UUIDs and "
-    "payload-free operation receipts prevent replay. Selective removal "
-    "covers local saved records and pending clarification, not earlier "
-    "conversation/provider copies. SecondContext event projections and "
-    "remote selective erasure are not available yet. “Don't remember” "
-    "prevents additional profile-memory writes; it does not create a "
-    "private chat mode.\n"
-    "\n"
-    "/privacy shows this policy and Decline withdraws consent. Declining "
-    "stops learning, readings and setup, and clears pending questions; "
-    "previously saved data remains. /delete_me (or /delete-me) opens "
-    "confirmed account deletion. Processing stops on confirmation; cleanup "
-    "retries until Oria and SecondContext acknowledge it. Profiles, "
-    "events/entities, consent, sessions, conversations/memories and the "
-    "Telegram identity mapping are erased from active stores. Minimal "
-    "deletion markers and unlinked update receipts remain. An encrypted "
-    "reply address lasts up to 24 hours after cleanup for the final "
-    "notice. /help lists commands.\n"
-    "\n"
-    "We store internal identity, Telegram routing IDs, consent decisions, "
-    "encrypted unfinished setup and private derived chart facts. Queued "
-    "messages and replies are encrypted temporarily and erased on "
-    "completion/final failure; unfinished payloads expire after 24 hours, "
-    "erased when workers next run. Before consent, ordinary free text is "
-    "discarded; explicit inspection/erasure requests and bounded pending "
-    "answers use this temporary queue. Queue metadata remains. Encrypted "
-    "date/record-selection questions and conversation focus expire 24 "
-    "hours from their reference message and clear on withdrawal.\n"
-    "\n"
-    "Active readings use SecondContext and its AI provider. Filtered chat, "
-    "replies and retrieved context are retained there; volunteered context "
-    "may appear. Obvious secrets and recognized birth "
-    "clauses/continuations are held locally; filtering is limited. Raw "
-    "saved birth profiles and onboarding messages are not sent there. "
-    "Calculated facts can be quoted in retained replies; even a blocked "
-    "draft may be retained. Local memory controls do not call that "
-    "provider. Backups, AI-provider retention and Telegram history have "
-    "separate lifecycles.\n"
-    "\n"
-    "By choosing “I'm 18+ and agree”, you confirm you are at least 18 and "
+    "Hi — I'm Oria, an AI astrology personality for adults. Astrology is interpreti"
+    "ve, not a scientifically established forecast. My responses are not medical, l"
+    "egal, financial or other professional advice.\n\nAfter agreement, Oria encrypts "
+    "your birth date, exact/approximate/unknown time and birthplace for chart calcu"
+    "lations. You are responsible for what you voluntarily share about yourself, pe"
+    "ople, pets, organizations and possessions. Oria is responsible for secure stor"
+    "age, account isolation and user controls.\n\nWith an active profile, clearly dis"
+    "closed meaningful events and entities can be learned from bounded English conv"
+    "ersation without a command. Labels, aliases, relationships, participants, supp"
+    "lied dates/times/places and source/date-resolution provenance are encrypted lo"
+    "cally. Unknown dates/times stay unknown. Saved events can resolve later date r"
+    "eferences. Your own birth uses the confirmed profile rather than duplicate fie"
+    "lds. Examples, hypotheticals and recognized “don't remember this” requests do "
+    "not create additional profile or interpretation memories. Inspect or correct m"
+    "isunderstandings.\n\nWhen linked memory is enabled, SecondContext also receives "
+    "bounded entity labels/relationships, event types, participant links, record UU"
+    "IDs/revisions, topic tags, user-stated significance and filtered prior interpr"
+    "etation summaries. Canonical dates/times/places, raw birth inputs, aliases and"
+    " source messages are not projected. Ranking is heuristic; house-topic tags are"
+    " themes, not calculated placements or proven correlations. Recall checks curre"
+    "nt references; outages can delay it.\n\nUse /profile for birth details, chart st"
+    "atus and consent; /edit_profile confirms own-birth corrections. /memories list"
+    "s saved context; ask what I remember, correct an event or say “forget …”. Insp"
+    "ection and removal remain available without current consent. Entity removal ca"
+    "n include linked events; I ask if unclear. Selective removal erases local reco"
+    "rds and queues linked SecondContext summaries and entire linked conversation s"
+    "essions, including drafts/context packets. It stays pending until acknowledged"
+    ". Independent earlier chat/provider copies have separate retention. Minimal UU"
+    "ID/revision fences and payload-free operation receipts prevent replay. “Don't "
+    "remember” is not a private-chat mode.\n\n/privacy shows this policy; Decline wit"
+    "hdraws consent, stops learning/readings/setup and clears pending questions. Sa"
+    "ved data remains; erasure retries. /delete_me opens confirmed account deletion"
+    ". Processing stops on confirmation; cleanup retries until Oria and SecondConte"
+    "xt acknowledge it. Profiles, events/entities, projections, consent, sessions, "
+    "conversations/memories and Telegram identity are erased from active stores. Mi"
+    "nimal deletion markers and unlinked update receipts remain. An encrypted reply"
+    " address lasts up to 24 hours after cleanup for the final notice. /help lists "
+    "commands.\n\nWe store internal identity, Telegram routing IDs, consent, encrypte"
+    "d unfinished setup and derived chart facts. Queued messages/replies are encryp"
+    "ted and erased on completion/final failure; unfinished payloads expire after 2"
+    "4 hours, erased by workers. Before consent ordinary free text is discarded; ex"
+    "plicit inspection/erasure requests and bounded pending answers use this queue."
+    " Queue metadata remains. Encrypted date/record questions and focus expire 24 h"
+    "ours from their reference message and clear on withdrawal.\n\nReadings use Secon"
+    "dContext and its AI provider. Filtered chat, replies and retrieved context are"
+    " retained there; volunteered context may appear. Obvious secrets and recognize"
+    "d birth clauses/continuations are held locally; filtering is limited. Raw save"
+    "d birth profiles and onboarding messages are not sent there. Calculated facts "
+    "can appear in retained replies; even blocked drafts may be retained. Backups, "
+    "retired indexes, AI-provider retention and Telegram history have separate life"
+    "cycles.\n\nBy choosing “I'm 18+ and agree”, you confirm you are at least 18 and "
     "consent to this data use.\n"
 )
 ACCEPTED_TEXT = (
@@ -193,6 +176,26 @@ class ConsentFlow:
                 session, self.onboarding.encryption, self.policy_version
             ).controls(user_id, message, command)
             if memory_reply is not None:
+                from oria_engine.context.projections import LinkedContext
+                from oria_engine.context.second_context import SecondContextProvider
+                from oria_engine.domain.memory import directive
+
+                request = directive(message.text)
+                context = self.onboarding.context
+                if (
+                    context is not None
+                    and isinstance(context.provider, SecondContextProvider)
+                    and context.provider.knowledge_enabled
+                    and (command in {"memory", "memories"} or request and request.action == "read")
+                ):
+                    linked = LinkedContext(
+                        session, self.onboarding.encryption, self.policy_version, context.provider
+                    )
+                    recalled = await linked.inspect(user_id, message.text)
+                    if recalled and len((memory_reply + recalled).encode("utf-16-le")) // 2 < 4050:
+                        memory_reply += "\n\n" + recalled
+                    if any(row.pending and row.deleted for row in await linked.repo.rows(user_id)):
+                        memory_reply += "\nSecondContext removal is still pending."
                 return ConsentReply(state, memory_reply)
         if command == "profile" and self.onboarding is not None:
             return await self.onboarding.inspect_profile(session, user_id)

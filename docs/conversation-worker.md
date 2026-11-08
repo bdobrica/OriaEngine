@@ -5,12 +5,16 @@ into the existing consent/onboarding flow. The job owns and closes the HTTP clie
 All consent, profile, queue, locking and delivery invariants in
 [worker queue](worker-queue.md) still apply. Migration `0010` adds encrypted temporary
 date clarification. There are no new dependencies, model tools or live wire-schema
-changes. Canonical events/entities are encrypted locally under migration 0011; [memory controls](private-memory.md) run without model authority. Candidate remote projection routes remain inactive.
+changes for the legacy lane. Canonical events/entities use migration 0011 and
+[memory controls](private-memory.md) without model authority. Migration 0012 adds
+optional [linked context](linked-context.md) and encrypted durable projection work;
+recovery retries selective erasure after withdrawal/disablement.
 
 After consent, a confirmed profile with a current derived cache permits active
 chat. Onboarding, callbacks and profile/privacy commands remain deterministic and
-never reach SecondContext. Active chat uses the scoped cache without decrypting
-the birth profile, except explicit own-birth anchors resolved locally. Follow-ups
+do not use model generation. Optional memory inspection can query linked context. Active chat uses the scoped cache without decrypting
+the birth profile, except locally resolved own-birth anchors and optional
+interpretation filtering against known birth places. Follow-ups
 include current natal facts; date/current-transit
 requests additionally calculate transit facts. Missing transit facts cannot be
 reconstructed from memory. Relative targets use the explicit current timezone
@@ -69,7 +73,7 @@ contract extension. See the [consumer contract](../contracts/second-context/v1.m
 
 ## Demo setup
 
-Use `ORIA_POLICY_VERSION=2026-11-08.3` consistently in polling and workers. Bump custom
+Use `ORIA_POLICY_VERSION=2026-11-08.4` consistently in polling and workers. Bump custom
 policy versions as well. Existing users must accept the new disclosure. It describes
 voluntary personal context, user/storage responsibilities, birth-clause withholding,
 temporary date clarification and local own-birthday access,

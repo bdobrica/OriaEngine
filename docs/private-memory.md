@@ -2,9 +2,9 @@
 
 Migration `0011` implements the local canonical-memory slice of the
 [conversation plan](conversation-memory-plan.md), under [ADR 0002](adr/0002-private-life-events-and-context-projections.md).
-It does not enable SecondContext knowledge endpoints, semantic projections, salience,
-synastry or event-chart calculations. Apply migrations and use consent version
-`2026-11-08.3` consistently before collecting this expanded data. Custom policy
+Migration `0012` adds optional [SecondContext linked memory](linked-context.md),
+without enabling synastry or event-chart calculations. Apply migrations and use consent version
+`2026-11-08.4` consistently before collecting this expanded data. Custom policy
 versions must also change. No live deployment is implied by the source change.
 
 ## Conversation
@@ -60,15 +60,15 @@ It does not import old transcripts, authored sketches or model-generated claims.
 
 Memory controls run locally. A separate explicit reading request can continue after
 a save; only the prepared request goes to the existing provider. The local save
-receipt is composed by the application. No arbitrary canonical payload, record ID,
-raw birth input or new memory projection is added to that API. Existing non-birth
+receipt is composed by the application. The optional linked-context adapter sends only its defined summaries/references;
+raw birth inputs and arbitrary canonical payloads stay local. Existing non-birth
 resolved date context remains governed by the [time reference](current-time.md).
 
 ## Storage and authority
 
 `KnowledgeRepository` uses the caller's transaction and authenticated owner UUID.
-The candidate [canonical v1 DTOs](../contracts/knowledge/v1.md) validate local records;
-they still do not authorize remote routes. No model extraction or write tool is enabled.
+The [canonical v1 DTOs](../contracts/knowledge/v1.md) validate local records;
+DTOs alone never authorize remote routes. No model extraction or write tool is enabled.
 
 | Table | Content |
 | --- | --- |
@@ -117,8 +117,9 @@ not obsolete private payloads. It does not rewrite a prior human conversation.
 
 Earlier independent chat, provider drafts, Telegram history, backups and retired
 copies have separate lifecycles. A local removal receipt says so; it never claims
-remote selective erasure. SecondContext knowledge ingestion stays disabled until
-slice 4's owning-service lifecycle is accepted, implemented and tested. Existing
+remote selective erasure. Optional SecondContext ingestion requires the verified lifecycle and disclosure
+described in [linked context](linked-context.md). Its queued erasure remains pending
+until acknowledged and includes whole linked remote sessions. Existing
 [account deletion](deletion.md) erases every new local table and still waits for
 validated full-subject remote purge before completion.
 

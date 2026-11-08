@@ -4,7 +4,7 @@
 
 OriaEngine is the application runtime for **Oria**, an AI astrology personality that lives inside messaging and social platforms and maintains an ongoing relationship with each user.
 
-The first MVP will run as a **Telegram bot**. Users explicitly consent to the disclosed data use, create a persistent birth profile, and ask for personalized astrological interpretations and conversational insights. The intended next extension learns meaningful volunteered life events and entities, understands natural time expressions, and maintains user-controlled memory; see the [design and staged delivery plan](docs/conversation-memory-plan.md). Natural dates and local encrypted event/entity memory are implemented; remote projections, salience and linked calculations remain planned.
+The first MVP will run as a **Telegram bot**. Users explicitly consent to the disclosed data use, create a persistent birth profile, and ask for personalized astrological interpretations and conversational insights. The intended next extension learns meaningful volunteered life events and entities, understands natural time expressions, and maintains user-controlled memory; see the [design and staged delivery plan](docs/conversation-memory-plan.md). Natural dates and local encrypted event/entity memory are implemented; optional SecondContext projections/salience are implemented; linked calculations remain planned.
 
 OriaEngine is intended to build on the ideas and infrastructure of [SecondContext](https://github.com/bdobrica/SecondContext): persistent user-scoped context, structured memory, retrieval, and conversation continuity. OriaEngine adds the channel integration, consent/profile state machine, privacy boundary, astrology calculation service, and Oria-specific policy/persona layer.
 
@@ -77,7 +77,7 @@ The MVP includes:
 - deterministic natal-chart generation;
 - deterministic transit/aspect calculation for a requested date or the current date;
 - relationship compatibility and synastry from voluntarily supplied partner birth details, including requested interpretive ratings (implementation pending);
-- bounded natural relative/mixed/event-anchored dates and temporary clarification; encrypted local event/entity memory supports conversational learning/CRUD; SecondContext salience remains planned (see section 6.2);
+- bounded natural relative/mixed/event-anchored dates and temporary clarification; encrypted local event/entity memory supports conversational learning/CRUD; optional SecondContext salience is implemented (see section 6.2);
 - astrology calculation service in a separate Docker container using FastMCP;
 - Redis-backed job processing and temporary state;
 - per-user processing locks;
@@ -133,12 +133,11 @@ The disclosure is versioned. The user must explicitly choose an **Agree** action
 Current disclosure source:
 
 [Consent copy](src/oria_engine/domain/consent.py) and [consent-flow reference](docs/consent-flow.md)
-use version `2026-11-08.3` for voluntary context and local encrypted event/entity
-learning, aliases/relationships, conversational inspection/correction/removal, opt-out,
-24-hour progress and existing transcript retention. [Private memory](docs/private-memory.md)
-describes implementation limits and own-birth profile references. Remote event
-projections/selective erasure remain unavailable; new remote data use needs another
-accurate versioned disclosure. AI identity, truthful interpretation, account isolation
+use version `2026-11-08.4` for voluntary context and local encrypted event/entity learning plus optional linked summaries, significance,
+interpretations and selective SecondContext cleanup, with opt-out and retention limits. [Private memory](docs/private-memory.md)
+describes implementation limits and own-birth profile references. [Linked context](docs/linked-context.md)
+implements optional remote summaries, salience and selective linked-session erasure
+under the current expanded disclosure. AI identity, truthful interpretation, account isolation
 and affirmative adult consent remain invariants.
 
 If the user sends birth information before accepting, OriaEngine must not persist it as profile data. It should restate the consent requirement and ask the user to accept or decline.
@@ -326,12 +325,13 @@ placements and correlations require calculated evidence. Implement via the
 [ordered current-priority slices](TODO.md#current-priority--natural-time-and-life-event-memory),
 with a versioned disclosure before enabling expanded data use. Local canonical
 storage and bounded conversational controls are now implemented in [private memory](docs/private-memory.md).
-The fixed SecondContext memory kinds do not implement event projections; its new
-lifecycle and salience remain slice 4. [Candidate typed contracts](contracts/knowledge/v1.md)
-and ADR 0002 preserve that ownership boundary.
+Optional [linked context](docs/linked-context.md) implements SecondContext
+projections, salience and interpretation memory through the [typed contract](contracts/knowledge/v1.md).
+ADR 0002 preserves the ownership boundary.
 Slice 2 now implements [bounded natural-time routing](docs/current-time.md), typed
 precision/roles and encrypted 24-hour clarification anchored to original ingress.
-Own-birth anchors remain local. Event/entity CRUD and retrieval remain the next slices.
+Own-birth anchors remain local. Canonical CRUD and linked recall are implemented;
+linked astrology and coordinated release remain.
 
 ---
 
@@ -817,10 +817,9 @@ A conversation request should be user-scoped and include:
 
 Birth date, exact birth time, and birthplace should not be promoted into general SecondContext semantic memories.
 
-Oria now owns local canonical encrypted event/entity records. SecondContext
-salience and linked interpretations remain planned. Its current fixed-memory
-contract needs versioned projection, retrieval, correction and selective erasure
-support in the owning repository first. See [section 6.2](#62-natural-time-life-events-and-entities)
+Oria owns local canonical encrypted event/entity records. Optional SecondContext
+salience and linked interpretations use the verified versioned lifecycle and durable
+reconciliation described in [linked context](docs/linked-context.md). See [section 6.2](#62-natural-time-life-events-and-entities)
 and the [lifecycle design](docs/conversation-memory-plan.md#salience-and-linked-interpretation-in-secondcontext).
 
 SecondContext is appropriate for memories such as:
@@ -901,7 +900,7 @@ A small router can classify each active message into categories such as:
 - current transit interpretation;
 - transit interpretation for a specified date;
 - compatibility/synastry using partner birth details, distinguished from profile edits and transit targets (planned);
-- learn/recall/correct/remove local life events and entities through bounded English controls, with separate temporal roles and application-validated mutations; linked remote projections remain planned;
+- learn/recall/correct/remove local life events and entities through bounded English controls, with separate temporal roles and application-validated mutations; optional linked remote projections follow the scoped lifecycle;
 - follow-up on previous interpretation;
 - profile management;
 - privacy/help;
@@ -1004,7 +1003,7 @@ questions under the disclosed data use. Oria avoids unnecessary identifier
 collection while securely remembering meaningful user context. Personal data alone
 is not a refusal trigger. The updated behavioral guards permit this discussion; local canonical event-memory
 storage and bounded conversational extraction are implemented in [private memory](docs/private-memory.md).
-Remote projection lifecycle and linked calculations remain planned.
+Optional remote projection lifecycle is implemented; linked calculations remain planned.
 
 This should be enforced through multiple layers rather than only a system prompt:
 
@@ -1177,7 +1176,7 @@ Starts the deterministic edit state machine. Updating any calculation-relevant f
 The current source disclosure covers automatic local learning, sharing responsibility,
 secure storage, isolation, local lookup/correction/removal and separate transcript
 retention. See section 6.2 and [private memory](docs/private-memory.md). Existing
-users must accept version 2026-11-08.3 before collection. Remote projections and
+users must accept version 2026-11-08.4 before collection. Remote projections and
 salience still need owning-service implementation and accurate expanded disclosure.
 
 Explains:

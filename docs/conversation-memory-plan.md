@@ -1,11 +1,10 @@
 # Natural time, entities and life-event memory
 
-Status: the adult-dialogue policy and Oria-side candidate contract foundation are
-implemented, along with bounded natural-time extraction and encrypted clarification.
-Local encrypted event/entity memory is implemented; remote lifecycle integration remains planned. See [implemented private memory](private-memory.md).
-[ADR 0002](adr/0002-private-life-events-and-context-projections.md)
-records ownership; [candidate contracts](../contracts/knowledge/v1.md) are not live
-SecondContext routes. No deployment is implied. Track delivery
+Status: policy, bounded natural time, local encrypted memory and optional
+[SecondContext linked context](linked-context.md) are implemented. Linked calculated
+readings and coordinated release remain. [ADR 0002](adr/0002-private-life-events-and-context-projections.md)
+and the [versioned contracts](../contracts/knowledge/v1.md) preserve ownership.
+No deployment is implied. Track delivery
 in [TODO](../TODO.md#current-priority--natural-time-and-life-event-memory).
 
 ## Conversation policy
@@ -106,7 +105,8 @@ the engine's 1800–2399 calculation range on otherwise valid historical events.
 
 Extend the user's private profile with related records, preserving the existing
 strict natal-profile schema and its explicit edit workflow. Logical
-records below describe the design; [private memory](private-memory.md) identifies the implemented local subset and limits. Derived readings and projection work remain planned.
+records below describe the design; [private memory](private-memory.md) identifies the implemented local subset and limits. [Linked context](linked-context.md) adds
+optional interpretation projections and durable work; linked calculated features remain planned.
 An own-birth event should reference the canonical natal-profile revision rather
 than create a second, independently editable source for the user's birth inputs.
 Conversational corrections to other events must not silently mutate that profile.
@@ -162,9 +162,9 @@ disclosed context under the accepted data use, with correction and opt-out contr
 
 Oria owns canonical user-supplied entities/events. SecondContext owns its scoped
 context and salience projections. Extend its authenticated versioned HTTP contract
-in the owning repository; never write its database or Qdrant from Oria. Existing
-v1 only admits enumerated fixed memory phrases and subject-wide purge. It does
-not yet supply the projection lifecycle required here.
+in the owning repository; never write its database or Qdrant from Oria. The legacy
+v1 subset admits fixed memory phrases and subject-wide purge; the optional
+[linked-context lane](linked-context.md) now adds the projection lifecycle.
 
 Project the minimum useful labels, stable entity/event references and revisions,
 user-stated significance, topics and derived interpretation summaries. Keep raw
@@ -253,7 +253,7 @@ No change to live images or unrelated host containers is part of this plan.
 | 1. Policy and contracts | Implemented Oria policy/guard foundation, candidate typed temporal/event/entity and projection contracts, ADR 0002 and versioned voluntary-chat disclosure | Synthetic benign/harmful cases and consumer contracts checked; no event storage enabled; proposed lifecycle still needs acceptance/implementation by SecondContext before slice 4 ingestion |
 | 2. Natural-time routing | Implemented bounded English/Gregorian parsing, typed date roles/precision and encrypted 24-hour clarification; local own-birth, same-message and supplied anchors | Design examples, multiple dates, leap days, DST, retries and missing timezone checked; no partner birthday routed to own-profile edit or transit by default; historical event recall awaits slices 3–4; see [current behavior](current-time.md) |
 | 3. Private profile memory | Implemented encrypted entities/events, provenance and bounded conversational learning/CRUD; see [private memory](private-memory.md) | Restart, owner isolation, aliases, correction, deduplication, withdrawal/deletion races and “don't remember” verified; no false save acknowledgements |
-| 4. Context continuity | Revisioned SecondContext projections, salience, linked retrieval and reconciliation | Real owning-service contract tests for upsert, stale writes, selective erasure and full purge; dependency outages cannot resurrect forgotten records |
+| 4. Context continuity | Implemented optional [linked context](linked-context.md): revisioned projections, salience, interpretations, bounded linked retrieval and encrypted reconciliation | Owning-service HTTP tests cover revision/idempotency fences, selective linked-session erasure and full purge; rollout requires migrations, compatible release, explicit switch and disclosure 2026-11-08.4 |
 | 5. Linked astrology | Birthday-only support, synastry/event calculations and house-topic retrieval, with versioned facts | Synthetic birth/partner/wedding reading uses actual supplied calculations; no invented times, houses, correlations or precision; corrections invalidate dependent readings |
 | 6. Release | Updated consent copy/version, review fixtures, full verification and published images | Existing users accept expanded data use before new storage starts; multi-turn review and end-to-end lifecycle pass; deploy only identified Oria services after publication |
 

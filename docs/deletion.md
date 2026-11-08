@@ -3,8 +3,9 @@
 [Local life-event/entity memory](private-memory.md) is included in account erasure:
 records, provenance, links, mutation receipts and temporary progress are removed.
 Local conversational removal is available separately; it does not erase independent
-remote transcripts. SecondContext record-scoped erasure remains a slice 4 prerequisite
-for event projections, and full-subject purge is never substituted for that feature.
+remote transcripts. [Linked SecondContext memory](linked-context.md) has record-scoped erasure of
+projections/dependents and whole linked sessions. Pending work never claims remote
+completion; full-subject purge remains the separate account erasure operation.
 
 `/delete_me` and `/delete-me` open the same deterministic confirmation flow, including
 before consent or after withdrawal. The first command changes no profile or consent.
@@ -45,7 +46,7 @@ Stopped workers resume cleanup on restart. Database failures leave progress dura
 
 The local step removes encrypted birth profiles, derived charts, encrypted drafts,
 consent history, canonical events/entities and their provenance/receipts,
-temporary date/record clarification and conversation-session mappings, and wipes
+temporary date/record clarification, encrypted projection work and conversation-session mappings, and wipes
 inbound/reply ciphertext.
 The subject purge uses the existing [SecondContext v1 contract](../contracts/second-context/v1.md).
 Only its validated subject-specific completion acknowledgement advances the job.
@@ -87,7 +88,7 @@ deletion. A subsequent `/start` creates a fresh UUID and requires fresh consent.
 
 ## Demo setup and verification
 
-Run `make migrate`, set `ORIA_POLICY_VERSION=2026-11-08.3` (bump custom versions too),
+Run `make migrate`, set `ORIA_POLICY_VERSION=2026-11-08.4` (bump custom versions too),
 and restart polling and workers consistently. Existing accepted users re-consent for
 chat, but deletion itself requires no consent. Keep encryption keys available until
 pending final notifications have been delivered or expired.

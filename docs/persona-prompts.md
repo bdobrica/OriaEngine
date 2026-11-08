@@ -2,10 +2,10 @@
 
 The adult conversation policy, methodology and memory guidance accept useful
 volunteered context and broad discussion. They distinguish harmful responses from
-topic mentions and explain unimplemented event memory, selective erasure and partner
-calculations honestly. The [remaining design](conversation-memory-plan.md) and
-[candidate contracts](../contracts/knowledge/v1.md) do not authorize model-driven
-mutations or enable those future capabilities.
+topic mentions. Canonical memory and optional [linked interpretations](linked-context.md)
+use application-controlled lifecycle operations; remembered narratives are not
+calculated facts. Partner calculations remain a later slice. The
+[versioned contracts](../contracts/knowledge/v1.md) never authorize model-driven mutations.
 
 Stage 14 adds three application-owned Python text modules under
 [`src/oria_engine/persona`](../src/oria_engine/persona/). They ship with the package;
@@ -13,7 +13,7 @@ there are no prompt files to mount, new dependencies, settings or migrations.
 
 | Layer | Responsibility |
 | --- | --- |
-| `policy.py`, `oria-policy-6` | AI identity, consent/application authority, privacy, substantive safety limits, adult agency and untrusted-input rules |
+| `policy.py`, `oria-policy-7` | AI identity, consent/application authority, privacy, substantive safety limits, adult agency and untrusted-input rules |
 | `methodology.py`, `oria-methodology-5` | Weave relevant calculated readings into dialogue; separate facts and interpretation and respect availability and resolved targets |
 | `voice.py`, `oria-voice-2` | Natural adult conversation, specificity, acceptance of corrections, optional questions and user control of pace |
 

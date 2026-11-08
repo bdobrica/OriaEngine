@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from oria_engine.astrology.client import AstrologyClient, AstrologyUnavailable
 from oria_engine.context.contracts import ConversationRequest
+from oria_engine.context.projections import LinkedContext
+from oria_engine.context.second_context import SecondContextProvider
 from oria_engine.context.service import ConversationContext
 from oria_engine.db.astrology_profiles import AstrologyProfileRepository
 from oria_engine.db.birth_profiles import BirthProfileRepository, ConsentRequiredError
@@ -21,7 +23,7 @@ from oria_engine.domain.channel import ChannelButton, ChannelMessage
 from oria_engine.domain.consent import ConsentReply
 from oria_engine.domain.consent import OnboardingState as State
 from oria_engine.domain.knowledge import KnowledgeConversation, source_id
-from oria_engine.domain.memory import requested_follow_up
+from oria_engine.domain.memory import NO_REMEMBER, requested_follow_up
 from oria_engine.domain.onboarding_data import OnboardingDraft, parse_birth_date, parse_birth_time
 from oria_engine.domain.places import PlaceResolutionUnavailable, PlaceResolver, TooManyPlaces
 from oria_engine.domain.policy import PRIVACY_REPLY
@@ -365,6 +367,25 @@ class OnboardingFlow:
                                 )
                             turn = replace(turn, selected=dialogue.selected_record or turn.selected)
                             memory_reply = await knowledge.learn(user_id, turn, dialogue)
+                            if (
+                                self.context is not None
+                                and isinstance(self.context.provider, SecondContextProvider)
+                                and self.context.provider.knowledge_enabled
+                                and not NO_REMEMBER.search(dialogue.text)
+                            ):
+                                linked = LinkedContext(
+                                    session,
+                                    self.encryption,
+                                    self.policy_version,
+                                    self.context.provider,
+                                )
+                                await linked.stage(user_id)
+                                await linked.observe(
+                                    user_id,
+                                    dialogue.text,
+                                    dialogue.operation_source or source_id(user_id, message),
+                                )
+
                             if memory_reply is not None:
                                 follow_up = requested_follow_up(dialogue.text)
                                 if not follow_up or not memory_reply.startswith(
@@ -420,6 +441,9 @@ class OnboardingFlow:
                                     if dialogue is not None
                                     else message.received_at,
                                 ),
+                                encryption=self.encryption,
+                                memory_text=dialogue.text if dialogue else message.text,
+                                operation_id=source_id(user_id, message),
                             )
                             text = response.text
                             if memory_receipt:

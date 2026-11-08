@@ -70,7 +70,8 @@ def test_compatibility_goal_is_preserved_without_fabricated_facts():
 def test_disclosure_fits_telegram_and_describes_current_capabilities():
     assert len(("Policy " + "v" * 64 + "\n\n" + DISCLAIMER).encode("utf-16-le")) // 2 <= 4096
     assert "You are responsible" in DISCLAIMER
-    assert "remote selective erasure are not available yet" in DISCLAIMER
+    assert "It stays pending until acknowledged" in DISCLAIMER
+    assert "entire linked conversation sessions" in DISCLAIMER
     assert "provenance are encrypted locally" in DISCLAIMER
     assert "Inspection and removal remain available" in DISCLAIMER
     assert "do not include identifying" not in DISCLAIMER

@@ -17,6 +17,7 @@ from oria_engine.db.models import (
     AstrologyProfile,
     BirthProfile,
     Consent,
+    ContextProjectionWork,
     ConversationSession,
     DeletionJob,
     InboundEvent,
@@ -98,6 +99,7 @@ async def assert_local_erased(worker, user_id, *, completed):
             AstrologyProfile,
             OnboardingProgress,
             TemporalClarification,
+            ContextProjectionWork,
             KnowledgeDialogue,
             KnowledgeChange,
             KnowledgeLink,
@@ -146,6 +148,22 @@ async def test_complete_deletion_http_purge_replay_and_fresh_account(deletion):
     async with worker.database.transaction() as session:
         assert (
             await session.scalar(select(KnowledgeRecord).where(KnowledgeRecord.user_id == user_id))
+            is not None
+        )
+        from oria_engine.db.knowledge import KnowledgeRepository
+        from oria_engine.db.projections import ProjectionRepository
+        from oria_engine.domain.projections import canonical_projection
+
+        canonical = await KnowledgeRepository(
+            session, worker.encryption, worker.flow.policy_version
+        ).list(user_id)
+        await ProjectionRepository(session, worker.encryption, worker.flow.policy_version).put(
+            user_id, canonical_projection(canonical[0])
+        )
+        assert (
+            await session.scalar(
+                select(ContextProjectionWork).where(ContextProjectionWork.user_id == user_id)
+            )
             is not None
         )
         assert await session.get(KnowledgeDialogue, user_id) is not None

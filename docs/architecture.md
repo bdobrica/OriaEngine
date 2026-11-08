@@ -8,8 +8,9 @@ This document records existing behavior without introducing a new architectural 
 
 [Local private memory](private-memory.md) adds canonical encrypted event/entity
 records, scoped links and conversational controls under ADR 0002. SecondContext
-salience projections remain planned and disabled pending owning-service lifecycle
-support. Existing published interfaces and storage ownership remain unchanged.
+salience/interpretation projections use the optional [linked-context lane](linked-context.md),
+with durable Oria delivery work and owning-service selective erasure. Existing v1
+clients remain compatible; storage ownership remains unchanged.
 
 ```mermaid
 flowchart TD

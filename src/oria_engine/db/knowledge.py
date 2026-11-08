@@ -206,6 +206,12 @@ class KnowledgeRepository:
                     dependencies.add(anchor.id)
         if row.revision is not None and isinstance(record, EventRecord):
             await self._invalidate(user_id, record.id)
+        if row.revision is not None:
+            from oria_engine.db.projections import ProjectionRepository
+
+            await ProjectionRepository(
+                self.session, self.encryption, self.policy_version
+            ).invalidate(user_id, {record.id}, erase=False)
         row.revision = record.revision
         row.encrypted_payload = self.encryption.encrypt_event(
             record.model_dump_json(),
@@ -235,6 +241,14 @@ class KnowledgeRepository:
             )
         )
         await self.session.flush()
+        from oria_engine.db.models import ContextProjectionWork
+        from oria_engine.db.projections import ProjectionRepository
+        from oria_engine.domain.projections import canonical_projection
+
+        if await self.session.get(ContextProjectionWork, (user_id, record.id)) is not None:
+            await ProjectionRepository(self.session, self.encryption, self.policy_version).put(
+                user_id, canonical_projection(SavedRecord(record))
+            )
         return SavedRecord(record)
 
     async def dependents(self, user_id: UUID, record_id: UUID) -> set[UUID]:
@@ -281,6 +295,20 @@ class KnowledgeRepository:
     async def invalidate_profile(self, user_id: UUID, profile_id: UUID) -> None:
         """Own-birth events are virtual profile references, never duplicated inputs."""
         await self.lock(user_id, write=True)
+        from oria_engine.db.projections import ProjectionRepository
+
+        await ProjectionRepository(self.session, self.encryption, self.policy_version).invalidate(
+            user_id, {profile_id}, erase=False
+        )
+        from oria_engine.db.models import ContextProjectionWork
+        from oria_engine.domain.projections import canonical_projection
+
+        if await self.session.get(ContextProjectionWork, (user_id, profile_id)) is not None:
+            own = await self.own_birth(user_id)
+            if own is not None:
+                await ProjectionRepository(self.session, self.encryption, self.policy_version).put(
+                    user_id, canonical_projection(own)
+                )
         for saved in await self.list(user_id):
             record = saved.record
             if (
@@ -300,6 +328,11 @@ class KnowledgeRepository:
         if saved is None:
             raise KnowledgeConflict("Stale or unavailable record")
         ids = {ref.id, *await self.dependents(user_id, ref.id)}
+        from oria_engine.db.projections import ProjectionRepository
+
+        await ProjectionRepository(self.session, self.encryption, self.policy_version).invalidate(
+            user_id, ids, erase=True
+        )
         now = datetime.now(UTC)
         for id in ids:
             row = await self._row(user_id, id)

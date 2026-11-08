@@ -1,11 +1,11 @@
 # SecondContext adapter
 
-The [planned event/entity extension](conversation-memory-plan.md#salience-and-linked-interpretation-in-secondcontext)
-uses SecondContext for linked salience and interpretations, with encrypted
-canonical events/entities in Oria. Its [candidate schemas and consumer requirements](../contracts/knowledge/v1.md)
-define revision-aware projections and selective erasure for the owning service. The existing fixed memories
-and subject-wide purge below do not implement that lifecycle; do not use arbitrary
-memory text or direct database access to bypass the contract.
+Optional [linked context](linked-context.md) uses SecondContext for salience and
+interpretations while canonical encrypted events/entities stay in Oria. The
+[versioned projection lifecycle](../contracts/knowledge/v1.md) adds verified
+capability, revision-aware delivery, linked retrieval and selective erasure.
+The fixed memories and subject purge below remain separate compatible APIs; do
+not bypass them with arbitrary memory text or direct database access.
 
 The Stage 12 foundation provides `ContextProvider`, the HTTP implementation
 `SecondContextProvider`, `ConversationContext` consent fencing, and stable
@@ -81,7 +81,7 @@ The adapter supports [active routing and transit facts](transits-and-routing.md)
 The polling/worker demo calls this adapter for eligible active chat and
 [confirmed, durable account deletion](deletion.md) across Oria and SecondContext.
 
-The updated disclosure uses policy version `2026-11-08.3`; deploy it consistently and
+The updated disclosure uses policy version `2026-11-08.4`; deploy it consistently and
 bump custom versions before enabling conversation storage. It describes actual
 SecondContext retention and deletion controls, including the minimal deletion marker.
 
@@ -92,3 +92,14 @@ Oria's verification gate does not run that sibling repository's suite.
 No real OpenAI/Telegram calls or operator database changes are required.
 Run `make test-contract` for adapter tests,
 `make test-integration` for Oria's database tests, and `make verify` for the full gate.
+
+## Optional linked life-event memory
+
+[Linked context](linked-context.md) adds a separate `linked-context-1` projection
+lane, migration 000004 in SecondContext and 0012 in Oria. It is disabled by default;
+existing published images do not gain the capability from this source change.
+After a compatible release, use `SECOND_CONTEXT_KNOWLEDGE_ENABLED=true`, scoped
+service authentication and disclosure 2026-11-08.4. The owning-service contract
+adds only explicit knowledge upsert/query/delete/capabilities routes and optional
+`knowledge_refs` on responses. Legacy response, fixed-memory and purge behavior
+remain compatible. Selective cleanup retries after withdrawal/disablement.
