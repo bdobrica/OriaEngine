@@ -28,6 +28,10 @@ not completion of operator checks or proof of model safety/astrological predicti
 
 ## Conversation, privacy and reliability
 
+- Natural mixed/event-anchored dates, automatic life-event/entity learning,
+  conversational event CRUD and SecondContext salience are planned, not implemented.
+  Current birth-only schemas, fixed memory kinds and lexical topic restrictions
+  need coordinated changes; see the [design and delivery sequence](conversation-memory-plan.md).
 - Telegram private text and supported callbacks are the current channel surface.
   Groups, media and other update types are ignored. Use one bot per database and
   one polling process per bot.

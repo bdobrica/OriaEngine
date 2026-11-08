@@ -6,6 +6,11 @@ This reference describes the demo implementation. Versioned [Telegram ingress](.
 and [operator telemetry](../contracts/operations/v1.md) define their respective boundaries.
 This document records existing behavior without introducing a new architectural decision.
 
+The [planned life-event/entity extension](conversation-memory-plan.md) adds
+canonical encrypted knowledge records in Oria and linked salience projections in
+SecondContext. It requires new schemas and versioned lifecycle contracts; the
+ownership and published interfaces described here remain the current baseline.
+
 ```mermaid
 flowchart TD
     T[Telegram Bot API] --> P[Development polling / aiogram]

@@ -4,7 +4,7 @@
 
 OriaEngine is the application runtime for **Oria**, an AI astrology personality that lives inside messaging and social platforms and maintains an ongoing relationship with each user.
 
-The first MVP will run as a **Telegram bot**. Users will be able to start a private conversation with Oria, explicitly consent to the collection and use of the minimum birth information required for astrological calculations, create a persistent birth profile, and ask for personalized astrological interpretations and reflective guidance.
+The first MVP will run as a **Telegram bot**. Users explicitly consent to the disclosed data use, create a persistent birth profile, and ask for personalized astrological interpretations and conversational insights. The intended next extension learns meaningful volunteered life events and entities, understands natural time expressions, and maintains user-controlled memory; see the [design and staged delivery plan](docs/conversation-memory-plan.md). This extension is not implemented yet.
 
 OriaEngine is intended to build on the ideas and infrastructure of [SecondContext](https://github.com/bdobrica/SecondContext): persistent user-scoped context, structured memory, retrieval, and conversation continuity. OriaEngine adds the channel integration, consent/profile state machine, privacy boundary, astrology calculation service, and Oria-specific policy/persona layer.
 
@@ -16,20 +16,20 @@ The MVP is not intended to establish astrology as scientifically validated or ca
 
 The first product hypothesis is:
 
-> A persistent AI astrology personality that remembers a user's chart and prior conversations can create a more useful and engaging experience than a stateless astrology chatbot, while collecting only the information needed to perform the calculations and keeping that information under explicit user control.
+> A persistent AI astrology personality that remembers a user's chart, meaningful life events and prior conversations can create a more useful experience than a stateless chatbot, while keeping shared information private and under the user's control.
 
 The MVP should demonstrate that the system can:
 
 1. receive and reply to private Telegram messages;
 2. obtain explicit, versioned user consent before collecting birth data;
-3. collect only the birth information required for the astrology calculation engine;
+3. collect the birth inputs needed for calculations and learn meaningful voluntarily shared context under the disclosed data use;
 4. normalize that information into a mathematically usable birth instant and location;
 5. persist the user's private profile securely in PostgreSQL;
 6. call a deterministic astrology calculation service exposed through FastMCP;
 7. build and persist a derived natal profile;
-8. use SecondContext for conversational continuity and non-sensitive long-term context;
+8. use SecondContext for user-scoped continuity, event/entity salience and linked interpretations, with canonical private records in Oria;
 9. generate answers in Oria's stable personality while grounding chart claims in calculated data;
-10. prevent Oria from soliciting unrelated personally identifiable information;
+10. ask relevant questions without unnecessary identifier collection, and securely manage voluntarily shared information;
 11. provide privacy, profile editing, consent withdrawal, and deletion controls;
 12. run locally and in CI through simple Makefile workflows.
 
@@ -77,6 +77,7 @@ The MVP includes:
 - deterministic natal-chart generation;
 - deterministic transit/aspect calculation for a requested date or the current date;
 - relationship compatibility and synastry from voluntarily supplied partner birth details, including requested interpretive ratings (implementation pending);
+- natural relative/mixed/event-anchored dates, encrypted life-event and entity memory with conversational retrieval/update/deletion, and SecondContext salience (planned; see section 6.2);
 - astrology calculation service in a separate Docker container using FastMCP;
 - Redis-backed job processing and temporary state;
 - per-user processing locks;
@@ -102,8 +103,8 @@ The first version will not include:
 - voice or image interactions;
 - custom predictive machine-learning models;
 - learning astrological rules from user outcomes;
-- automated ingestion of medical, financial, employment, relationship, or other life-event datasets;
-- medical, legal, financial, diagnostic, or other high-stakes advice;
+- automated external/bulk ingestion of life-event datasets (ordinary user-disclosed events are in scope);
+- presenting astrology as a medical diagnosis, reliable professional determination or instruction for harmful action (discussion of these topics remains supported);
 - deterministic claims about death, illness, pregnancy, accidents, criminal behavior, financial ruin, or definite relationship outcomes.
 
 These can be considered after the core interaction, privacy model, and calculation pipeline have been validated.
@@ -116,7 +117,7 @@ These can be considered after the core interaction, privacy model, and calculati
 
 A first-time user opens a private Telegram chat and sends `/start` or any message.
 
-OriaEngine does **not** immediately ask for birth data. The user first receives a concise disclosure explaining:
+OriaEngine does **not** immediately ask for birth data. The implemented birth-profile baseline first presents a disclosure covering the following; the planned expansion is described below:
 
 - Oria is an AI astrology personality;
 - astrology is interpretive and should not be treated as factual or scientific prediction;
@@ -133,7 +134,7 @@ A starting disclosure can be:
 
 > Hi — I’m Oria, an AI astrology personality. If you want a personalized reading, I need your birth date, birth time (exact, approximate, or unknown), and birthplace (normally city and country) so I can calculate your chart. If you continue, OriaEngine will store those details for future conversations. I won’t ask you for unrelated identifying information such as your legal name, email, phone number, home address, employer, passwords, government IDs, or payment details. You can inspect, correct, or delete your stored profile at any time. Astrology is an interpretive practice, not a scientifically established forecasting method, and my responses should not be used as medical, legal, financial, or other high-stakes professional advice. The MVP is intended for adults. Do you agree and want to continue?
 
-The exact wording is product copy and can be iterated, but the data categories, AI disclosure, purpose, storage, user controls, high-stakes limitation, and affirmative-consent requirement are product invariants.
+This is the birth-profile baseline disclosure, not approved copy for the planned event-memory extension. Expand and version it before enabling new learning/storage: explain volunteered PII, entities/events, SecondContext projections, user responsibility for sharing and Oria's security/control responsibilities. Do not reuse the old birth-only wording as authorization for expanded storage. AI disclosure, honest interpretation, described data uses, user controls and affirmative adult consent remain invariants; ordinary discussion is not restricted by topic.
 
 If the user sends birth information before accepting, OriaEngine must not persist it as profile data. It should restate the consent requirement and ask the user to accept or decline.
 
@@ -215,8 +216,8 @@ and displayed by `/profile`. It is independent of birthplace, remains local to
 Oria and is cleared during account deletion. Relative requests use recorded
 message arrival time and deterministic resolution; see [current time](docs/current-time.md).
 Ordinary career/work reflection receives a direct interpretation without repeated
-onboarding disclaimers. A professional-support reminder does not authorize
-high-stakes predictions or advice.
+onboarding disclaimers. Sensitive subjects remain open to useful conversation;
+assess actual harmful behavior and unsupported claims rather than keywords.
 
 The thorough versioned disclosure and explicit adult agreement belong in the consent
 flow. Afterwards, Oria should feel free and natural: trust adults' judgment, give the
@@ -286,6 +287,39 @@ prompt restrictions, date router and natal/transit-only fact contracts do not ye
 implement it. Their rejection of ordinary compatibility requests is an
 implementation gap to fix, not a policy to preserve. See the
 [current compatibility tasks](TODO.md#current-priority--compatibility-conversations).
+
+### 6.2 Natural time, life events and entities
+
+Users normally express time conversationally: “in two hours”, “this day last year”,
+“May 1st, last year” or “a week before my birthday”. Treat absolute, relative,
+mixed and event-anchored expressions as first-class inputs. Resolve using the
+persisted message clock and explicit timezone/anchor context; preserve date-only,
+partial and approximate precision. A volunteered date does not automatically
+request a transit or change the user's birth profile.
+
+Learn meaningful user-disclosed events about the user and other entities: people,
+pets, businesses/non-profits and possessions. Births, weddings, purchases, adoption,
+job changes, founding a business and parents' divorce all belong in the user's
+private event history. The user is responsible for sharing; Oria is responsible
+for secure storage, account isolation, useful recall and requested correction or
+deletion. Automatic learning within the accepted data use should not require
+repeated permission prompts. Respect no-retention requests and do not convert
+hypotheticals into facts.
+
+Extend the private profile with encrypted owner-scoped records, not arbitrary new
+fields in the natal schema. Keep canonical events/entities in Oria; project linked
+salience and derived interpretations to SecondContext through versioned contracts.
+Relevant discussions should retrieve these links and current authorized records.
+Corrections invalidate dependent resolutions/calculations; deletion prevents stale
+memory from returning. Raw birth inputs remain outside general semantic memory.
+
+The [design](docs/conversation-memory-plan.md) defines temporal rules, proposed
+records, the twelve-house topic reference, remote lifecycle dependencies and
+acceptance criteria. House themes are interpretive retrieval tags; actual house
+placements and correlations require calculated evidence. Implement via the
+[ordered current-priority slices](TODO.md#current-priority--natural-time-and-life-event-memory),
+with a versioned disclosure before enabling the expanded data use. Current runtime
+schemas, fixed memory kinds and lexical guards do not implement these capabilities.
 
 ---
 
@@ -771,6 +805,12 @@ A conversation request should be user-scoped and include:
 
 Birth date, exact birth time, and birthplace should not be promoted into general SecondContext semantic memories.
 
+For the planned event/entity extension, Oria owns canonical encrypted records and
+SecondContext stores linked salience and interpretations. Its current fixed-memory
+contract needs versioned projection, retrieval, correction and selective erasure
+support in the owning repository first. See [section 6.2](#62-natural-time-life-events-and-entities)
+and the [lifecycle design](docs/conversation-memory-plan.md#salience-and-linked-interpretation-in-secondcontext).
+
 SecondContext is appropriate for memories such as:
 
 - the user prefers concise readings;
@@ -849,6 +889,7 @@ A small router can classify each active message into categories such as:
 - current transit interpretation;
 - transit interpretation for a specified date;
 - compatibility/synastry using partner birth details, distinguished from profile edits and transit targets (planned);
+- learn/recall/correct/forget life events and entities, with separate temporal roles and application-validated mutations (planned);
 - follow-up on previous interpretation;
 - profile management;
 - privacy/help;
@@ -896,10 +937,10 @@ At minimum it states that Oria:
 - identifies herself as an AI astrology personality when relevant and never claims to be human;
 - does not present astrology as scientifically established fact;
 - does not fabricate computed chart values;
-- may ask for relevant birth calculation inputs for a requested compatibility reading; saved-profile changes remain in the explicit profile workflow;
-- does not request legal name, phone number, email address, home address, employer, account identifiers, passwords, government IDs, payment details, or similar unrelated information;
+- may ask relevant calculation or event/entity questions; own natal-profile changes remain in the explicit profile workflow;
+- accepts useful volunteered personal context, including entity labels and work history, without a PII lecture; avoids unrelated identifier collection and never requests credentials;
 - does not make deterministic high-impact predictions;
-- does not provide medical diagnosis, legal advice, personalized investment instructions, or emergency guidance based on astrology;
+- supports discussion on any topic, including sensitive ones; does not enable harmful/destructive behavior or present astrological interpretation as reliable diagnosis, professional determination or emergency instruction;
 - accepts information the user voluntarily supplies about another person for the requested reading, without accessing another account's private records;
 - communicates uncertainty when birth time or calculation data is incomplete;
 - obeys deletion and consent state before persona goals.
@@ -945,26 +986,28 @@ common English PII and high-stakes baseline at the application service boundary.
 
 ## 21. PII minimization
 
-The MVP requirement is that Oria **never solicits unrelated PII**.
+The intended policy permits useful voluntarily shared PII and relevant follow-up
+questions under the disclosed data use. Oria avoids unnecessary identifier
+collection while securely remembering meaningful user context. Personal data alone
+is not a refusal trigger. The existing birth-only guards require revision.
 
 This should be enforced through multiple layers rather than only a system prompt:
 
 1. onboarding is a deterministic state machine with a fixed list of allowed fields;
-2. there is no generic “save arbitrary profile attribute” tool;
+2. event/entity mutations use typed, owner-scoped application operations rather than arbitrary model-selected profile fields;
 3. birth-profile repository APIs accept only the defined birth schema;
-4. persona/system prompts explicitly prohibit other PII solicitation;
-5. an output guard checks generated questions for common prohibited PII categories before sending;
-6. tests include adversarial attempts to persuade Oria to request forbidden fields;
+4. prompts distinguish relevant questions and volunteered context from unnecessary identifier collection;
+5. guards assess actual request/answer behavior instead of rejecting personal-data category words;
+6. tests cover useful sharing, harmful requests and attempts to bypass consent or ownership;
 7. logs never contain raw birth-profile payloads;
-8. profile data is not embedded into semantic/vector memory.
+8. raw birth inputs are not embedded into semantic/vector memory; other scoped projections use the versioned lifecycle in section 6.2.
 
 Users are responsible for information they voluntarily share. Receiving personal
 context should not trigger a blanket refusal, lecture or profile-edit redirect.
-Relevant partner birth inputs may be requested for a compatibility reading under
-section 6.1; they are not unrelated PII or a saved-profile edit. The system should
-avoid promoting unnecessary sensitive values into structured long-term memory.
-Input and output guards should distinguish useful voluntary sharing and relevant
-calculation questions from unsolicited collection of unrelated identifiers.
+Relevant partner birth inputs and event/entity details may be requested under
+sections 6.1–6.2. Store meaningful disclosures within that user's scope, honor
+“don't remember”, and support inspection/correction/deletion. Birth-only onboarding
+remains a schema constraint of that workflow, not a ban on conversational memory.
 
 ---
 
@@ -1116,6 +1159,11 @@ Starts the deterministic edit state machine. Updating any calculation-relevant f
 
 ### `/privacy`
 
+For the planned event/entity extension, this surface must also explain automatic
+learning, projected salience, user responsibility for sharing and Oria's storage,
+isolation and retrieval/correction/deletion duties. See section 6.2; the currently
+deployed disclosure does not yet authorize the expanded storage.
+
 Explains:
 
 - what data is collected;
@@ -1133,6 +1181,7 @@ Deletion should remove or invalidate:
 
 - encrypted birth profile;
 - derived astrology profile;
+- planned life-event/entity records, linked readings and pending projection work when that extension is implemented;
 - consent-linked application data as required by the retention policy;
 - Telegram identity mapping when no longer needed;
 - OriaEngine conversation records;
@@ -1145,29 +1194,29 @@ The deletion operation should be idempotent and tracked durably until all compon
 
 ## 26. Safety boundaries for astrology advice
 
-Oria may provide low-stakes reflective guidance, for example:
+After adult consent, Oria should hold useful conversations and provide insights
+about any topic, including health, money, law, grief, relationships and events
+involving people, pets, organizations or possessions. A sensitive subject or
+voluntarily shared PII does not itself justify refusal or protective coaching.
 
-- themes to think about;
-- journaling prompts;
-- communication considerations;
-- ways to frame a transition;
-- traditional interpretations of a chart/transit;
-- uncertainty-aware possibilities.
+The substantive conversational exception is a response that could encourage or
+enable harmful/destructive behavior toward the user or another entity. Assess
+context and the proposed answer: discussion of divorce is different from help
+abusing a partner, and reflection about a business differs from instructions to
+sabotage it. Address actual harmful requests briefly and specifically, continuing
+with useful supported discussion where possible. Do not block benign requests
+merely because they mention death, illness, money or another sensitive word.
 
-Oria should not use a chart to make authoritative claims about:
+Maintain honest grounds for every claim: astrology does not establish diagnosis,
+private intentions, causation or guaranteed outcomes. Computed features,
+user-reported events and interpretive suggestions remain distinct. The user's
+responsibility for sharing does not authorize fabricated facts, unsafe guidance,
+access to another account or expanded tool permissions. General disclosures stay
+in consent/help/privacy rather than recurring in ordinary replies.
 
-- disease or diagnosis;
-- death or lifespan;
-- pregnancy/fertility outcomes;
-- accidents or disasters;
-- criminality;
-- whether another person is dangerous;
-- certain relationship failure;
-- certain financial gain/loss;
-- personalized trades or financial transactions;
-- legal outcomes.
-
-When a user asks a high-stakes question, Oria can discuss the symbolic/reflective theme at a general level while explicitly declining to treat astrology as a reliable basis for the decision.
+The current lexical classifier and fixed high-stakes replies are a more
+restrictive implementation baseline. Replace them with contextual behavior and
+regression checks as part of the [delivery plan](docs/conversation-memory-plan.md#delivery-sequence-and-acceptance).
 
 ---
 
@@ -1497,9 +1546,14 @@ The MVP is complete when all of the following are true:
 15. `/profile` and `/edit-profile` work.
 16. `/privacy` accurately describes the implementation.
 17. `/delete-me` purges the user across OriaEngine and SecondContext.
-18. Policy tests demonstrate that Oria does not solicit common unrelated PII categories.
-19. High-stakes astrology requests receive bounded, non-deterministic responses.
+18. Policy tests distinguish useful voluntary sharing and relevant questions from unnecessary identifier collection and authority violations.
+19. Sensitive topics receive useful, honest discussion; responses do not encourage harmful/destructive behavior.
 20. `make verify` passes from a clean checkout with the documented prerequisites.
+
+The expanded event-memory delivery additionally requires the acceptance criteria
+in the [design](docs/conversation-memory-plan.md#delivery-sequence-and-acceptance):
+natural-time resolution, user-scoped event/entity CRUD, useful linked recall,
+cross-service correction/deletion and updated consent before enabling new storage.
 
 ---
 
@@ -1542,9 +1596,10 @@ Oria can have personality and continuity, but permissions, data collection, cons
 
 The astrology service produces facts. The LLM explains them.
 
-> **Collect less.**
+> **Remember usefully, under user control.**
 
-The system should know the user's chart without trying to know their identity.
+Learn meaningful volunteered context without unnecessary identifier collection;
+keep it private, correctable and deletable by the user.
 
 > **PostgreSQL remembers; Redis coordinates.**
 

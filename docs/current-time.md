@@ -1,5 +1,13 @@
 # Current timezone and relative requests
 
+This reference describes the implemented bounded resolver. The
+[planned natural-time extension](conversation-memory-plan.md#natural-dates-and-time)
+adds mixed expressions, event/anniversary anchors, multiple temporal roles and
+date-only event precision. Relative language is intended to be ordinary input;
+the current grammar and its clarification fallbacks are implementation limits,
+not a product requirement to use absolute dates. Existing transit snapshot
+conventions remain until an explicit compatible transition is implemented.
+
 Telegram supplies no current user timezone. After consent, `/timezone` explains
 the optional preference; `/timezone Europe/Bucharest` saves an explicitly selected
 IANA timezone from the bundled rules. `/timezone UTC` is also valid. `/profile`

@@ -1,5 +1,14 @@
 # Oria persona and methodology prompts
 
+The [planned adult conversation and memory policy](conversation-memory-plan.md)
+requires a coordinated runtime revision of product policy, methodology, memory
+guidance and lexical guards. It permits useful volunteered context about all
+entity types and broad discussion, distinguishing harmful responses from topic
+mentions. Event learning/recall and house themes must use application-confirmed
+state and supplied facts. Current prompt constants below still contain older
+birth-only and topic restrictions; this documentation plan does not deploy new
+capabilities or authorize the model to mutate records.
+
 Stage 14 adds three application-owned Python text modules under
 [`src/oria_engine/persona`](../src/oria_engine/persona/). They ship with the package;
 there are no prompt files to mount, new dependencies, settings or migrations.

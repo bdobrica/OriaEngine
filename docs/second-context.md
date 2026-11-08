@@ -1,5 +1,12 @@
 # SecondContext adapter
 
+The [planned event/entity extension](conversation-memory-plan.md#salience-and-linked-interpretation-in-secondcontext)
+uses SecondContext for linked salience and interpretations, with encrypted
+canonical events/entities in Oria. It requires versioned, revision-aware projection
+and selective-erasure support in the owning service. The existing fixed memories
+and subject-wide purge below do not implement that lifecycle; do not use arbitrary
+memory text or direct database access to bypass the contract.
+
 The Stage 12 foundation provides `ContextProvider`, the HTTP implementation
 `SecondContextProvider`, `ConversationContext` consent fencing, and stable
 PostgreSQL session mapping. See the [versioned consumer contract](../contracts/second-context/v1.md)

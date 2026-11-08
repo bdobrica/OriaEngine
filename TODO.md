@@ -34,11 +34,23 @@ belongs in the current implementation path, alongside the remaining release gate
 Users are responsible for what they share; a separate partner signup or consent
 flow is not a prerequisite. Existing runtime restrictions are implementation gaps.
 
-- [ ] Recognize compatibility requests and supplied partner dates before privacy rejection or transit routing; distinguish them from saved-profile edits.
-- [ ] Update input/output guards and product prompts to accept voluntary personal context and relevant partner birth inputs without privacy lectures or `/edit_profile` redirects.
-- [ ] Add calculated compatibility facts through versioned MCP/context contracts, including honest birthday-only and missing-time/place behavior; support requested interpretive ratings without fabricated precision.
-- [ ] Keep any retained partner inputs/results in the requesting user's scope and deletion lifecycle; preserve raw-birth exclusion from SecondContext fact payloads and explicit semantic memory.
-- [ ] Update the versioned disclosure if the implemented data use changes, and verify compatibility questions, optional follow-ups, account isolation and deletion through regression tests.
+Compatibility delivery is included in the broader sequence below; keep the
+partner-birthday refusal as a regression case throughout, rather than a separate
+storage or consent mechanism.
+
+## Current priority — natural time and life-event memory
+
+[Design, policy and acceptance criteria](docs/conversation-memory-plan.md) expand
+the intended experience beyond natal profiles. These are pending implementation
+slices alongside the remaining MVP release gate. Completed historical stages below
+describe the existing baseline, including guards this work will replace.
+
+- [ ] **1 — Policy/contracts:** update runtime policy, methodology, memory guidance and input/output guards for voluntary sharing, relevant questions and broad discussion; use actual harmful/destructive intent and response content rather than topic keywords. Retain consent, truthfulness and application authority. Define versioned event/entity/time and SecondContext lifecycle contracts with the owning component before enabling new data flows.
+- [ ] **2 — Natural time:** support absolute, relative, mixed and event-anchored expressions, multiple dates/roles, persisted clarification and date-only/approximate precision. Cover every example in the design, timezone/DST, calendar offsets, anniversaries and retry-stable reference clocks. Partner/event dates must not default to transits or own-profile edits.
+- [ ] **3 — Canonical profile memory:** add encrypted owner-scoped entities, events, relationships and provenance with migrations; learn meaningful volunteered events naturally under current consent. Implement conversational inspection, revisioned corrections, selective deletion and “don't remember”; test deduplication, aliases, isolation and account-deletion/withdrawal races.
+- [ ] **4 — SecondContext continuity:** implement authenticated revision-aware projection upsert/retrieval/selective deletion in the owning service and Oria adapter; add durable reconciliation, salience and linked entity/event retrieval. Verify erasure of dependent summaries/index/graph/history as promised, stale-write fencing and full subject purge before enabling ingestion. Keep raw birth inputs outside semantic memory and disclose the precise context projection.
+- [ ] **5 — Linked readings:** add birthday-only, synastry and event-chart capabilities through versioned MCP/context facts, with honest missing-time/place behavior and requested interpretive ratings. Use all twelve house themes for retrieval; compute actual placements/overlays only with supported inputs. Invalidate dependent readings on corrections; never presume a correlation.
+- [ ] **6 — Release:** update and version the disclosure for expanded learning/storage and re-consent before enabling it. Add synthetic multi-turn replays for all entity/date examples, harmful versus benign sensitive requests, recall, CRUD, no-retention intent and cross-service erasure. Run focused tests, generators/migrations/compatibility checks and `make verify`, then verify published images and an Oria-only rollout.
 
 ```mermaid
 flowchart LR
@@ -1040,6 +1052,7 @@ Do not call the project MVP-complete until every item below passes.
 - [ ] `/edit-profile` works.
 - [ ] `/privacy` works.
 - [ ] `/delete-me` works across all persistent systems.
+- [ ] The [natural-time and event-memory acceptance criteria](docs/conversation-memory-plan.md#delivery-sequence-and-acceptance) pass before those capabilities are enabled, including linked recall, correction and selective/full deletion.
 
 ### Privacy/security
 
@@ -1050,8 +1063,8 @@ Do not call the project MVP-complete until every item below passes.
 - [ ] Cross-user isolation integration tests pass.
 - [ ] Duplicate update tests pass.
 - [ ] Per-user concurrent message tests pass.
-- [ ] PII solicitation policy tests pass.
-- [ ] High-stakes astrology policy tests pass.
+- [ ] Policy tests accept useful voluntary sharing and relevant questions while preserving consent and authority.
+- [ ] Policy tests distinguish benign sensitive discussion from harmful/destructive responses.
 - [x] Webhook secret validation passes ([live HTTPS evidence](docs/evidence/live-test-2026-10-29.md)).
 
 ### Reliability

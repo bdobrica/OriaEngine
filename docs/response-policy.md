@@ -1,11 +1,19 @@
 # Response policy guard
 
-## Intended compatibility behavior
+## Intended adult conversation behavior
 
-Users are responsible for what they voluntarily share. Ordinary partner
-compatibility, supplied birth details and relevant calculation questions are
-supported product uses, without a separate partner signup/consent gate or privacy
-lecture. See [PLAN section 6.1](../PLAN.md#61-voluntary-sharing-and-compatibility).
+Users are responsible for what they voluntarily share about themselves, people,
+pets, organizations and possessions. Oria is responsible for secure, scoped
+storage, recall, correction and deletion. Compatibility, meaningful event memory,
+natural dates and relevant follow-up questions are supported product intentions,
+without third-party registration/consent gates or repeated privacy lectures.
+
+Conversation and insights may cover any topic. Sensitive words or volunteered PII
+are not sufficient grounds for refusal. Assess actual harmful/destructive requests
+and proposed responses; respond briefly and specifically when a boundary applies.
+Preserve truthfulness, account isolation and application-controlled permissions.
+General disclosures remain in consent/help/privacy. See [PLAN sections 6.1–6.2](../PLAN.md#61-voluntary-sharing-and-compatibility)
+and the [policy and implementation design](conversation-memory-plan.md).
 The current guard and prompt restrictions described below still need updating;
 they describe implementation behavior, not a product prohibition to preserve.
 
@@ -66,8 +74,10 @@ no new dependencies, configuration, migrations or wire changes.
 
 This is a bounded lexical guard, not proof of semantic safety: paraphrases,
 unrecognized languages, encoded requests and other obfuscations can evade it.
-False positives are intentional in this baseline. It does not validate chart
-truth, scrub volunteered PII from incoming messages or remove downstream history.
+False positives were intentional in this baseline; reducing benign refusals is
+part of the planned replacement, not a weakening of an intended topic ban.
+It does not validate chart truth, scrub volunteered PII from incoming messages or
+remove downstream history.
 SecondContext may already have persisted a blocked draft before returning it;
 local replacement only controls the response returned by Oria's service.
 

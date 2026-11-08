@@ -1,5 +1,12 @@
 # Account deletion
 
+Planned life-event/entity memory must extend this workflow to all new records,
+derived readings and pending context projections. Selective conversational
+requests such as “forget my ex's birthday” additionally require record-scoped
+erasure and stale-write fencing across Oria and SecondContext; subject-wide purge
+does not provide selective deletion. See the [planned lifecycle and retention rules](conversation-memory-plan.md#salience-and-linked-interpretation-in-secondcontext).
+The current account deletion implementation below is unchanged.
+
 `/delete_me` and `/delete-me` open the same deterministic confirmation flow, including
 before consent or after withdrawal. The first command changes no profile or consent.
 A sender-scoped random confirmation token expires after 15 minutes. Reopening the

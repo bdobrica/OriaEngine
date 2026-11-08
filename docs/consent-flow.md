@@ -8,6 +8,16 @@ transaction. Replies are sent after commit so delivery failure cannot undo a dec
 
 ## Disclosure and decisions
 
+The [planned event/entity memory extension](conversation-memory-plan.md) requires
+new versioned copy and acceptance before expanded learning starts. It must explain
+meaningful events learned from conversation, volunteered PII about all entity
+types, SecondContext salience/interpretation projections, user responsibility for
+sharing and Oria's security, isolation, retrieval, correction and deletion duties.
+Within that accepted data use, do not add consent prompts for every event or require
+another entity to register. Honor “don't remember.” The implementation and version
+described below remain the birth-profile/conversation baseline; this plan does not
+change deployed copy or authorize new storage yet.
+
 The initial copy is `DISCLAIMER` in `domain/consent.py`, using
 `ORIA_POLICY_VERSION` (default `2026-10-03.2`). It covers AI identity, interpretive
 astrology, high-stakes limitations, birth date/time/place, chart purpose and future

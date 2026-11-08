@@ -6,19 +6,20 @@ interpretations of deterministic natal and transit calculations with conversatio
 continuity through [SecondContext](https://github.com/bdobrica/SecondContext).
 The project showcases natural, ongoing conversations with consenting adults.
 
-Adults are responsible for what they choose to share, including a partner's birth
-details. Relationship compatibility, synastry and requested interpretive ratings
-are intended everyday uses; sharing those details should lead to a reading rather
-than a privacy refusal or `/edit_profile` redirect. The current input guard and
-calculation path still need updating to support this flow; see
-[compatibility implementation work](TODO.md#current-priority--compatibility-conversations).
+Adults are responsible for what they share. Oria's intended experience includes
+natural relative dates, remembered life events about people, pets, organizations
+and possessions, and compatibility readings. Oria is responsible for secure,
+user-scoped storage and retrieval, correction and deletion. The runtime still needs
+these extensions; see the [design and delivery plan](docs/conversation-memory-plan.md).
 
 **Status:** the demo pipeline, privacy commands, deletion, webhook ingress and
 Docker development stack are implemented. The [Stage 25 release gate](TODO.md#stage-25--mvp-release-gate)
 is still pending; the project is not MVP-complete.
 
 Astrology is an interpretive framework, not a scientifically established forecasting
-method. Oria is not a source of medical, legal, financial or other high-stakes advice.
+method. Sensitive topics are open for discussion; responses must not encourage
+harm or present unsupported claims as facts. Current lexical guards remain more
+restrictive than this intended experience.
 
 ## Quick start: verify a checkout
 
@@ -101,6 +102,7 @@ and [deletion and retention](docs/deletion.md).
 | Deploy published images with Compose | [Deployment](docs/deployment.md) |
 | Conversation dependency and policy | [SecondContext](docs/second-context.md), [worker pipeline](docs/conversation-worker.md) |
 | Adult conversation experience and authored examples | [Dialogue guide](docs/dialogue/README.md), [persona prompts](docs/persona-prompts.md) |
+| Planned natural dates, life events, entities and salience | [Conversation memory design](docs/conversation-memory-plan.md) |
 | Logs, health, limits and recovery | [Operations](docs/operations.md), [abuse controls](docs/abuse-controls.md) |
 | Known gaps and live checks | [MVP limitations](docs/limitations.md) |
 | Implementation intent and remaining release work | [PLAN.md](PLAN.md), [TODO.md](TODO.md) |
