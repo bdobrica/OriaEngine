@@ -272,7 +272,7 @@ async def test_voluntary_context_reaches_conversation_without_refusal_or_implici
     await confirm(worker.flow)
     with patch.object(BirthProfileRepository, "get", side_effect=AssertionError("No decrypt")):
         await worker.process(await ingress.accept(message(text=text)))
-    assert worker.client.send_text.call_args.args[1] == "A reflective reply."
+    assert "A reflective reply." in worker.client.send_text.call_args.args[1]
     provider.respond.assert_awaited_once()
     request = provider.respond.call_args.args[1]
     assert request.transit_facts is None
@@ -302,7 +302,7 @@ async def test_birth_filter_cannot_hide_harmful_intent(conversation):
 async def test_date_clarification_retries_reuse_original_reference(conversation):
     ingress, worker, astrology, provider = conversation
     await confirm(worker.flow)
-    original = message(text="We married this day last year at 3pm")
+    original = message(text="We married this day last year at 3pm. Tell me about my chart.")
     first = await ingress.accept(original)
     await worker.process(first)
     assert "Which timezone" in worker.client.send_text.call_args.args[1]
@@ -339,4 +339,40 @@ async def test_birth_continuations_cannot_leak_via_resolved_date_notes(conversat
     for value in ("Exampletown", "1992", "12:30", "47.1", "23.6"):
         assert value not in request.filtered_message
     assert "rate our compatibility" in request.filtered_message
+    astrology.calculate_transits.assert_not_called()
+
+
+async def test_queued_memory_controls_after_withdrawal_and_delivery_replay(conversation):
+    from oria_engine.db.knowledge import KnowledgeRepository
+
+    ingress, worker, astrology, provider = conversation
+    await confirm(worker.flow)
+    original = message(text="My girlfriend Alice was born June 2nd, 1992")
+    identifier = await ingress.accept(original)
+    worker.client.send_text.side_effect = RuntimeError("synthetic delivery failure")
+    await worker.process(identifier)
+    event = await row(worker, identifier)
+    async with worker.database.transaction() as session:
+        records = await KnowledgeRepository(
+            session, worker.encryption, worker.flow.policy_version
+        ).list(event.user_id)
+        assert len(records) == 2
+    worker.client.send_text.side_effect = None
+    await due(worker, identifier)
+    await worker.process(identifier)
+    assert "Saved" in worker.client.send_text.call_args.args[1]
+    await worker.flow.handle(message(callback=worker.flow.buttons[1].data))
+    await worker.process(await ingress.accept(message(text="what do you remember about Alice?")))
+    assert "1992-06-02" in worker.client.send_text.call_args.args[1]
+    await worker.process(await ingress.accept(message(text="forget my girlfriend")))
+    assert "Remove them too" in worker.client.send_text.call_args.args[1]
+    await worker.process(await ingress.accept(message(text="yes")))
+    assert "Removed 2" in worker.client.send_text.call_args.args[1]
+    await worker.process(identifier)
+    async with worker.database.transaction() as session:
+        assert not await KnowledgeRepository(
+            session, worker.encryption, worker.flow.policy_version
+        ).list(event.user_id)
+    provider.respond.assert_not_called()
+    provider.remember.assert_not_called()
     astrology.calculate_transits.assert_not_called()

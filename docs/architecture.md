@@ -6,10 +6,10 @@ This reference describes the demo implementation. Versioned [Telegram ingress](.
 and [operator telemetry](../contracts/operations/v1.md) define their respective boundaries.
 This document records existing behavior without introducing a new architectural decision.
 
-The [planned life-event/entity extension](conversation-memory-plan.md) adds
-canonical encrypted knowledge records in Oria and linked salience projections in
-SecondContext. It requires new schemas and versioned lifecycle contracts; the
-ownership and published interfaces described here remain the current baseline.
+[Local private memory](private-memory.md) adds canonical encrypted event/entity
+records, scoped links and conversational controls under ADR 0002. SecondContext
+salience projections remain planned and disabled pending owning-service lifecycle
+support. Existing published interfaces and storage ownership remain unchanged.
 
 ```mermaid
 flowchart TD
@@ -43,7 +43,7 @@ can repeat. See [queue ordering and retries](worker-queue.md).
 
 | Component | Owns / receives |
 | --- | --- |
-| Oria PostgreSQL | Internal UUIDs, Telegram routing identifiers, consent, encrypted profiles/drafts/events/replies, derived charts, sessions and deletion progress |
+| Oria PostgreSQL | Internal UUIDs, Telegram routing identifiers, consent, encrypted profiles/drafts/queue payloads and canonical entities/life events, derived charts, sessions and deletion progress |
 | Redis | Disposable broker messages, leases, publication reservations and short-lived sender admission counters; no queued message/profile content |
 | Astrology MCP | Stateless typed calculation requests and results; no identities, database, memory or LLM |
 | SecondContext | Scoped conversation sessions, transcripts, semantic memory and its index; accessed only through the versioned HTTP contract |

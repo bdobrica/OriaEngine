@@ -13,7 +13,7 @@ from oria_engine.db.birth_profiles import ConsentRequiredError
 from oria_engine.db.models import TemporalClarification
 from oria_engine.db.repositories import ConsentRepository, UserRepository, UserUnavailableError
 from oria_engine.domain.temporal import EventAnchor, TemporalMention
-from oria_engine.knowledge.contracts import UTCInstant
+from oria_engine.knowledge.contracts import RecordRef, UTCInstant
 from oria_engine.privacy.encryption import ProfileEncryption
 
 
@@ -27,6 +27,8 @@ class PendingTemporal(WireModel):
     anchors: tuple[EventAnchor, ...] = Field(default=(), max_length=32)
     unresolved: TemporalMention | None = None
     source_update_id: str = Field(min_length=1, max_length=128)
+    selected_record: RecordRef | None = None
+    operation_source: UUID | None = None
 
 
 class TemporalRepository:

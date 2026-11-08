@@ -2,7 +2,7 @@
 
 Status: the adult-dialogue policy and Oria-side candidate contract foundation are
 implemented, along with bounded natural-time extraction and encrypted clarification.
-Event storage and remote lifecycle integration remain planned.
+Local encrypted event/entity memory is implemented; remote lifecycle integration remains planned. See [implemented private memory](private-memory.md).
 [ADR 0002](adr/0002-private-life-events-and-context-projections.md)
 records ownership; [candidate contracts](../contracts/knowledge/v1.md) are not live
 SecondContext routes. No deployment is implied. Track delivery
@@ -105,8 +105,8 @@ the engine's 1800–2399 calculation range on otherwise valid historical events.
 ## Canonical user knowledge in Oria
 
 Extend the user's private profile with related records, preserving the existing
-strict natal-profile schema and its explicit edit workflow. Proposed logical
-records below are design requirements, not applied migrations or public schemas.
+strict natal-profile schema and its explicit edit workflow. Logical
+records below describe the design; [private memory](private-memory.md) identifies the implemented local subset and limits. Derived readings and projection work remain planned.
 An own-birth event should reference the canonical natal-profile revision rather
 than create a second, independently editable source for the user's birth inputs.
 Conversational corrections to other events must not silently mutate that profile.
@@ -252,7 +252,7 @@ No change to live images or unrelated host containers is part of this plan.
 | --- | --- | --- |
 | 1. Policy and contracts | Implemented Oria policy/guard foundation, candidate typed temporal/event/entity and projection contracts, ADR 0002 and versioned voluntary-chat disclosure | Synthetic benign/harmful cases and consumer contracts checked; no event storage enabled; proposed lifecycle still needs acceptance/implementation by SecondContext before slice 4 ingestion |
 | 2. Natural-time routing | Implemented bounded English/Gregorian parsing, typed date roles/precision and encrypted 24-hour clarification; local own-birth, same-message and supplied anchors | Design examples, multiple dates, leap days, DST, retries and missing timezone checked; no partner birthday routed to own-profile edit or transit by default; historical event recall awaits slices 3–4; see [current behavior](current-time.md) |
-| 3. Private profile memory | Encrypted entities/events, provenance, inspect/update/delete and automatic learning in chat | Restart, owner isolation, aliases, correction, deduplication, withdrawal/deletion races and “don't remember” verified; no false save acknowledgements |
+| 3. Private profile memory | Implemented encrypted entities/events, provenance and bounded conversational learning/CRUD; see [private memory](private-memory.md) | Restart, owner isolation, aliases, correction, deduplication, withdrawal/deletion races and “don't remember” verified; no false save acknowledgements |
 | 4. Context continuity | Revisioned SecondContext projections, salience, linked retrieval and reconciliation | Real owning-service contract tests for upsert, stale writes, selective erasure and full purge; dependency outages cannot resurrect forgotten records |
 | 5. Linked astrology | Birthday-only support, synastry/event calculations and house-topic retrieval, with versioned facts | Synthetic birth/partner/wedding reading uses actual supplied calculations; no invented times, houses, correlations or precision; corrections invalidate dependent readings |
 | 6. Release | Updated consent copy/version, review fixtures, full verification and published images | Existing users accept expanded data use before new storage starts; multi-turn review and end-to-end lifecycle pass; deploy only identified Oria services after publication |

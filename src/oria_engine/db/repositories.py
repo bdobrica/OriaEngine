@@ -7,7 +7,13 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from oria_engine.db.models import Consent, SocialIdentity, TemporalClarification, User
+from oria_engine.db.models import (
+    Consent,
+    KnowledgeDialogue,
+    SocialIdentity,
+    TemporalClarification,
+    User,
+)
 
 
 class UserUnavailableError(LookupError):
@@ -163,6 +169,9 @@ class ConsentRepository:
             await self.session.execute(
                 delete(TemporalClarification).where(TemporalClarification.user_id == user_id)
             )
+            await self.session.execute(
+                delete(KnowledgeDialogue).where(KnowledgeDialogue.user_id == user_id)
+            )
         await self.session.flush()
         return consent
 
@@ -186,6 +195,9 @@ class ConsentRepository:
         self.session.add(consent)
         await self.session.execute(
             delete(TemporalClarification).where(TemporalClarification.user_id == user_id)
+        )
+        await self.session.execute(
+            delete(KnowledgeDialogue).where(KnowledgeDialogue.user_id == user_id)
         )
         await self.session.flush()
         return consent

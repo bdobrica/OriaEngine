@@ -6,6 +6,7 @@ sender. They never call SecondContext or ask a model to collect profile fields.
 | Command | Behavior |
 | --- | --- |
 | `/profile` | Reads confirmed details and any unconfirmed draft, plus policy/consent and current chart availability. No calculation or profile mutation. |
+| `/memories` / `/memory` | Inspects encrypted local entities/events; conversational corrections and “forget …” use [private-memory controls](private-memory.md). Lookup/removal work without current consent. |
 | `/edit_profile` | Resumes the deterministic field editors after consent. Confirmation saves changes and recomputes the chart. |
 | `/retry_profile` | Retries calculation after consent and confirmation; reuses a valid cache. |
 | `/privacy` | Shows the current disclosure and Accept/Decline buttons. Displaying it never changes consent. |
@@ -40,6 +41,6 @@ consent-revision check, retry and erasure rules. Birth fields are never sent to
 SecondContext or application logs. Telegram still retains displayed messages under its
 own policies. See [worker queue](worker-queue.md) and [consent flow](consent-flow.md).
 
-Deploy polling and workers with `ORIA_POLICY_VERSION=2026-11-08.2` (bump custom versions
-too) and accept the updated disclosure. Inspection itself needs no new migration;
+Deploy polling and workers with `ORIA_POLICY_VERSION=2026-11-08.3` (bump custom versions
+too) and accept the updated disclosure. Canonical memory requires migration `0011`;
 the [deletion workflow](deletion.md) requires migration `0008`.

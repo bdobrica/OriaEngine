@@ -17,6 +17,11 @@ from oria_engine.db.models import (
     ConversationSession,
     DeletionJob,
     InboundEvent,
+    KnowledgeChange,
+    KnowledgeDialogue,
+    KnowledgeLink,
+    KnowledgeOperation,
+    KnowledgeRecord,
     OnboardingProgress,
     SocialIdentity,
     TemporalClarification,
@@ -31,7 +36,8 @@ from oria_engine.privacy.encryption import ProfileEncryption
 
 logger = logging.getLogger(__name__)
 FINAL_TEXT = (
-    "Deletion is complete for your previous Oria account: birth details, chart, consent "
+    "Deletion is complete for your previous Oria account: birth details, events/entities, "
+    "chart, consent "
     "history, application sessions and SecondContext conversation/memory data are removed. "
     "Minimal deletion and unlinked update receipts remain to prevent replay. Backups, "
     "AI-provider retention and Telegram messages have separate lifecycles. "
@@ -73,7 +79,8 @@ async def deletion_command(
         await session.flush()
         return ConsentReply(
             OnboardingState.CLOSED,
-            "Delete your Oria account and its saved birth details, chart, consent history "
+            "Delete your Oria account and its saved birth details, events/entities, chart, "
+            "consent history "
             "and SecondContext conversations/memories? This cannot be undone. Processing "
             "stops after confirmation; cleanup retries if a service is unavailable. "
             "Backups, AI-provider retention and Telegram messages are separate. Minimal "
@@ -197,6 +204,11 @@ class DeletionWorker:
                     BirthProfile,
                     OnboardingProgress,
                     TemporalClarification,
+                    KnowledgeDialogue,
+                    KnowledgeChange,
+                    KnowledgeLink,
+                    KnowledgeOperation,
+                    KnowledgeRecord,
                     ConversationSession,
                     Consent,
                 ):

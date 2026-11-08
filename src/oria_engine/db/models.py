@@ -9,6 +9,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Identity,
     String,
     UniqueConstraint,
@@ -84,6 +85,7 @@ class BirthProfile(Base):
     __table_args__ = (
         UniqueConstraint("user_id"),
         CheckConstraint("schema_version > 0", name="positive_schema_version"),
+        CheckConstraint("revision > 0", name="positive_revision"),
         CheckConstraint("octet_length(encrypted_payload) >= 29", name="encrypted_envelope"),
         CheckConstraint(
             "encryption_key_version ~ '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'",
@@ -96,6 +98,7 @@ class BirthProfile(Base):
     encrypted_payload: Mapped[bytes]
     encryption_key_version: Mapped[str] = mapped_column(String(64))
     schema_version: Mapped[int]
+    revision: Mapped[int] = mapped_column(server_default="1")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -151,6 +154,102 @@ class TemporalClarification(Base):
     encrypted_payload: Mapped[bytes]
     encryption_key_version: Mapped[str] = mapped_column(String(64))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class KnowledgeRecord(Base):
+    """Canonical payloads are encrypted; deleted UUIDs remain terminal fences."""
+
+    __tablename__ = "knowledge_records"
+    __table_args__ = (
+        CheckConstraint("kind IN ('entity', 'event')", name="kind"),
+        CheckConstraint("revision > 0", name="positive_revision"),
+        CheckConstraint(
+            "(deleted_at IS NULL AND encrypted_payload IS NOT NULL AND "
+            "octet_length(encrypted_payload) >= 29 "
+            "AND encryption_key_version IS NOT NULL) OR "
+            "(deleted_at IS NOT NULL AND encrypted_payload IS NULL "
+            "AND encryption_key_version IS NULL)",
+            name="lifecycle",
+        ),
+    )
+
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(16))
+    revision: Mapped[int]
+    encrypted_payload: Mapped[bytes | None]
+    encryption_key_version: Mapped[str | None] = mapped_column(String(64))
+    needs_review: Mapped[bool] = mapped_column(default=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class KnowledgeLink(Base):
+    """Dependency edges cannot cross an owner boundary, even through direct SQL."""
+
+    __tablename__ = "knowledge_links"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["user_id", "record_id"],
+            ["knowledge_records.user_id", "knowledge_records.id"],
+            ondelete="CASCADE",
+        ),
+        ForeignKeyConstraint(
+            ["user_id", "dependency_id"],
+            ["knowledge_records.user_id", "knowledge_records.id"],
+            ondelete="CASCADE",
+            name="fk_knowledge_links_dependency",
+        ),
+        CheckConstraint("record_id <> dependency_id", name="not_self"),
+    )
+    user_id: Mapped[UUID] = mapped_column(primary_key=True)
+    record_id: Mapped[UUID] = mapped_column(primary_key=True)
+    dependency_id: Mapped[UUID] = mapped_column(primary_key=True)
+
+
+class KnowledgeChange(Base):
+    """Provenance without historical copies of corrected/deleted private payloads."""
+
+    __tablename__ = "knowledge_changes"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["user_id", "record_id"],
+            ["knowledge_records.user_id", "knowledge_records.id"],
+            ondelete="CASCADE",
+        ),
+    )
+    user_id: Mapped[UUID] = mapped_column(primary_key=True)
+    record_id: Mapped[UUID] = mapped_column(primary_key=True)
+    revision: Mapped[int] = mapped_column(primary_key=True)
+    source_message_id: Mapped[UUID]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class KnowledgeOperation(Base):
+    """Payload-free inbound mutation receipt, retained across selective erasure."""
+
+    __tablename__ = "knowledge_operations"
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    source_message_id: Mapped[UUID] = mapped_column(primary_key=True)
+
+
+class KnowledgeDialogue(Base):
+    """Encrypted bounded focus/selection state, never model-granted mutation authority."""
+
+    __tablename__ = "knowledge_dialogues"
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    id: Mapped[UUID] = mapped_column(default=uuid4)
+    encrypted_payload: Mapped[bytes]
+    encryption_key_version: Mapped[str] = mapped_column(String(64))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    __table_args__ = (
+        CheckConstraint("octet_length(encrypted_payload) >= 29", name="encrypted_envelope"),
+    )
 
 
 class InboundEvent(Base):

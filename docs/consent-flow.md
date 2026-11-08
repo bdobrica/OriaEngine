@@ -8,21 +8,17 @@ transaction. Replies are sent after commit so delivery failure cannot undo a dec
 
 ## Disclosure and decisions
 
-The [planned event/entity memory extension](conversation-memory-plan.md) requires
-new versioned copy and acceptance before expanded learning starts. It must explain
-meaningful events learned from conversation, volunteered PII about all entity
-types, SecondContext salience/interpretation projections, user responsibility for
-sharing and Oria's security, isolation, retrieval, correction and deletion duties.
-Within that accepted data use, do not add consent prompts for every event or require
-another entity to register. Honor “don't remember.” The implementation and version
-described below now allow voluntary conversational context. They do not authorize
-the planned new event/entity profile storage or projection writes.
+[Private event/entity memory](private-memory.md) now uses versioned disclosure and
+acceptance before expanded local learning. Within that accepted data use, do not
+add consent prompts for each event or require mentioned entities to register.
+Honor “don't remember.” Remote event projections and selective erasure still await
+slice 4's owning-service lifecycle and another accurate disclosure before use.
 
 The initial copy is `DISCLAIMER` in `domain/consent.py`, using
-`ORIA_POLICY_VERSION` (default `2026-11-08.2`). It covers AI identity, interpretive
+`ORIA_POLICY_VERSION` (default `2026-11-08.3`). It covers AI identity, interpretive
 astrology, high-stakes limitations, birth date/time/place, chart purpose and future
 storage, voluntary PII and sharing responsibility, secure scoped handling, profile/edit
-controls, unavailable event memory/selective forgetting, deletion limitations, and adult
+controls, encrypted event/entity storage, local selective removal and its retention limits, and adult
 use. **I'm 18+ and agree** confirms adulthood and acceptance together; it is a
 self-attestation, not age verification. The copy explicitly describes this demo's
 limits: encrypted birth profiles and drafts are collected, local place lookup and
@@ -38,11 +34,12 @@ adult agreement. After consent, ordinary dialogue should be free and natural, wi
 recurring disclaimers or canned professional-support reminders. Respect adults' own
 judgment; explain a specific limitation only where it affects the actual request.
 The [dialogue guide](dialogue/README.md) describes that experience. Version
-`2026-11-08.2` replaces the prior birth-only chat warning with voluntary sharing,
-obvious-secret blocking and birth-clause withholding. It also describes encrypted
-24-hour date clarification and local own-birthday access. Ingress and
-worker startup reject known older policy versions; custom versions must be bumped
-by the operator too. Long-term event/entity memory remains unavailable.
+`2026-11-08.3` adds local long-term learning, aliases/relationships, corrections,
+inspection/removal without consent, opt-out and 24-hour encrypted conversation
+focus/clarification. It distinguishes local record erasure from prior chat/provider
+retention. Ingress and worker startup reject known older policy versions; operators
+must bump custom versions too. Ordinary pre-consent chat is discarded; explicit
+inspection/erasure controls and bounded pending answers use the temporary queue.
 
 Keep each deployed version associated with its disclosure in source history. Bump
 `ORIA_POLICY_VERSION` when the copy/data use changes and deploy consistently to all

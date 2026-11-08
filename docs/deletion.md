@@ -1,11 +1,10 @@
 # Account deletion
 
-Planned life-event/entity memory must extend this workflow to all new records,
-derived readings and pending context projections. Selective conversational
-requests such as “forget my ex's birthday” additionally require record-scoped
-erasure and stale-write fencing across Oria and SecondContext; subject-wide purge
-does not provide selective deletion. See the [planned lifecycle and retention rules](conversation-memory-plan.md#salience-and-linked-interpretation-in-secondcontext).
-The current account deletion also erases encrypted temporary date clarification.
+[Local life-event/entity memory](private-memory.md) is included in account erasure:
+records, provenance, links, mutation receipts and temporary progress are removed.
+Local conversational removal is available separately; it does not erase independent
+remote transcripts. SecondContext record-scoped erasure remains a slice 4 prerequisite
+for event projections, and full-subject purge is never substituted for that feature.
 
 `/delete_me` and `/delete-me` open the same deterministic confirmation flow, including
 before consent or after withdrawal. The first command changes no profile or consent.
@@ -45,8 +44,9 @@ a counter and back off from 10 seconds to one hour. Deletion has no attempt limi
 Stopped workers resume cleanup on restart. Database failures leave progress durable.
 
 The local step removes encrypted birth profiles, derived charts, encrypted drafts,
-consent history, temporary date clarification and conversation-session mappings,
-and wipes inbound/reply ciphertext.
+consent history, canonical events/entities and their provenance/receipts,
+temporary date/record clarification and conversation-session mappings, and wipes
+inbound/reply ciphertext.
 The subject purge uses the existing [SecondContext v1 contract](../contracts/second-context/v1.md).
 Only its validated subject-specific completion acknowledgement advances the job.
 Unsupported purge, failed authentication, wrong-scope replies and dependency outages
@@ -87,7 +87,7 @@ deletion. A subsequent `/start` creates a fresh UUID and requires fresh consent.
 
 ## Demo setup and verification
 
-Run `make migrate`, set `ORIA_POLICY_VERSION=2026-11-08.2` (bump custom versions too),
+Run `make migrate`, set `ORIA_POLICY_VERSION=2026-11-08.3` (bump custom versions too),
 and restart polling and workers consistently. Existing accepted users re-consent for
 chat, but deletion itself requires no consent. Keep encryption keys available until
 pending final notifications have been delivered or expired.

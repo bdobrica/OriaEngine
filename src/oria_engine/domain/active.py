@@ -78,10 +78,17 @@ def route_active(
     anchors: tuple[EventAnchor, ...] = (),
 ) -> ActiveIntent:
     """English demo grammar. Unrecognized language never authorizes a tool call."""
+    from oria_engine.domain.memory import directive, extract_events
+
     if is_harmful_request(text):
         return ActiveIntent(kind="unsupported_high_stakes")
     if received_at.utcoffset() is None:
         raise ValueError("Message time must be timezone aware")
+    memory_request = directive(text)
+    if memory_request and memory_request.action == "correct":
+        return ActiveIntent(kind="follow_up")
+    if extract_events(text) and not READING.search(text):
+        return ActiveIntent(kind="follow_up")
     analysis = analyze_temporal(
         text, received_at=received_at, current_timezone=current_timezone, anchors=anchors
     )

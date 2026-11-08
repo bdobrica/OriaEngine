@@ -15,11 +15,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from oria_engine.astrology.client import AstrologyUnavailable
 from oria_engine.context.contracts import ContextUnavailable
-from oria_engine.db.models import InboundEvent, SocialIdentity, TemporalClarification, User
+from oria_engine.db.models import (
+    InboundEvent,
+    KnowledgeDialogue,
+    SocialIdentity,
+    TemporalClarification,
+    User,
+)
 from oria_engine.db.repositories import ConsentRepository, SocialIdentityRepository
 from oria_engine.db.session import Database
 from oria_engine.domain.channel import ChannelButton, ChannelClient, ChannelMessage
 from oria_engine.domain.consent import ConsentFlow
+from oria_engine.domain.memory import privacy_control
 from oria_engine.observability import correlation_scope, count, measurement, observed
 from oria_engine.privacy.deletion import admission_lock
 from oria_engine.privacy.encryption import ProfileEncryption
@@ -173,7 +180,22 @@ class EventIngress:
                 and not (callback and callback.startswith("delete:") and len(callback) <= 64)
             ):
                 callback = "stale" if callback is not None else None
-            message = replace(message, text=message.text if consent else "", callback_data=callback)
+            # Explicit inspection/erasure controls remain usable after withdrawal.
+            # Only bounded selection answers to an existing owner-scoped control
+            # are retained; arbitrary pre-consent chat is still discarded.
+            import re
+
+            control_answer = bool(
+                re.fullmatch(
+                    r"(?:[1-9]|1[0-9]|20|yes|cancel|never mind|"
+                    r"(?:the )?(?:first|second|third)(?: one)?)",
+                    message.text.strip(),
+                    re.I,
+                )
+                and await session.get(KnowledgeDialogue, user.id) is not None
+            )
+            retain = consent or privacy_control(message.text) or control_answer
+            message = replace(message, text=message.text if retain else "", callback_data=callback)
             identifier = uuid4()
             now = datetime.now(UTC)
             payload = InputPayload(message=message, command=command)
@@ -425,6 +447,7 @@ async def recoverable(database: Database) -> list[UUID]:
         await session.execute(
             delete(TemporalClarification).where(TemporalClarification.expires_at <= now)
         )
+        await session.execute(delete(KnowledgeDialogue).where(KnowledgeDialogue.expires_at <= now))
         expired = (
             await session.scalars(
                 select(InboundEvent)

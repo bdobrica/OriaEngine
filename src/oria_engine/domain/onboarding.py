@@ -20,6 +20,8 @@ from oria_engine.domain.birth_time import birth_zone, utc_candidates
 from oria_engine.domain.channel import ChannelButton, ChannelMessage
 from oria_engine.domain.consent import ConsentReply
 from oria_engine.domain.consent import OnboardingState as State
+from oria_engine.domain.knowledge import KnowledgeConversation, source_id
+from oria_engine.domain.memory import requested_follow_up
 from oria_engine.domain.onboarding_data import OnboardingDraft, parse_birth_date, parse_birth_time
 from oria_engine.domain.places import PlaceResolutionUnavailable, PlaceResolver, TooManyPlaces
 from oria_engine.domain.policy import PRIVACY_REPLY
@@ -255,6 +257,9 @@ class OnboardingFlow:
             "Use /edit_profile to correct date, time or place after consent. Selecting a place "
             "updates its coordinates and timezone. Use /privacy for storage and consent controls."
         )
+        sections.append(
+            "Use /memories to inspect saved entities and life events, including after withdrawal."
+        )
         return ConsentReply(state, "\n\n".join(sections))
 
     async def handle(
@@ -285,6 +290,9 @@ class OnboardingFlow:
             message, command = replace(message, text=parts[1]), None
         elif command in {"edit_profile", "edit-profile"}:
             await TemporalRepository(session, self.encryption, self.policy_version).clear(user_id)
+            await KnowledgeConversation(
+                session, self.encryption, self.policy_version
+            ).repository.clear_progress(user_id)
         drafts = OnboardingRepository(session, self.encryption, self.policy_version)
         profiles = BirthProfileRepository(
             session, self.encryption, policy_version=self.policy_version
@@ -316,7 +324,16 @@ class OnboardingFlow:
                         return ConsentReply(State.ACTIVE, PRIVACY_REPLY)
                     try:
                         dialogue = None
+                        memory_receipt = None
+                        follow_up = None
                         if intent.kind != "unsupported_high_stakes":
+                            knowledge = KnowledgeConversation(
+                                session, self.encryption, self.policy_version
+                            )
+                            turn = await knowledge.resume(user_id, message)
+                            if turn.reply is not None:
+                                return ConsentReply(State.ACTIVE, turn.reply)
+                            message = turn.message
                             dialogue = await prepare_temporal_dialogue(
                                 session,
                                 user_id,
@@ -326,13 +343,35 @@ class OnboardingFlow:
                                 text=message.text,
                                 received_at=message.received_at,
                                 source_update_id=message.provider_update_id,
-                                timezone=user.current_timezone,
+                                timezone=turn.timezone or user.current_timezone,
+                                timezone_source=turn.timezone_source,
+                                saved_anchors=await knowledge.anchors(user_id, turn.selected),
+                                selected_record=turn.selected,
+                                operation_source=turn.source or source_id(user_id, message),
                             )
                             if dialogue.unresolved is not None:
                                 assert dialogue.unresolved.issue is not None
+                                anchor_question = await knowledge.clarify_anchor(
+                                    user_id,
+                                    replace(
+                                        message, text=dialogue.text, received_at=dialogue.reference
+                                    ),
+                                    dialogue.unresolved.anchor_label,
+                                )
+                                if anchor_question:
+                                    return ConsentReply(State.ACTIVE, anchor_question)
                                 return ConsentReply(
                                     State.ACTIVE, clarification(dialogue.unresolved.issue)
                                 )
+                            turn = replace(turn, selected=dialogue.selected_record or turn.selected)
+                            memory_reply = await knowledge.learn(user_id, turn, dialogue)
+                            if memory_reply is not None:
+                                follow_up = requested_follow_up(dialogue.text)
+                                if not follow_up or not memory_reply.startswith(
+                                    ("Saved", "Updated")
+                                ):
+                                    return ConsentReply(State.ACTIVE, memory_reply)
+                                memory_receipt = memory_reply
                             intent = route_active(
                                 dialogue.text,
                                 received_at=dialogue.reference,
@@ -346,6 +385,15 @@ class OnboardingFlow:
                             if dialogue is not None
                             else prepare_active_input(message.text)
                         )
+                        if follow_up is not None:
+                            assert dialogue is not None
+                            active_text = prepare_active_input(follow_up)
+                            intent = route_active(
+                                active_text,
+                                received_at=dialogue.reference,
+                                current_timezone=dialogue.timezone,
+                                anchors=dialogue.anchors,
+                            )
                         facts = await prepare_active(
                             active_text,
                             received_at=message.received_at,
@@ -374,6 +422,10 @@ class OnboardingFlow:
                                 ),
                             )
                             text = response.text
+                            if memory_receipt:
+                                text = memory_receipt + "\n\n" + text
+                                if len(text.encode("utf-16-le")) // 2 > 4096:
+                                    text = memory_receipt + "\n\nPlease ask for a shorter reading."
                             if facts.transits is not None and user.current_timezone is not None:
                                 local_target = facts.transits.target_timestamp_utc.astimezone(
                                     birth_zone(user.current_timezone)

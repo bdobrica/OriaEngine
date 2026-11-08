@@ -1,4 +1,4 @@
-"""Deterministic consent decisions gating optional encrypted onboarding; no model calls."""
+"""Deterministic consent decisions and versioned storage disclosure."""
 
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -16,57 +16,78 @@ from oria_engine.observability import count
 if TYPE_CHECKING:
     from oria_engine.domain.onboarding import OnboardingFlow
 
-# Collection disclosure uses the configured policy version (default 2026-11-08.2).
+# Collection disclosure uses the configured policy version (default 2026-11-08.3).
 # Change the configured version whenever the disclosure/data use changes.
 DISCLAIMER = (
-    "Hi — I'm Oria, an AI astrology personality. Astrology is interpretive, not a factual "
-    "or scientifically established forecast. My responses are not medical, legal, financial "
-    "or other high-stakes professional advice.\n\n"
-    "For personalized chart calculations, I need your birth date, birth time "
-    "(exact, approximate, or unknown), and birthplace (city and country). "
-    "OriaEngine will store those details for future conversations after you agree. "
-    "You are responsible for information you choose to share about yourself, other people, "
-    "pets, organizations or possessions. Oria is responsible for secure storage, account "
-    "isolation and the inspection, correction and deletion controls described here. "
-    "I ask relevant questions, not for unrelated identifiers or account secrets.\n\n"
-    "Use /profile to inspect confirmed birth details, unfinished edits, chart status and "
-    "consent, even after declining. /edit_profile corrects birth details after consent; "
-    "selecting a birthplace determines coordinates and timezone. /privacy reviews this "
-    "policy and lets you withdraw consent with Decline. /help lists commands. "
-    "Use /delete_me (or /delete-me) and its confirmation button to delete your account. "
-    "Processing stops on confirmation; cleanup retries until services acknowledge deletion. "
-    "Derived chart facts are stored privately "
-    "in the application database. "
-    "We store internal identity, Telegram routing IDs, consent decisions and encrypted "
-    "onboarding progress, including incomplete birth details. Confirmed profiles are encrypted. "
-    "Send only the birth field requested. After consent, queued messages and pending replies "
-    "are temporarily encrypted in PostgreSQL and erased on completion or permanent failure. "
-    "Unfinished payloads expire after 24 hours and are erased when the worker next runs. "
-    "Before consent, free text is discarded. Queue metadata and processing status are retained. "
-    "Active chat uses SecondContext and its AI provider: filtered messages, replies and "
-    "retrieved context are retained there for conversation continuity. Volunteered personal "
-    "context can be included. Obvious account secrets are held locally. Recognized "
-    "birth-bearing clauses are withheld before model processing; filtering is limited. "
-    "Unfinished date questions are temporarily encrypted locally for up to 24 hours from "
-    "the original message, then erased when the worker next runs. Replies can complete "
-    "these questions; withdrawal clears them. Your saved birth date can resolve your own "
-    "explicit birthday references locally. Event/entity profile memory and selective "
-    "forgetting are not available yet. "
-    "Calculated chart facts are sent "
-    "for interpretation and may be quoted in retained replies. Raw saved birth profiles "
-    "and onboarding messages are not sent to SecondContext. A blocked AI draft may still "
-    "be retained there. Declining stops further conversation processing but does not erase "
-    "prior transcripts. Confirmed deletion removes profiles, consent history, application "
-    "sessions, SecondContext conversations/memories and Telegram identity mapping. "
-    "Minimal subject/timestamp deletion markers and unlinked update receipts remain. "
-    "An encrypted reply address is retained for up to 24 hours after cleanup to retry "
-    "the final confirmation; workers erase it after delivery or expiry. "
-    "Backups and AI-provider retention are separate. "
-    "Telegram retains messages under its own policies. You can use Decline below to stop "
-    "onboarding, including after accepting; this does not delete identity, consent history "
-    "or previously collected birth details.\n\n"
-    "This MVP is for adults aged 18 or older. By choosing 'I'm 18+ and agree', you confirm "
-    "that you are at least 18 and consent to the described data use."
+    "Hi — I'm Oria, an AI astrology personality for adults. Astrology is "
+    "interpretive, not a scientifically established forecast. My responses "
+    "are not medical, legal, financial or other professional advice.\n"
+    "\n"
+    "After you agree, OriaEngine encrypts your birth date, "
+    "exact/approximate/unknown time and birthplace for chart calculations. "
+    "You are responsible for what you voluntarily share about yourself, "
+    "people, pets, organizations and possessions. Oria is responsible for "
+    "secure storage, account isolation and the controls below.\n"
+    "\n"
+    "With an active profile, clearly disclosed meaningful events and "
+    "entities can be learned from bounded English conversation without a "
+    "separate save command. Labels, aliases, relationships, event "
+    "participants, supplied dates/times/places and source/date-resolution "
+    "provenance are encrypted locally. Unknown dates and times stay "
+    "unknown. Saved events can resolve later date references locally. Your "
+    "own birth remains in its confirmed profile, with revision references "
+    "rather than duplicate birth fields. Examples, hypotheticals and "
+    "recognized “don't remember this” requests do not create saved events. "
+    "Extraction is limited: inspect or correct anything misunderstood. A "
+    "save or change is acknowledged only with the application operation.\n"
+    "\n"
+    "Use /profile for confirmed birth details, unfinished edits, chart "
+    "status and consent. /edit_profile corrects your own birth details "
+    "after consent; selecting a birthplace sets coordinates/timezone. "
+    "/memories lists saved events/entities; ask what I remember, correct "
+    "an event or say “forget …”. Inspection and removal remain available "
+    "without current consent. Entity removal can also remove linked "
+    "events; I ask if the cascade is unclear. Forgotten UUIDs and "
+    "payload-free operation receipts prevent replay. Selective removal "
+    "covers local saved records and pending clarification, not earlier "
+    "conversation/provider copies. SecondContext event projections and "
+    "remote selective erasure are not available yet. “Don't remember” "
+    "prevents additional profile-memory writes; it does not create a "
+    "private chat mode.\n"
+    "\n"
+    "/privacy shows this policy and Decline withdraws consent. Declining "
+    "stops learning, readings and setup, and clears pending questions; "
+    "previously saved data remains. /delete_me (or /delete-me) opens "
+    "confirmed account deletion. Processing stops on confirmation; cleanup "
+    "retries until Oria and SecondContext acknowledge it. Profiles, "
+    "events/entities, consent, sessions, conversations/memories and the "
+    "Telegram identity mapping are erased from active stores. Minimal "
+    "deletion markers and unlinked update receipts remain. An encrypted "
+    "reply address lasts up to 24 hours after cleanup for the final "
+    "notice. /help lists commands.\n"
+    "\n"
+    "We store internal identity, Telegram routing IDs, consent decisions, "
+    "encrypted unfinished setup and private derived chart facts. Queued "
+    "messages and replies are encrypted temporarily and erased on "
+    "completion/final failure; unfinished payloads expire after 24 hours, "
+    "erased when workers next run. Before consent, ordinary free text is "
+    "discarded; explicit inspection/erasure requests and bounded pending "
+    "answers use this temporary queue. Queue metadata remains. Encrypted "
+    "date/record-selection questions and conversation focus expire 24 "
+    "hours from their reference message and clear on withdrawal.\n"
+    "\n"
+    "Active readings use SecondContext and its AI provider. Filtered chat, "
+    "replies and retrieved context are retained there; volunteered context "
+    "may appear. Obvious secrets and recognized birth "
+    "clauses/continuations are held locally; filtering is limited. Raw "
+    "saved birth profiles and onboarding messages are not sent there. "
+    "Calculated facts can be quoted in retained replies; even a blocked "
+    "draft may be retained. Local memory controls do not call that "
+    "provider. Backups, AI-provider retention and Telegram history have "
+    "separate lifecycles.\n"
+    "\n"
+    "By choosing “I'm 18+ and agree”, you confirm you are at least 18 and "
+    "consent to this data use.\n"
 )
 ACCEPTED_TEXT = (
     "Your consent is recorded. The next step is your birth date, but profile setup "
@@ -165,6 +186,14 @@ class ConsentFlow:
 
         if command == "help":
             return ConsentReply(state, HELP_TEXT)
+        if self.onboarding is not None:
+            from oria_engine.domain.knowledge import KnowledgeConversation
+
+            memory_reply = await KnowledgeConversation(
+                session, self.onboarding.encryption, self.policy_version
+            ).controls(user_id, message, command)
+            if memory_reply is not None:
+                return ConsentReply(state, memory_reply)
         if command == "profile" and self.onboarding is not None:
             return await self.onboarding.inspect_profile(session, user_id)
 

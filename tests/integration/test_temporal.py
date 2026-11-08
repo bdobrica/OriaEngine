@@ -11,6 +11,7 @@ from sqlalchemy import delete, select, update
 from oria_engine.context.contracts import ContextReply
 from oria_engine.context.service import ConversationContext
 from oria_engine.db.birth_profiles import BirthProfileRepository
+from oria_engine.db.knowledge import KnowledgeRepository
 from oria_engine.db.models import ConversationSession, TemporalClarification, User
 from oria_engine.db.repositories import ConsentRepository
 from oria_engine.db.temporal import TemporalRepository
@@ -72,12 +73,13 @@ async def test_timezone_reply_resumes_original_reference_after_restart(
     provider = provider_for(flow)
     answer = replace(message("UTC"), received_at=original.received_at + timedelta(hours=2))
     await flow.handle(answer)
-    request = provider.respond.call_args.args[1]
-    assert request.reference_time_utc == original.received_at
+    async with store.transaction() as session:
+        event = (await KnowledgeRepository(session, encryption, "v1").list(user_id))[0].record
+    assert event.temporal.reference_time_utc == original.received_at
     expected = original.received_at.date().replace(year=original.received_at.year - 1)
-    assert (
-        expected.isoformat() in request.filtered_message and "15:00:00Z" in request.filtered_message
-    )
+    assert event.temporal.value.value.date() == expected
+    assert event.temporal.value.value.hour == 15
+    provider.respond.assert_not_called()
     assert await pending(store, encryption, user_id) is None
     async with store.transaction() as session:
         assert (await session.get(User, user_id)).current_timezone is None  # Event-only answer.
@@ -107,9 +109,12 @@ async def test_pending_clock_and_mixed_year_finish_without_repeating_story(
     provider = provider_for(flow)
     assert "clock time" in (await flow.handle(message("We married May 1st, 2020 at"))).text
     await flow.handle(message("at 3pm"))
-    request = provider.respond.call_args.args[1]
-    assert "2020-05-01T15:00:00" in request.filtered_message
-    assert "local_datetime" in request.filtered_message
+    user_id = await owner(store)
+    async with store.transaction() as session:
+        event = (await KnowledgeRepository(session, encryption, "v1").list(user_id))[0].record
+    assert event.temporal.value.kind == "local_datetime"
+    assert event.temporal.value.value.isoformat() == "2020-05-01T15:00:00"
+    provider.respond.assert_not_called()
     assert "Which year" in (await flow.handle(message("transits on May 1st"))).text
     reply = await flow.handle(message("2020"))
     assert "Which timezone" in reply.text
@@ -141,7 +146,8 @@ async def test_event_and_partner_dates_stay_local_without_profile_mutations(
             )
         )
     text = provider.respond.call_args.args[1].filtered_message
-    assert "We married May 1st, 2020" in text and "Rate our compatibility" in text
+    assert "Rate our compatibility" in text
+    assert "We married" not in text
     assert "1992" not in text and "June" not in text
     assert provider.respond.call_args.args[1].transit_facts is None
     client.calculate_transits.assert_not_called()

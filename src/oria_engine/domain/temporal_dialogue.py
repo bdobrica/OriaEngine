@@ -5,10 +5,12 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from oria_engine.astrology.contracts import WireModel
 from oria_engine.db.birth_profiles import BirthProfileRepository
+from oria_engine.db.models import BirthProfile
 from oria_engine.db.temporal import PendingTemporal, TemporalRepository
 from oria_engine.domain.active import route_active
 from oria_engine.domain.birth_time import birth_zone
@@ -19,7 +21,7 @@ from oria_engine.domain.temporal import (
     TemporalMention,
     analyze_temporal,
 )
-from oria_engine.knowledge.contracts import CalendarDate, PartialDate, TemporalEvidence
+from oria_engine.knowledge.contracts import CalendarDate, PartialDate, RecordRef, TemporalEvidence
 from oria_engine.privacy.encryption import ProfileEncryption
 from oria_engine.privacy.messages import held_birth_spans, prepare_active_input
 
@@ -32,6 +34,9 @@ class TemporalDialogue(WireModel):
     analysis: TemporalAnalysis
     anchors: tuple[EventAnchor, ...]
     unresolved: TemporalMention | None = None
+    selected_record: RecordRef | None = None
+    source_update_id: str = ""
+    operation_source: UUID | None = None
 
     def model_text(self) -> str:
         """No birth candidates/anchor dates or saved timezone metadata are forwarded."""
@@ -145,27 +150,35 @@ async def prepare_temporal_dialogue(
     received_at: datetime,
     source_update_id: str,
     timezone: str | None,
+    saved_anchors: tuple[EventAnchor, ...] = (),
+    selected_record: RecordRef | None = None,
+    operation_source: UUID | None = None,
+    timezone_source: Literal["explicit_event", "current_preference"] = "current_preference",
 ) -> TemporalDialogue:
     repository = TemporalRepository(session, encryption, policy_version)
     pending = await repository.get(user_id)
-    anchors: tuple[EventAnchor, ...] = ()
-    timezone_source: Literal["explicit_event", "current_preference"] = "current_preference"
+    anchors: tuple[EventAnchor, ...] = saved_anchors
     if pending is not None:
         resumed = _resume(pending, text)
         if resumed is not None:
-            text, timezone, anchors = resumed
+            text, timezone, pending_anchors = resumed
+            anchors = (*saved_anchors, *(a for a in pending_anchors if a.reference is None))
             received_at = pending.reference_time_utc
+            source_update_id = pending.source_update_id
+            selected_record = pending.selected_record or selected_record
+            operation_source = pending.operation_source or operation_source
             timezone_source = (
                 "explicit_event"
                 if pending.unresolved is not None and pending.unresolved.issue == "timezone"
                 else pending.timezone_source
             )
         elif text == pending.text and source_update_id == pending.source_update_id:
-            received_at, timezone, anchors = (
+            received_at, timezone, pending_anchors = (
                 pending.reference_time_utc,
                 pending.timezone,
                 pending.anchors,
             )
+            anchors = (*saved_anchors, *(a for a in pending_anchors if a.reference is None))
             timezone_source = pending.timezone_source
         await repository.clear(user_id)
     # Only an explicit own-birth anchor authorizes reading these local inputs.
@@ -177,9 +190,16 @@ async def prepare_temporal_dialogue(
             session, encryption, policy_version=policy_version
         ).get(user_id)
         if profile is not None:
+            row = await session.scalar(select(BirthProfile).where(BirthProfile.user_id == user_id))
+            assert row is not None
+            reference = RecordRef(kind="event", id=row.id, revision=row.revision)
             own = (
-                EventAnchor(label="my birthday", day=profile.birth_date, recurring=True),
-                EventAnchor(label="the day I was born", day=profile.birth_date),
+                EventAnchor(
+                    label="my birthday", day=profile.birth_date, recurring=True, reference=reference
+                ),
+                EventAnchor(
+                    label="the day I was born", day=profile.birth_date, reference=reference
+                ),
             )
             anchors = (
                 *anchors,
@@ -192,6 +212,19 @@ async def prepare_temporal_dialogue(
         anchors=anchors,
         timezone_source=timezone_source,
     )
+    from oria_engine.domain.memory import directive
+
+    memory_request = directive(text)
+    if memory_request is not None and memory_request.action == "correct":
+        # In “correct our wedding to May 2, not May 1”, the record selector
+        # and quoted old value are not replacement dates or calculation targets.
+        replacement = re.search(r"\bto\s+", text, re.I)
+        start = replacement.end() if replacement else 0
+        old_value = re.search(r"\bnot\b", text[start:], re.I)
+        end = start + old_value.start() if old_value else len(text)
+        analysis = analysis.model_copy(
+            update={"mentions": tuple(m for m in analysis.mentions if start <= m.start < end)}
+        )
     unresolved = next((m for m in analysis.mentions if m.issue is not None), None)
     initial_intent = route_active(
         text, received_at=received_at, current_timezone=timezone, anchors=anchors
@@ -239,9 +272,11 @@ async def prepare_temporal_dialogue(
                 reference_time_utc=received_at,
                 timezone=timezone,
                 timezone_source=timezone_source,
-                anchors=anchors,
+                anchors=tuple(a for a in anchors if a.reference is None)[:32],
                 unresolved=unresolved,
                 source_update_id=source_update_id,
+                selected_record=selected_record,
+                operation_source=operation_source,
             ),
         )
     return TemporalDialogue(
@@ -252,4 +287,7 @@ async def prepare_temporal_dialogue(
         anchors=anchors,
         analysis=analysis,
         unresolved=unresolved,
+        selected_record=selected_record,
+        source_update_id=source_update_id,
+        operation_source=operation_source,
     )

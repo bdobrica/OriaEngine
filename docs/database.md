@@ -50,6 +50,12 @@ downgrade removes only local mappings and does not purge remote SecondContext da
 Revision `0008` adds [durable deletion jobs](deletion.md) and unlinked inbound receipts.
 Its development downgrade drops deletion progress and unlinked receipts; it cannot
 restore deleted users or remote context. Do not downgrade with active deletion jobs.
+Revision `0009` adds the explicit current timezone preference, `0010` encrypted
+date clarification, and `0011` [canonical private memory](private-memory.md) with
+links, provenance, revision/deletion fences and encrypted dialogue progress. The
+birth profile gains a monotonic revision for virtual own-birth references. A
+development downgrade of `0011` discards that local event/entity memory and its
+receipts; it does not restore erased content or purge remote chat.
 `make migrate-down` rolls back one revision and is guarded to development/test.
 It uses the configured database URL: verify that URL points to your intended
 development database before running it. Downgrading `0002` drops all identity

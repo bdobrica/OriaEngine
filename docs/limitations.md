@@ -30,9 +30,9 @@ not completion of operator checks or proof of model safety/astrological predicti
 
 - [Natural dates](current-time.md) use bounded English/Gregorian extraction with typed
   roles/precision and encrypted temporary clarification. Own-birth, same-message and
-  clarification-supplied anchors work; older event recall requires the planned
-  canonical event/entity memory. Automatic learning, conversational event CRUD and
-  SecondContext salience still need implementation. See the [delivery sequence](conversation-memory-plan.md).
+  clarification-supplied and saved canonical anchors work. [Local event/entity memory](private-memory.md)
+  supports bounded English learning and conversational CRUD; it is not a general
+  language/entity-resolution system. SecondContext salience/projections still need implementation. See the [delivery sequence](conversation-memory-plan.md).
 - Telegram private text and supported callbacks are the current channel surface.
   Groups, media and other update types are ignored. Use one bot per database and
   one polling process per bot.

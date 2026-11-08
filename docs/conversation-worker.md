@@ -5,7 +5,7 @@ into the existing consent/onboarding flow. The job owns and closes the HTTP clie
 All consent, profile, queue, locking and delivery invariants in
 [worker queue](worker-queue.md) still apply. Migration `0010` adds encrypted temporary
 date clarification. There are no new dependencies, model tools or live wire-schema
-changes. Candidate long-term event contracts remain inactive.
+changes. Canonical events/entities are encrypted locally under migration 0011; [memory controls](private-memory.md) run without model authority. Candidate remote projection routes remain inactive.
 
 After consent, a confirmed profile with a current derived cache permits active
 chat. Onboarding, callbacks and profile/privacy commands remain deterministic and
@@ -69,7 +69,7 @@ contract extension. See the [consumer contract](../contracts/second-context/v1.m
 
 ## Demo setup
 
-Use `ORIA_POLICY_VERSION=2026-11-08.2` consistently in polling and workers. Bump custom
+Use `ORIA_POLICY_VERSION=2026-11-08.3` consistently in polling and workers. Bump custom
 policy versions as well. Existing users must accept the new disclosure. It describes
 voluntary personal context, user/storage responsibilities, birth-clause withholding,
 temporary date clarification and local own-birthday access,

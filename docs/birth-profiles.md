@@ -49,7 +49,8 @@ it into chat, evidence or committed examples. Restrict local file access, for
 example `chmod 600 .env` on a filesystem that supports Unix permissions. Do not
 run this to replace the key on a populated database. Polling, gateway and workers
 must use the same key/version. The key also encrypts drafts, temporary event/reply
-envelopes and deletion notification addresses, so retain it while those exist.
+envelopes, [canonical events/entities and memory progress](private-memory.md), and
+deletion notification addresses, so retain it while those exist.
 
 `PROFILE_ENCRYPTION_KEY_VERSION` identifies that key (default `v1`). This stage
 supports one configured key, not an automatic rotation/keyring workflow. Unknown

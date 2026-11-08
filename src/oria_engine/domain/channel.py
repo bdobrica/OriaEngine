@@ -35,6 +35,7 @@ HELP_TEXT = (
     "not a scientifically established forecast or professional advice.\n\n"
     "/start — review consent or resume setup.\n"
     "/profile — inspect saved details, unfinished edits, chart status and consent.\n"
+    "/memories — inspect saved life events and entities; say “forget …” to remove one.\n"
     "/edit_profile — correct date, time or place, then confirm to recalculate.\n"
     "/retry_profile — retry a missing or outdated chart calculation.\n"
     "/timezone — set or clear your current timezone for relative dates.\n"
@@ -44,7 +45,8 @@ HELP_TEXT = (
     "Editing and readings require current consent. With an active profile, "
     "ask about your natal chart, transits today, "
     "tomorrow, in 3 hours, or transits on YYYY-MM-DD. "
-    "You can share life events and dates naturally; structured event memory is not available yet. "
+    "Share life events and dates naturally; meaningful disclosures can be saved locally. "
+    "Say “don’t remember this” to skip profile memory. "
     "Declining stops readings and setup but does not erase data. Confirmed deletion stops "
     "processing and retries cleanup across Oria and SecondContext."
 )

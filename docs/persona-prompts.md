@@ -13,7 +13,7 @@ there are no prompt files to mount, new dependencies, settings or migrations.
 
 | Layer | Responsibility |
 | --- | --- |
-| `policy.py`, `oria-policy-5` | AI identity, consent/application authority, privacy, substantive safety limits, adult agency and untrusted-input rules |
+| `policy.py`, `oria-policy-6` | AI identity, consent/application authority, privacy, substantive safety limits, adult agency and untrusted-input rules |
 | `methodology.py`, `oria-methodology-5` | Weave relevant calculated readings into dialogue; separate facts and interpretation and respect availability and resolved targets |
 | `voice.py`, `oria-voice-2` | Natural adult conversation, specificity, acceptance of corrections, optional questions and user control of pace |
 

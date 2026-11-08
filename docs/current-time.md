@@ -5,8 +5,9 @@ persisted aware UTC arrival time, never the worker or model clock. Typed candida
 distinguish life events, birth inputs, anniversaries, own-profile corrections,
 calculation targets and other context. A narrative date does not authorize a transit
 calculation or a profile mutation. Multiple clauses can have different roles.
-Long-term event/entity storage and recall still belong to the later
-[memory slices](conversation-memory-plan.md#delivery-sequence-and-acceptance).
+Local encrypted event/entity storage and recall are implemented in
+[private memory](private-memory.md). Remote projections and linked calculations
+remain later [memory slices](conversation-memory-plan.md#delivery-sequence-and-acceptance).
 
 ## Supported expressions and precision
 
@@ -50,8 +51,10 @@ The active flow can read the user's encrypted birth date for an explicit own-bir
 anchor. Ordinary readings and partner dates still use only the derived natal cache.
 Dates stated earlier in the same message can provisionally anchor subsequent
 wedding/birth references. A clarification can supply another event's anchor date.
-These are temporary inputs, not saved profile events. Retrieval of old weddings,
-pets, businesses or other entity events requires slice 3 storage and later recall.
+Same-message and supplied anchors alone are temporary inputs. [Private memory](private-memory.md)
+adds saved canonical anchors for weddings, pets, businesses and other recognized events;
+ambiguous stored occurrences ask for selection. Corrected/deleted anchors cannot remain
+authoritative in suspended questions.
 
 ## Pending questions and privacy
 
@@ -77,7 +80,7 @@ non-birth resolved temporal values can reach SecondContext as untrusted user-sta
 context, not astrology facts or saved events. Raw saved birth values, birth
 candidates and birthday anchor dates are not forwarded. Filtering is bounded and
 cannot detect every unlabeled/encoded input. No new remote route, memory ingestion
-or model-controlled mutation is introduced. Consent version `2026-11-08.2` describes
+or model-controlled mutation is introduced. Consent version `2026-11-08.3` describes
 these temporary records and local own-birthday access; existing users re-consent.
 
 ## Timezone preference and calculation compatibility

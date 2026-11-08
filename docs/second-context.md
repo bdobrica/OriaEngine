@@ -81,7 +81,7 @@ The adapter supports [active routing and transit facts](transits-and-routing.md)
 The polling/worker demo calls this adapter for eligible active chat and
 [confirmed, durable account deletion](deletion.md) across Oria and SecondContext.
 
-The updated disclosure uses policy version `2026-11-08.2`; deploy it consistently and
+The updated disclosure uses policy version `2026-11-08.3`; deploy it consistently and
 bump custom versions before enabling conversation storage. It describes actual
 SecondContext retention and deletion controls, including the minimal deletion marker.
 

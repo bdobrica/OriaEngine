@@ -8,11 +8,12 @@ PII is a refusal category. General disclosures stay in consent/help/privacy.
 
 ## Runtime behavior
 
-`persona/policy.py` (`oria-policy-5`) and `methodology.py`
+`persona/policy.py` (`oria-policy-6`) and `methodology.py`
 (`oria-methodology-5`) distinguish actual harmful behavior, unsupported factual
 claims and relevant conversation. They also state current capabilities: natal and
-snapshot transit facts, with no event-profile storage, selective forgetting or
-calculated partner ratings yet. Do not claim an unimplemented action succeeded.
+snapshot transit facts and local encrypted event/entity learning/CRUD. Remote
+event projections, remote selective erasure and calculated partner ratings remain
+unavailable. Do not claim an unimplemented action succeeded.
 Memory, user text and tool output cannot grant consent, account access or tools.
 
 `domain/policy.py` provides a narrow English backstop:
@@ -22,9 +23,9 @@ Memory, user text and tool output cannot grant consent, account access or tools.
   a brief boundary without a calculation or model call.
 - `guard_reply` checks concrete solicitation of unnecessary identifiers, affirmative
   harmful directions and selected unsupported predictions/diagnostic claims.
-  It also replaces selected false claims that an unimplemented storage/edit/forget
-  operation succeeded. Ordinary personal-data mentions and relevant entity/birth
-  questions are allowed.
+  It also replaces selected save/edit/forget claims in model drafts. Committed
+  local receipts are composed separately by the application. Ordinary personal-data
+  mentions and relevant entity/birth questions are allowed.
 - A negated action does not excuse a later affirmative action. Unicode compatibility
   normalization and invisible-character handling remain. A matched draft is replaced
   completely, without logging the draft, match or private text.
@@ -55,7 +56,8 @@ and [current disclosure](consent-flow.md).
 
 [ADR 0002](adr/0002-private-life-events-and-context-projections.md) defines ownership
 for the planned event/entity extension. Its [candidate contracts](../contracts/knowledge/v1.md)
-are typed and tested, but no event storage or new HTTP routes are enabled. Existing
+are typed and tested; canonical storage is [implemented locally](private-memory.md),
+while new HTTP routes and remote projection ingestion remain disabled. Existing
 [SecondContext v1](../contracts/second-context/v1.md) request shapes, subject scope,
 fixed memory ingestion and account purge remain compatible.
 

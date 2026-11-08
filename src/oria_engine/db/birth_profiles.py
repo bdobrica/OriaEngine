@@ -63,9 +63,16 @@ class BirthProfileRepository:
         if row is None:
             row = BirthProfile(id=profile_id, user_id=user_id)
             self.session.add(row)
+        else:
+            row.revision += 1
         row.encrypted_payload = encrypted
         row.encryption_key_version = self.encryption.key_version
         row.schema_version = payload.schema_version
         row.updated_at = (await self.session.execute(select(func.clock_timestamp()))).scalar_one()
         await self.session.flush()
+        from oria_engine.db.knowledge import KnowledgeRepository
+
+        await KnowledgeRepository(
+            self.session, self.encryption, self.policy_version
+        ).invalidate_profile(user_id, profile_id)
         return profile_id

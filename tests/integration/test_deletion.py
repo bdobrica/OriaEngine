@@ -20,6 +20,11 @@ from oria_engine.db.models import (
     ConversationSession,
     DeletionJob,
     InboundEvent,
+    KnowledgeChange,
+    KnowledgeDialogue,
+    KnowledgeLink,
+    KnowledgeOperation,
+    KnowledgeRecord,
     OnboardingProgress,
     SocialIdentity,
     TemporalClarification,
@@ -93,6 +98,11 @@ async def assert_local_erased(worker, user_id, *, completed):
             AstrologyProfile,
             OnboardingProgress,
             TemporalClarification,
+            KnowledgeDialogue,
+            KnowledgeChange,
+            KnowledgeLink,
+            KnowledgeOperation,
+            KnowledgeRecord,
             ConversationSession,
             Consent,
         ):
@@ -130,6 +140,15 @@ async def test_complete_deletion_http_purge_replay_and_fresh_account(deletion):
     scope = ContextScope(user_id=user_id, session_id=session_id)
     await runner.context.remember(scope, "concise_readings")
     assert stub.memories and stub.sessions
+    await worker.process(
+        await ingress.accept(message(text="My girlfriend Alice was born June 2nd, 1992"))
+    )
+    async with worker.database.transaction() as session:
+        assert (
+            await session.scalar(select(KnowledgeRecord).where(KnowledgeRecord.user_id == user_id))
+            is not None
+        )
+        assert await session.get(KnowledgeDialogue, user_id) is not None
     await worker.process(await ingress.accept(message(text="We married May 1st, 2020 at")))
     async with worker.database.transaction() as session:
         assert await session.get(TemporalClarification, user_id) is not None

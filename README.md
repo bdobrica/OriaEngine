@@ -11,7 +11,9 @@ natural relative dates, remembered life events about people, pets, organizations
 and possessions, and compatibility readings. Oria is responsible for secure,
 user-scoped storage and retrieval, correction and deletion. Adult dialogue policies,
 typed contracts and [natural-date clarification](docs/current-time.md) are implemented;
-event memory and linked calculations remain planned. See the [delivery plan](docs/conversation-memory-plan.md).
+local encrypted event/entity memory supports conversational lookup, correction and
+removal. SecondContext projections and linked calculations remain planned. See the
+[delivery plan](docs/conversation-memory-plan.md).
 
 **Status:** the demo pipeline, privacy commands, deletion, webhook ingress and
 Docker development stack are implemented. The [Stage 25 release gate](TODO.md#stage-25--mvp-release-gate)
@@ -54,7 +56,7 @@ See [testing](docs/testing.md) for coverage and limits. `make help` lists all ta
    Configure its URL, service authentication and subject namespace for chat and deletion.
    Its OpenAI credentials belong in SecondContext, not OriaEngine.
 5. Set `SECOND_CONTEXT_DOCKER_URL` to an address reachable from containers and retain
-   `ORIA_POLICY_VERSION=2026-11-08.2`. For polling, leave the webhook secret empty
+   `ORIA_POLICY_VERSION=2026-11-08.3`. For polling, leave the webhook secret empty
    and use a development bot with no registered webhook.
 
 ```sh
@@ -103,7 +105,8 @@ and [deletion and retention](docs/deletion.md).
 | Deploy published images with Compose | [Deployment](docs/deployment.md) |
 | Conversation dependency and policy | [SecondContext](docs/second-context.md), [worker pipeline](docs/conversation-worker.md) |
 | Adult conversation experience and authored examples | [Dialogue guide](docs/dialogue/README.md), [persona prompts](docs/persona-prompts.md) |
-| Planned natural dates, life events, entities and salience | [Conversation memory design](docs/conversation-memory-plan.md) |
+| Private event/entity memory | [Storage and conversation controls](docs/private-memory.md) |
+| Natural dates, life events, entities and planned salience | [Conversation memory design](docs/conversation-memory-plan.md) |
 | Logs, health, limits and recovery | [Operations](docs/operations.md), [abuse controls](docs/abuse-controls.md) |
 | Known gaps and live checks | [MVP limitations](docs/limitations.md) |
 | Implementation intent and remaining release work | [PLAN.md](PLAN.md), [TODO.md](TODO.md) |
