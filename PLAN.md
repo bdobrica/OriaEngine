@@ -4,7 +4,7 @@
 
 OriaEngine is the application runtime for **Oria**, an AI astrology personality that lives inside messaging and social platforms and maintains an ongoing relationship with each user.
 
-The first MVP will run as a **Telegram bot**. Users explicitly consent to the disclosed data use, create a persistent birth profile, and ask for personalized astrological interpretations and conversational insights. The intended next extension learns meaningful volunteered life events and entities, understands natural time expressions, and maintains user-controlled memory; see the [design and staged delivery plan](docs/conversation-memory-plan.md). Natural dates and local encrypted event/entity memory are implemented; optional SecondContext projections/salience are implemented; linked calculations remain planned.
+The first MVP will run as a **Telegram bot**. Users explicitly consent to the disclosed data use, create a persistent birth profile, and ask for personalized astrological interpretations and conversational insights. The intended next extension learns meaningful volunteered life events and entities, understands natural time expressions, and maintains user-controlled memory; see the [design and staged delivery plan](docs/conversation-memory-plan.md). Natural dates and local encrypted event/entity memory are implemented; optional SecondContext projections/salience are implemented; [linked calculations](docs/linked-readings.md) are implemented; coordinated release remains.
 
 OriaEngine is intended to build on the ideas and infrastructure of [SecondContext](https://github.com/bdobrica/SecondContext): persistent user-scoped context, structured memory, retrieval, and conversation continuity. OriaEngine adds the channel integration, consent/profile state machine, privacy boundary, astrology calculation service, and Oria-specific policy/persona layer.
 
@@ -76,7 +76,7 @@ The MVP includes:
 - encrypted persistent birth-profile storage in PostgreSQL;
 - deterministic natal-chart generation;
 - deterministic transit/aspect calculation for a requested date or the current date;
-- relationship compatibility and synastry from voluntarily supplied partner birth details, including requested interpretive ratings (implementation pending);
+- relationship compatibility and synastry from voluntarily supplied partner birth details, including requested interpretive ratings ([implemented linked readings](docs/linked-readings.md));
 - bounded natural relative/mixed/event-anchored dates and temporary clarification; encrypted local event/entity memory supports conversational learning/CRUD; optional SecondContext salience is implemented (see section 6.2);
 - astrology calculation service in a separate Docker container using FastMCP;
 - Redis-backed job processing and temporary state;
@@ -275,9 +275,9 @@ account's records. Route them to compatibility rather than `/edit_profile` or a
 transit-date request. Use a birthday-only reading where supported, invite optional
 time/place details when they add useful precision, and avoid making completeness
 a condition for all discussion. Missing inputs remain unknown; do not invent chart
-positions, houses, aspects or precision. The current engine's unknown-time mode
-does not calculate natal positions, so birthday-only facts require implementation
-work rather than an invented noon birth time.
+positions, houses, aspects or precision. Legacy natal v1 retains its unknown-time
+unavailability. The separate [linked-chart v1 contract](contracts/astrology/linked-v1.md)
+adds explicitly labeled birthday samples without asserting an actual birth time.
 
 Keep raw birth inputs in the application calculation path and provide typed
 calculated features to SecondContext through versioned contracts. Do not promote
@@ -288,9 +288,9 @@ deletion responsibilities rather than introducing a separate partner account.
 
 This is intended product behavior. The policy/guard foundation now permits the
 conversation and withholds birth-bearing clauses locally without a privacy lecture.
-Typed temporal extraction and clarification are implemented; event storage and calculated
-partner facts are still pending. Local extraction cannot yet provide a
-calculated compatibility rating. See the
+Typed temporal extraction, encrypted event storage and linked calculations are
+implemented. Requested ratings use the documented symbolic interpretation of
+current supplied cross-chart aspects, separately from memory salience. See the
 [current compatibility tasks](TODO.md#current-priority--compatibility-conversations).
 
 ### 6.2 Natural time, life events and entities
@@ -331,7 +331,7 @@ ADR 0002 preserves the ownership boundary.
 Slice 2 now implements [bounded natural-time routing](docs/current-time.md), typed
 precision/roles and encrypted 24-hour clarification anchored to original ingress.
 Own-birth anchors remain local. Canonical CRUD and linked recall are implemented;
-linked astrology and coordinated release remain.
+[linked astrology](docs/linked-readings.md) is implemented; coordinated release remains.
 
 ---
 
@@ -780,11 +780,15 @@ Outputs:
 - time-to-exact values where supported;
 - engine/ephemeris versions and calculation metadata.
 
-#### Optional later tools
+#### Linked and optional later tools
+
+`calculate_synastry` and `calculate_event_chart` are implemented through the additive
+[linked-chart v1 contract](contracts/astrology/linked-v1.md), with explicit birthday
+sampling, static cross-aspects and directional overlays. Existing natal/transit v1
+behavior is unchanged. Remaining optional tools:
 
 - `calculate_solar_return`;
-- `calculate_progressions`;
-- `calculate_synastry` for the compatibility flow in section 6.1, with versioned inputs/results and the requesting user's scope and deletion lifecycle.
+- `calculate_progressions`.
 
 ### Tool design rules
 
@@ -899,7 +903,7 @@ A small router can classify each active message into categories such as:
 - natal explanation;
 - current transit interpretation;
 - transit interpretation for a specified date;
-- compatibility/synastry using partner birth details, distinguished from profile edits and transit targets (planned);
+- compatibility/synastry and event readings using current scoped records and new supplied inputs, distinguished from profile edits and transit targets;
 - learn/recall/correct/remove local life events and entities through bounded English controls, with separate temporal roles and application-validated mutations; optional linked remote projections follow the scoped lifecycle;
 - follow-up on previous interpretation;
 - profile management;
@@ -1003,7 +1007,7 @@ questions under the disclosed data use. Oria avoids unnecessary identifier
 collection while securely remembering meaningful user context. Personal data alone
 is not a refusal trigger. The updated behavioral guards permit this discussion; local canonical event-memory
 storage and bounded conversational extraction are implemented in [private memory](docs/private-memory.md).
-Optional remote projection lifecycle is implemented; linked calculations remain planned.
+Optional remote projection lifecycle and [linked calculations](docs/linked-readings.md) are implemented.
 
 This should be enforced through multiple layers rather than only a system prompt:
 

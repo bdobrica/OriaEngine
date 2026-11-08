@@ -50,6 +50,7 @@ METRICS = frozenset(
         "worker_dead",
         "mcp_natal",
         "mcp_transits",
+        "mcp_linked",
         "second_context_respond",
         "second_context_remember",
         "second_context_purge",

@@ -1,9 +1,12 @@
 """Synthetic MCP transport smoke check; never use real birth data here."""
 
 import asyncio
+from datetime import date
+from uuid import uuid4
 
 from oria_engine.astrology.client import FastMCPAstrologyClient
 from oria_engine.astrology.contracts import NatalRequest
+from oria_engine.astrology.linked import ChartInput, ChartRequest, SynastryRequest
 from oria_engine.astrology.transits import TransitRequest
 
 
@@ -37,7 +40,29 @@ async def smoke() -> None:
     )
     assert len(transits.planets) == 10 and not transits.aspects
     assert not transits.availability.natal_aspects
-    print("Typed natal and transit MCP checks passed")
+    event_input = ChartInput(
+        accuracy="exact",
+        timestamp_utc=request.timestamp_utc,
+        latitude=51.5,
+        longitude=0,
+    )
+    event = await client.calculate_event_chart(
+        ChartRequest(calculation_id=uuid4(), chart=event_input)
+    )
+    assert len(event.chart.planets) == 10 and len(event.chart.house_cusps) == 12
+    comparison = await client.calculate_synastry(
+        SynastryRequest(
+            calculation_id=uuid4(),
+            chart_a=event_input,
+            chart_b=ChartInput(accuracy="unknown", calendar_date=date(1992, 6, 2)),
+        )
+    )
+    assert comparison.chart_b.precision == "date_sample" and not comparison.chart_b.house_cusps
+    assert len(comparison.overlays) == 10
+    assert all(
+        o.direction == "b_in_a" and o.precision == "date_sample" for o in comparison.overlays
+    )
+    print("Typed natal, transit, synastry and event MCP checks passed")
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import pytest
 from astrology_mcp.engine import calculate
+from astrology_mcp.linked import calculate_event_chart, calculate_synastry
 from sqlalchemy import select
 
 from oria_engine.astrology.client import AstrologyUnavailable
@@ -24,6 +25,8 @@ from .test_onboarding import store as store  # Reuse isolated cleanup fixture.
 def chart_flow(store, encryption, birth_payload):
     client = AsyncMock()
     client.calculate_natal_chart.side_effect = calculate
+    client.calculate_synastry.side_effect = calculate_synastry
+    client.calculate_event_chart.side_effect = calculate_event_chart
     resolver = AsyncMock()
     resolver.resolve.return_value = (birth_payload.birth_place,)
     flow = ConsentFlow(store, "v1", OnboardingFlow(encryption, "v1", resolver, client))

@@ -1,0 +1,1561 @@
+{
+  "chart_request": {
+    "$defs": {
+      "ChartInput": {
+        "additionalProperties": false,
+        "properties": {
+          "accuracy": {
+            "enum": [
+              "exact",
+              "approximate",
+              "unknown"
+            ],
+            "title": "Accuracy",
+            "type": "string"
+          },
+          "calendar_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Calendar Date"
+          },
+          "date_approximate": {
+            "default": false,
+            "title": "Date Approximate",
+            "type": "boolean"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "maximum": 90,
+                "minimum": -90,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "maximum": 180,
+                "minimum": -180,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Longitude"
+          },
+          "timestamp_utc": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Timestamp Utc"
+          }
+        },
+        "required": [
+          "accuracy"
+        ],
+        "title": "ChartInput",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "calculation_id": {
+        "format": "uuid",
+        "title": "Calculation Id",
+        "type": "string"
+      },
+      "chart": {
+        "$ref": "#/$defs/ChartInput"
+      },
+      "contract_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Contract Version",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "calculation_id",
+      "chart"
+    ],
+    "title": "ChartRequest",
+    "type": "object"
+  },
+  "chart_response": {
+    "$defs": {
+      "Angles": {
+        "additionalProperties": false,
+        "properties": {
+          "ascendant": {
+            "exclusiveMaximum": 360,
+            "minimum": 0,
+            "title": "Ascendant",
+            "type": "number"
+          },
+          "midheaven": {
+            "exclusiveMaximum": 360,
+            "minimum": 0,
+            "title": "Midheaven",
+            "type": "number"
+          }
+        },
+        "required": [
+          "ascendant",
+          "midheaven"
+        ],
+        "title": "Angles",
+        "type": "object"
+      },
+      "CalculationMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "aspect_orb_degrees": {
+            "const": 6,
+            "default": 6,
+            "title": "Aspect Orb Degrees",
+            "type": "integer"
+          },
+          "binding_version": {
+            "const": "2.10.3.2",
+            "default": "2.10.3.2",
+            "title": "Binding Version",
+            "type": "string"
+          },
+          "engine_version": {
+            "const": "oria-natal-1",
+            "default": "oria-natal-1",
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "ephemeris": {
+            "const": "moshier",
+            "default": "moshier",
+            "title": "Ephemeris",
+            "type": "string"
+          },
+          "ephemeris_data_version": {
+            "const": "bundled-with-swisseph-2.10.03",
+            "default": "bundled-with-swisseph-2.10.03",
+            "title": "Ephemeris Data Version",
+            "type": "string"
+          },
+          "house_system": {
+            "const": "P",
+            "default": "P",
+            "title": "House System",
+            "type": "string"
+          },
+          "reference_frame": {
+            "const": "apparent-geocentric-ecliptic-of-date",
+            "default": "apparent-geocentric-ecliptic-of-date",
+            "title": "Reference Frame",
+            "type": "string"
+          },
+          "swiss_ephemeris_version": {
+            "const": "2.10.03",
+            "default": "2.10.03",
+            "title": "Swiss Ephemeris Version",
+            "type": "string"
+          },
+          "zodiac": {
+            "const": "tropical",
+            "default": "tropical",
+            "title": "Zodiac",
+            "type": "string"
+          }
+        },
+        "title": "CalculationMetadata",
+        "type": "object"
+      },
+      "ChartFacts": {
+        "additionalProperties": false,
+        "properties": {
+          "angles": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Angles"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "house_cusps": {
+            "default": [],
+            "items": {
+              "exclusiveMaximum": 360,
+              "minimum": 0,
+              "type": "number"
+            },
+            "title": "House Cusps",
+            "type": "array"
+          },
+          "planets": {
+            "items": {
+              "$ref": "#/$defs/Planet"
+            },
+            "maxItems": 10,
+            "minItems": 10,
+            "title": "Planets",
+            "type": "array"
+          },
+          "precision": {
+            "enum": [
+              "exact",
+              "approximate",
+              "date_sample"
+            ],
+            "title": "Precision",
+            "type": "string"
+          },
+          "reasons": {
+            "default": [],
+            "items": {
+              "enum": [
+                "date_only_sample",
+                "approximate_date",
+                "approximate_time",
+                "place_unknown",
+                "houses_unsupported"
+              ],
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          }
+        },
+        "required": [
+          "precision",
+          "planets"
+        ],
+        "title": "ChartFacts",
+        "type": "object"
+      },
+      "LinkedMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "astronomy": {
+            "$ref": "#/$defs/CalculationMetadata"
+          },
+          "comparison": {
+            "const": "static-longitude-major-6deg-1",
+            "default": "static-longitude-major-6deg-1",
+            "title": "Comparison",
+            "type": "string"
+          },
+          "date_sampling": {
+            "const": "calendar-date-at-12-utc-1",
+            "default": "calendar-date-at-12-utc-1",
+            "title": "Date Sampling",
+            "type": "string"
+          },
+          "engine_version": {
+            "const": "oria-linked-1",
+            "default": "oria-linked-1",
+            "title": "Engine Version",
+            "type": "string"
+          }
+        },
+        "title": "LinkedMetadata",
+        "type": "object"
+      },
+      "Planet": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body",
+            "type": "string"
+          },
+          "degree_in_sign": {
+            "exclusiveMaximum": 30,
+            "minimum": 0,
+            "title": "Degree In Sign",
+            "type": "number"
+          },
+          "house": {
+            "anyOf": [
+              {
+                "maximum": 12,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "House"
+          },
+          "longitude": {
+            "exclusiveMaximum": 360,
+            "minimum": 0,
+            "title": "Longitude",
+            "type": "number"
+          },
+          "longitude_velocity_deg_day": {
+            "title": "Longitude Velocity Deg Day",
+            "type": "number"
+          },
+          "retrograde": {
+            "title": "Retrograde",
+            "type": "boolean"
+          },
+          "sign": {
+            "enum": [
+              "Aries",
+              "Taurus",
+              "Gemini",
+              "Cancer",
+              "Leo",
+              "Virgo",
+              "Libra",
+              "Scorpio",
+              "Sagittarius",
+              "Capricorn",
+              "Aquarius",
+              "Pisces"
+            ],
+            "title": "Sign",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body",
+          "longitude",
+          "sign",
+          "degree_in_sign",
+          "longitude_velocity_deg_day",
+          "retrograde"
+        ],
+        "title": "Planet",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "calculation_id": {
+        "format": "uuid",
+        "title": "Calculation Id",
+        "type": "string"
+      },
+      "chart": {
+        "$ref": "#/$defs/ChartFacts"
+      },
+      "contract_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Contract Version",
+        "type": "integer"
+      },
+      "metadata": {
+        "$ref": "#/$defs/LinkedMetadata"
+      }
+    },
+    "required": [
+      "calculation_id",
+      "chart"
+    ],
+    "title": "ChartResult",
+    "type": "object"
+  },
+  "context_facts": {
+    "$defs": {
+      "Angles": {
+        "additionalProperties": false,
+        "properties": {
+          "ascendant": {
+            "exclusiveMaximum": 360,
+            "minimum": 0,
+            "title": "Ascendant",
+            "type": "number"
+          },
+          "midheaven": {
+            "exclusiveMaximum": 360,
+            "minimum": 0,
+            "title": "Midheaven",
+            "type": "number"
+          }
+        },
+        "required": [
+          "ascendant",
+          "midheaven"
+        ],
+        "title": "Angles",
+        "type": "object"
+      },
+      "CalculationMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "aspect_orb_degrees": {
+            "const": 6,
+            "default": 6,
+            "title": "Aspect Orb Degrees",
+            "type": "integer"
+          },
+          "binding_version": {
+            "const": "2.10.3.2",
+            "default": "2.10.3.2",
+            "title": "Binding Version",
+            "type": "string"
+          },
+          "engine_version": {
+            "const": "oria-natal-1",
+            "default": "oria-natal-1",
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "ephemeris": {
+            "const": "moshier",
+            "default": "moshier",
+            "title": "Ephemeris",
+            "type": "string"
+          },
+          "ephemeris_data_version": {
+            "const": "bundled-with-swisseph-2.10.03",
+            "default": "bundled-with-swisseph-2.10.03",
+            "title": "Ephemeris Data Version",
+            "type": "string"
+          },
+          "house_system": {
+            "const": "P",
+            "default": "P",
+            "title": "House System",
+            "type": "string"
+          },
+          "reference_frame": {
+            "const": "apparent-geocentric-ecliptic-of-date",
+            "default": "apparent-geocentric-ecliptic-of-date",
+            "title": "Reference Frame",
+            "type": "string"
+          },
+          "swiss_ephemeris_version": {
+            "const": "2.10.03",
+            "default": "2.10.03",
+            "title": "Swiss Ephemeris Version",
+            "type": "string"
+          },
+          "zodiac": {
+            "const": "tropical",
+            "default": "tropical",
+            "title": "Zodiac",
+            "type": "string"
+          }
+        },
+        "title": "CalculationMetadata",
+        "type": "object"
+      },
+      "ChartFacts": {
+        "additionalProperties": false,
+        "properties": {
+          "angles": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Angles"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "house_cusps": {
+            "default": [],
+            "items": {
+              "exclusiveMaximum": 360,
+              "minimum": 0,
+              "type": "number"
+            },
+            "title": "House Cusps",
+            "type": "array"
+          },
+          "planets": {
+            "items": {
+              "$ref": "#/$defs/Planet"
+            },
+            "maxItems": 10,
+            "minItems": 10,
+            "title": "Planets",
+            "type": "array"
+          },
+          "precision": {
+            "enum": [
+              "exact",
+              "approximate",
+              "date_sample"
+            ],
+            "title": "Precision",
+            "type": "string"
+          },
+          "reasons": {
+            "default": [],
+            "items": {
+              "enum": [
+                "date_only_sample",
+                "approximate_date",
+                "approximate_time",
+                "place_unknown",
+                "houses_unsupported"
+              ],
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          }
+        },
+        "required": [
+          "precision",
+          "planets"
+        ],
+        "title": "ChartFacts",
+        "type": "object"
+      },
+      "CrossAspect": {
+        "additionalProperties": false,
+        "properties": {
+          "angular_separation": {
+            "maximum": 180,
+            "minimum": 0,
+            "title": "Angular Separation",
+            "type": "number"
+          },
+          "body_a": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body A",
+            "type": "string"
+          },
+          "body_b": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body B",
+            "type": "string"
+          },
+          "name": {
+            "enum": [
+              "conjunction",
+              "sextile",
+              "square",
+              "trine",
+              "opposition"
+            ],
+            "title": "Name",
+            "type": "string"
+          },
+          "orb": {
+            "maximum": 6,
+            "minimum": 0,
+            "title": "Orb",
+            "type": "number"
+          },
+          "target_angle": {
+            "enum": [
+              0,
+              60,
+              90,
+              120,
+              180
+            ],
+            "title": "Target Angle",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "body_a",
+          "body_b",
+          "name",
+          "target_angle",
+          "angular_separation",
+          "orb"
+        ],
+        "title": "CrossAspect",
+        "type": "object"
+      },
+      "InterpretiveRating": {
+        "additionalProperties": false,
+        "properties": {
+          "method": {
+            "const": "oria-reflection-rating-1",
+            "default": "oria-reflection-rating-1",
+            "title": "Method",
+            "type": "string"
+          },
+          "scale": {
+            "const": 10,
+            "default": 10,
+            "title": "Scale",
+            "type": "integer"
+          },
+          "score": {
+            "maximum": 10,
+            "minimum": 1,
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "score"
+        ],
+        "title": "InterpretiveRating",
+        "type": "object"
+      },
+      "LinkedMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "astronomy": {
+            "$ref": "#/$defs/CalculationMetadata"
+          },
+          "comparison": {
+            "const": "static-longitude-major-6deg-1",
+            "default": "static-longitude-major-6deg-1",
+            "title": "Comparison",
+            "type": "string"
+          },
+          "date_sampling": {
+            "const": "calendar-date-at-12-utc-1",
+            "default": "calendar-date-at-12-utc-1",
+            "title": "Date Sampling",
+            "type": "string"
+          },
+          "engine_version": {
+            "const": "oria-linked-1",
+            "default": "oria-linked-1",
+            "title": "Engine Version",
+            "type": "string"
+          }
+        },
+        "title": "LinkedMetadata",
+        "type": "object"
+      },
+      "Overlay": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "a_in_b",
+              "b_in_a"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "house": {
+            "maximum": 12,
+            "minimum": 1,
+            "title": "House",
+            "type": "integer"
+          },
+          "precision": {
+            "enum": [
+              "exact",
+              "approximate",
+              "date_sample"
+            ],
+            "title": "Precision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "direction",
+          "body",
+          "house",
+          "precision"
+        ],
+        "title": "Overlay",
+        "type": "object"
+      },
+      "Planet": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body",
+            "type": "string"
+          },
+          "degree_in_sign": {
+            "exclusiveMaximum": 30,
+            "minimum": 0,
+            "title": "Degree In Sign",
+            "type": "number"
+          },
+          "house": {
+            "anyOf": [
+              {
+                "maximum": 12,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "House"
+          },
+          "longitude": {
+            "exclusiveMaximum": 360,
+            "minimum": 0,
+            "title": "Longitude",
+            "type": "number"
+          },
+          "longitude_velocity_deg_day": {
+            "title": "Longitude Velocity Deg Day",
+            "type": "number"
+          },
+          "retrograde": {
+            "title": "Retrograde",
+            "type": "boolean"
+          },
+          "sign": {
+            "enum": [
+              "Aries",
+              "Taurus",
+              "Gemini",
+              "Cancer",
+              "Leo",
+              "Virgo",
+              "Libra",
+              "Scorpio",
+              "Sagittarius",
+              "Capricorn",
+              "Aquarius",
+              "Pisces"
+            ],
+            "title": "Sign",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body",
+          "longitude",
+          "sign",
+          "degree_in_sign",
+          "longitude_velocity_deg_day",
+          "retrograde"
+        ],
+        "title": "Planet",
+        "type": "object"
+      },
+      "ReadingChart": {
+        "additionalProperties": false,
+        "properties": {
+          "convention": {
+            "default": "birth",
+            "enum": [
+              "birth",
+              "event"
+            ],
+            "title": "Convention",
+            "type": "string"
+          },
+          "facts": {
+            "$ref": "#/$defs/ChartFacts"
+          },
+          "role": {
+            "enum": [
+              "self",
+              "other",
+              "event"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "facts"
+        ],
+        "title": "ReadingChart",
+        "type": "object"
+      },
+      "ReadingComparison": {
+        "additionalProperties": false,
+        "properties": {
+          "a": {
+            "enum": [
+              "self",
+              "other",
+              "event"
+            ],
+            "title": "A",
+            "type": "string"
+          },
+          "aspects": {
+            "items": {
+              "$ref": "#/$defs/CrossAspect"
+            },
+            "maxItems": 100,
+            "title": "Aspects",
+            "type": "array"
+          },
+          "b": {
+            "enum": [
+              "self",
+              "other",
+              "event"
+            ],
+            "title": "B",
+            "type": "string"
+          },
+          "overlays": {
+            "items": {
+              "$ref": "#/$defs/Overlay"
+            },
+            "maxItems": 20,
+            "title": "Overlays",
+            "type": "array"
+          }
+        },
+        "required": [
+          "a",
+          "b",
+          "aspects",
+          "overlays"
+        ],
+        "title": "ReadingComparison",
+        "type": "object"
+      },
+      "RecordRef": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "entity",
+              "event",
+              "reading"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "revision"
+        ],
+        "title": "RecordRef",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "charts": {
+        "items": {
+          "$ref": "#/$defs/ReadingChart"
+        },
+        "maxItems": 3,
+        "minItems": 1,
+        "title": "Charts",
+        "type": "array"
+      },
+      "comparisons": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/ReadingComparison"
+        },
+        "maxItems": 3,
+        "title": "Comparisons",
+        "type": "array"
+      },
+      "contract_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Contract Version",
+        "type": "integer"
+      },
+      "house_themes": {
+        "default": [],
+        "items": {
+          "maximum": 12,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "maxItems": 12,
+        "title": "House Themes",
+        "type": "array"
+      },
+      "kind": {
+        "enum": [
+          "compatibility",
+          "event_reading"
+        ],
+        "title": "Kind",
+        "type": "string"
+      },
+      "metadata": {
+        "$ref": "#/$defs/LinkedMetadata"
+      },
+      "rating": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/InterpretiveRating"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "sources": {
+        "default": [],
+        "items": {
+          "$ref": "#/$defs/RecordRef"
+        },
+        "maxItems": 32,
+        "title": "Sources",
+        "type": "array"
+      }
+    },
+    "required": [
+      "kind",
+      "charts"
+    ],
+    "title": "LinkedReading",
+    "type": "object"
+  },
+  "synastry_request": {
+    "$defs": {
+      "ChartInput": {
+        "additionalProperties": false,
+        "properties": {
+          "accuracy": {
+            "enum": [
+              "exact",
+              "approximate",
+              "unknown"
+            ],
+            "title": "Accuracy",
+            "type": "string"
+          },
+          "calendar_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Calendar Date"
+          },
+          "date_approximate": {
+            "default": false,
+            "title": "Date Approximate",
+            "type": "boolean"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "maximum": 90,
+                "minimum": -90,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "maximum": 180,
+                "minimum": -180,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Longitude"
+          },
+          "timestamp_utc": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Timestamp Utc"
+          }
+        },
+        "required": [
+          "accuracy"
+        ],
+        "title": "ChartInput",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "calculation_id": {
+        "format": "uuid",
+        "title": "Calculation Id",
+        "type": "string"
+      },
+      "chart_a": {
+        "$ref": "#/$defs/ChartInput"
+      },
+      "chart_b": {
+        "$ref": "#/$defs/ChartInput"
+      },
+      "contract_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Contract Version",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "calculation_id",
+      "chart_a",
+      "chart_b"
+    ],
+    "title": "SynastryRequest",
+    "type": "object"
+  },
+  "synastry_response": {
+    "$defs": {
+      "Angles": {
+        "additionalProperties": false,
+        "properties": {
+          "ascendant": {
+            "exclusiveMaximum": 360,
+            "minimum": 0,
+            "title": "Ascendant",
+            "type": "number"
+          },
+          "midheaven": {
+            "exclusiveMaximum": 360,
+            "minimum": 0,
+            "title": "Midheaven",
+            "type": "number"
+          }
+        },
+        "required": [
+          "ascendant",
+          "midheaven"
+        ],
+        "title": "Angles",
+        "type": "object"
+      },
+      "CalculationMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "aspect_orb_degrees": {
+            "const": 6,
+            "default": 6,
+            "title": "Aspect Orb Degrees",
+            "type": "integer"
+          },
+          "binding_version": {
+            "const": "2.10.3.2",
+            "default": "2.10.3.2",
+            "title": "Binding Version",
+            "type": "string"
+          },
+          "engine_version": {
+            "const": "oria-natal-1",
+            "default": "oria-natal-1",
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "ephemeris": {
+            "const": "moshier",
+            "default": "moshier",
+            "title": "Ephemeris",
+            "type": "string"
+          },
+          "ephemeris_data_version": {
+            "const": "bundled-with-swisseph-2.10.03",
+            "default": "bundled-with-swisseph-2.10.03",
+            "title": "Ephemeris Data Version",
+            "type": "string"
+          },
+          "house_system": {
+            "const": "P",
+            "default": "P",
+            "title": "House System",
+            "type": "string"
+          },
+          "reference_frame": {
+            "const": "apparent-geocentric-ecliptic-of-date",
+            "default": "apparent-geocentric-ecliptic-of-date",
+            "title": "Reference Frame",
+            "type": "string"
+          },
+          "swiss_ephemeris_version": {
+            "const": "2.10.03",
+            "default": "2.10.03",
+            "title": "Swiss Ephemeris Version",
+            "type": "string"
+          },
+          "zodiac": {
+            "const": "tropical",
+            "default": "tropical",
+            "title": "Zodiac",
+            "type": "string"
+          }
+        },
+        "title": "CalculationMetadata",
+        "type": "object"
+      },
+      "ChartFacts": {
+        "additionalProperties": false,
+        "properties": {
+          "angles": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Angles"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "house_cusps": {
+            "default": [],
+            "items": {
+              "exclusiveMaximum": 360,
+              "minimum": 0,
+              "type": "number"
+            },
+            "title": "House Cusps",
+            "type": "array"
+          },
+          "planets": {
+            "items": {
+              "$ref": "#/$defs/Planet"
+            },
+            "maxItems": 10,
+            "minItems": 10,
+            "title": "Planets",
+            "type": "array"
+          },
+          "precision": {
+            "enum": [
+              "exact",
+              "approximate",
+              "date_sample"
+            ],
+            "title": "Precision",
+            "type": "string"
+          },
+          "reasons": {
+            "default": [],
+            "items": {
+              "enum": [
+                "date_only_sample",
+                "approximate_date",
+                "approximate_time",
+                "place_unknown",
+                "houses_unsupported"
+              ],
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          }
+        },
+        "required": [
+          "precision",
+          "planets"
+        ],
+        "title": "ChartFacts",
+        "type": "object"
+      },
+      "CrossAspect": {
+        "additionalProperties": false,
+        "properties": {
+          "angular_separation": {
+            "maximum": 180,
+            "minimum": 0,
+            "title": "Angular Separation",
+            "type": "number"
+          },
+          "body_a": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body A",
+            "type": "string"
+          },
+          "body_b": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body B",
+            "type": "string"
+          },
+          "name": {
+            "enum": [
+              "conjunction",
+              "sextile",
+              "square",
+              "trine",
+              "opposition"
+            ],
+            "title": "Name",
+            "type": "string"
+          },
+          "orb": {
+            "maximum": 6,
+            "minimum": 0,
+            "title": "Orb",
+            "type": "number"
+          },
+          "target_angle": {
+            "enum": [
+              0,
+              60,
+              90,
+              120,
+              180
+            ],
+            "title": "Target Angle",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "body_a",
+          "body_b",
+          "name",
+          "target_angle",
+          "angular_separation",
+          "orb"
+        ],
+        "title": "CrossAspect",
+        "type": "object"
+      },
+      "LinkedMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "astronomy": {
+            "$ref": "#/$defs/CalculationMetadata"
+          },
+          "comparison": {
+            "const": "static-longitude-major-6deg-1",
+            "default": "static-longitude-major-6deg-1",
+            "title": "Comparison",
+            "type": "string"
+          },
+          "date_sampling": {
+            "const": "calendar-date-at-12-utc-1",
+            "default": "calendar-date-at-12-utc-1",
+            "title": "Date Sampling",
+            "type": "string"
+          },
+          "engine_version": {
+            "const": "oria-linked-1",
+            "default": "oria-linked-1",
+            "title": "Engine Version",
+            "type": "string"
+          }
+        },
+        "title": "LinkedMetadata",
+        "type": "object"
+      },
+      "Overlay": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "a_in_b",
+              "b_in_a"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "house": {
+            "maximum": 12,
+            "minimum": 1,
+            "title": "House",
+            "type": "integer"
+          },
+          "precision": {
+            "enum": [
+              "exact",
+              "approximate",
+              "date_sample"
+            ],
+            "title": "Precision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "direction",
+          "body",
+          "house",
+          "precision"
+        ],
+        "title": "Overlay",
+        "type": "object"
+      },
+      "Planet": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "enum": [
+              "sun",
+              "moon",
+              "mercury",
+              "venus",
+              "mars",
+              "jupiter",
+              "saturn",
+              "uranus",
+              "neptune",
+              "pluto"
+            ],
+            "title": "Body",
+            "type": "string"
+          },
+          "degree_in_sign": {
+            "exclusiveMaximum": 30,
+            "minimum": 0,
+            "title": "Degree In Sign",
+            "type": "number"
+          },
+          "house": {
+            "anyOf": [
+              {
+                "maximum": 12,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "House"
+          },
+          "longitude": {
+            "exclusiveMaximum": 360,
+            "minimum": 0,
+            "title": "Longitude",
+            "type": "number"
+          },
+          "longitude_velocity_deg_day": {
+            "title": "Longitude Velocity Deg Day",
+            "type": "number"
+          },
+          "retrograde": {
+            "title": "Retrograde",
+            "type": "boolean"
+          },
+          "sign": {
+            "enum": [
+              "Aries",
+              "Taurus",
+              "Gemini",
+              "Cancer",
+              "Leo",
+              "Virgo",
+              "Libra",
+              "Scorpio",
+              "Sagittarius",
+              "Capricorn",
+              "Aquarius",
+              "Pisces"
+            ],
+            "title": "Sign",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body",
+          "longitude",
+          "sign",
+          "degree_in_sign",
+          "longitude_velocity_deg_day",
+          "retrograde"
+        ],
+        "title": "Planet",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "aspects": {
+        "items": {
+          "$ref": "#/$defs/CrossAspect"
+        },
+        "maxItems": 100,
+        "title": "Aspects",
+        "type": "array"
+      },
+      "calculation_id": {
+        "format": "uuid",
+        "title": "Calculation Id",
+        "type": "string"
+      },
+      "chart_a": {
+        "$ref": "#/$defs/ChartFacts"
+      },
+      "chart_b": {
+        "$ref": "#/$defs/ChartFacts"
+      },
+      "contract_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Contract Version",
+        "type": "integer"
+      },
+      "metadata": {
+        "$ref": "#/$defs/LinkedMetadata"
+      },
+      "overlays": {
+        "items": {
+          "$ref": "#/$defs/Overlay"
+        },
+        "maxItems": 20,
+        "title": "Overlays",
+        "type": "array"
+      }
+    },
+    "required": [
+      "calculation_id",
+      "chart_a",
+      "chart_b",
+      "aspects",
+      "overlays"
+    ],
+    "title": "SynastryResult",
+    "type": "object"
+  }
+}

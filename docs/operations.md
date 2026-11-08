@@ -35,7 +35,7 @@ update or job IDs. No external collector/dashboard is installed here.
 | `worker_dispatch` | Dispatch including duplicates, contention and not-yet-due jobs |
 | `worker_process`, `worker_retry`, `worker_dead` | Claimed calculation/delivery attempt, retry scheduling, exhausted attempts |
 | `database_transaction` | Commit/rollback scope including lock waits and enclosed downstream calls |
-| `mcp_natal`, `mcp_transits` | Bounded calculation operation including protocol/result validation |
+| `mcp_natal`, `mcp_transits`, `mcp_linked` | Bounded calculation operation including protocol/result validation |
 | `second_context_*` | Respond/remember/purge including connection-only retries and result validation |
 | `telegram_send` | Outbound send; excludes polling getUpdates and callback acknowledgments |
 | `consent_disclosure` | Disclosure assembled; delivery/transaction success is reported separately |

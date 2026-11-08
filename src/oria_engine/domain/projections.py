@@ -8,27 +8,35 @@ from oria_engine.privacy.messages import private_active_input
 
 # Traditional retrieval themes; no measured houses or astrological causation.
 THEMES: dict[int, str] = {
-    1: r"identity|self.image|appearance|style|vitality",
-    2: r"money|finances|values|possessions|earnings|self.worth",
-    3: r"communication|siblings|neighbors|learning|local travel",
-    4: r"home|house|parents|family|roots|wedding|divorce",
-    5: r"creativity|romance|hobbies|children|joy|dating",
-    6: r"health|routines|daily work|job|cat|dog|pet|adoption",
+    1: r"identity|self.image|appearance|style|vitality|first impressions|ascendant",
+    2: r"money|finances|values|possessions|earnings|self.worth|personal resources|material comfort",
+    3: r"communication|siblings|neighbors|neighbours|learning|local travel|early education",
+    4: r"home|house|parents|family|roots|wedding|divorce|emotional security|imum coeli",
+    5: r"creativity|romance|hobbies|children|joy|dating|play|self.expression",
+    6: r"health|routines|daily work|job|cat|dog|pets?|adoption|habits|service|organization",
     7: (
         r"partnership|partner|relationships?|marriage|wedding|girlfriend|boyfriend|"
-        r"wife|husband|divorce"
+        r"wife|husband|divorce|alliances|contracts|descendant|cooperation"
     ),
-    8: r"intimacy|inheritance|joint finances|shared resources|transformation|wedding",
+    8: r"intimacy|inheritance|joint finances|shared resources|transformation|wedding|taxes|rebirth",
     9: r"philosophy|university|education|travel|beliefs|religion|publishing|law",
-    10: r"career|job|business|founding|ambition|reputation|legacy",
-    11: r"friends|networks|community|groups|aspirations|nonprofit",
-    12: r"dreams|subconscious|isolation|secrets|endings|spirituality",
+    10: r"career|job|business|founding|ambition|reputation|legacy|public status|midheaven|vocation",
+    11: r"friends|networks|community|groups|aspirations|non.?profit|collaboration|humanitarian",
+    12: (
+        r"dreams|subconscious|unconscious|isolation|secrets|endings?|spirituality|"
+        r"mental health|karma"
+    ),
 }
 
 
 def themes(text: str) -> tuple[int, ...]:
+    numbered_house = r"\b(?:(1[0-2]|[1-9])(?:st|nd|rd|th)?\s+house|house\s+(1[0-2]|[1-9]))\b"
+    explicit = {int(m[1] or m[2]) for m in re.finditer(numbered_house, text, re.I)}
+    topic_text = re.sub(numbered_house, "", text, flags=re.I)
     return tuple(
-        h for h, pattern in THEMES.items() if re.search(r"\b(?:" + pattern + r")\b", text, re.I)
+        h
+        for h, pattern in THEMES.items()
+        if h in explicit or re.search(r"\b(?:" + pattern + r")\b", topic_text, re.I)
     )
 
 

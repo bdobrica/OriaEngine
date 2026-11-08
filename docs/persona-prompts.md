@@ -13,8 +13,8 @@ there are no prompt files to mount, new dependencies, settings or migrations.
 
 | Layer | Responsibility |
 | --- | --- |
-| `policy.py`, `oria-policy-7` | AI identity, consent/application authority, privacy, substantive safety limits, adult agency and untrusted-input rules |
-| `methodology.py`, `oria-methodology-5` | Weave relevant calculated readings into dialogue; separate facts and interpretation and respect availability and resolved targets |
+| `policy.py`, `oria-policy-8` | AI identity, consent/application authority, privacy, substantive safety limits, adult agency and untrusted-input rules |
+| `methodology.py`, `oria-methodology-6` | Weave relevant calculated readings into dialogue; separate facts and interpretation and respect availability and resolved targets |
 | `voice.py`, `oria-voice-2` | Natural adult conversation, specificity, acceptance of corrections, optional questions and user control of pace |
 
 Policy is immutable **to runtime inputs**: it is source-controlled `Final` text,
@@ -35,7 +35,9 @@ The production adapter always uses the packaged voice.
 The SecondContext adapter uses this builder for every `respond` call. The filtered
 message remains the separate wire `input` string; identity and session stay in their
 existing fields. Facts stay in `instructions`, not explicit memory ingestion. No
-wire fields or astrology schemas change. Absent facts are not filled in. Approximate
+HTTP fact fields change. [Linked-chart v1](../contracts/astrology/linked-v1.md) adds a
+typed facts block and the twelve-house reference when a current linked reading is supplied.
+Absent facts are not filled in. Approximate
 birth time stays uncertain; unknown-time natal data cannot support personalized
 placements. General transits remain general, and unavailable exactness times remain
 unavailable.

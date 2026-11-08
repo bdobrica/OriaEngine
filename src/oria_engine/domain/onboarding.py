@@ -22,11 +22,17 @@ from oria_engine.domain.birth_time import birth_zone, utc_candidates
 from oria_engine.domain.channel import ChannelButton, ChannelMessage
 from oria_engine.domain.consent import ConsentReply
 from oria_engine.domain.consent import OnboardingState as State
-from oria_engine.domain.knowledge import KnowledgeConversation, source_id
+from oria_engine.domain.knowledge import KnowledgeConversation, cap_reply, source_id
 from oria_engine.domain.memory import NO_REMEMBER, requested_follow_up
 from oria_engine.domain.onboarding_data import OnboardingDraft, parse_birth_date, parse_birth_time
 from oria_engine.domain.places import PlaceResolutionUnavailable, PlaceResolver, TooManyPlaces
 from oria_engine.domain.policy import PRIVACY_REPLY
+from oria_engine.domain.readings import (
+    hold_date_question,
+    prepare_linked_reading,
+    render_linked,
+    wants_linked,
+)
 from oria_engine.domain.temporal import clarification
 from oria_engine.domain.temporal_dialogue import prepare_temporal_dialogue
 from oria_engine.observability import count
@@ -388,8 +394,11 @@ class OnboardingFlow:
 
                             if memory_reply is not None:
                                 follow_up = requested_follow_up(dialogue.text)
-                                if not follow_up or not memory_reply.startswith(
-                                    ("Saved", "Updated")
+                                reading_requested = wants_linked(dialogue.text)
+                                if not (follow_up or reading_requested) or not (
+                                    memory_reply.startswith(("Saved", "Updated"))
+                                    or reading_requested
+                                    and NO_REMEMBER.search(dialogue.text)
                                 ):
                                     return ConsentReply(State.ACTIVE, memory_reply)
                                 memory_receipt = memory_reply
@@ -415,6 +424,44 @@ class OnboardingFlow:
                                 current_timezone=dialogue.timezone,
                                 anchors=dialogue.anchors,
                             )
+                        linked_facts = None
+                        if (
+                            dialogue is not None
+                            and wants_linked(dialogue.text)
+                            and intent.kind != "unsupported_high_stakes"
+                        ):
+                            linked_preparation = await prepare_linked_reading(
+                                session,
+                                user_id,
+                                encryption=self.encryption,
+                                policy_version=self.policy_version,
+                                client=self.astrology,
+                                resolver=self.resolver,
+                                dialogue=dialogue,
+                            )
+                            if linked_preparation.question:
+                                await hold_date_question(
+                                    TemporalRepository(
+                                        session, self.encryption, self.policy_version
+                                    ),
+                                    user_id,
+                                    consent.id,
+                                    dialogue,
+                                    linked_preparation,
+                                )
+                                text = linked_preparation.question
+                                if memory_receipt:
+                                    text = memory_receipt + "\n\n" + text
+                                return ConsentReply(State.ACTIVE, cap_reply(text))
+                            linked_facts = linked_preparation.facts
+                            assert linked_facts is not None
+                            from oria_engine.domain.active import ActiveIntent
+
+                            intent = ActiveIntent(kind="follow_up")
+                            active_text = active_text.replace(
+                                "no additional calculation was performed",
+                                "linked calculation facts are supplied separately",
+                            )
                         facts = await prepare_active(
                             active_text,
                             received_at=message.received_at,
@@ -437,6 +484,7 @@ class OnboardingFlow:
                                     goal=facts.intent.kind,
                                     natal_facts=natal,
                                     transit_facts=facts.transits,
+                                    linked_facts=linked_facts,
                                     reference_time_utc=dialogue.reference
                                     if dialogue is not None
                                     else message.received_at,
@@ -464,6 +512,14 @@ class OnboardingFlow:
                                         "Please ask for a shorter reading."
                                     )
                             return ConsentReply(State.ACTIVE, text)
+                        if linked_facts is not None:
+                            text = render_linked(linked_facts)
+                            return ConsentReply(
+                                State.ACTIVE,
+                                cap_reply(
+                                    (memory_receipt + "\n\n" if memory_receipt else "") + text
+                                ),
+                            )
                         if facts.intent.kind == "unsupported_high_stakes":
                             count("policy_high_stakes")
                         if (
@@ -478,7 +534,7 @@ class OnboardingFlow:
                             raise  # The durable worker owns bounded retries.
                         return ConsentReply(
                             State.ACTIVE,
-                            "Transit calculation is temporarily unavailable. "
+                            "Chart calculation is temporarily unavailable. "
                             "Please resend your question to retry. "
                             "Your natal chart is still saved.",
                         )

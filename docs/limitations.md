@@ -14,7 +14,7 @@ not completion of operator checks or proof of model safety/astrological predicti
   ten bodies, tropical geocentric positions, Placidus and fixed six-degree major
   aspect orbs. Houses are unavailable at absolute latitudes of 66 degrees or more,
   or when calculation fails. No alternate house system is substituted.
-- Unknown birth time produces no natal positions, houses, angles or aspects.
+- Unknown birth time in legacy natal v1 produces no natal positions, houses, angles or aspects.
   Approximate time uses the entered instant with uncertainty; it does not compute
   a probability distribution. Unknown-time transits can show general target-time
   positions, without personalized natal relationships.
@@ -32,7 +32,8 @@ not completion of operator checks or proof of model safety/astrological predicti
   roles/precision and encrypted temporary clarification. Own-birth, same-message and
   clarification-supplied and saved canonical anchors work. [Local event/entity memory](private-memory.md)
   supports bounded English learning and conversational CRUD; it is not a general
-  language/entity-resolution system. SecondContext salience/projections still need implementation. See the [delivery sequence](conversation-memory-plan.md).
+  language/entity-resolution system. Optional [linked salience](linked-context.md) is implemented
+  but defaults off until coordinated rollout. See the [delivery sequence](conversation-memory-plan.md).
 - Telegram private text and supported callbacks are the current channel surface.
   Groups, media and other update types are ignored. Use one bot per database and
   one polling process per bot.
@@ -44,9 +45,9 @@ not completion of operator checks or proof of model safety/astrological predicti
   remotely. Blocked drafts can already be in upstream history; local replacement
   does not erase history. Birth-bearing clauses/continuations and typed birth
   candidates stay local; bounded extraction/filtering can miss unlabeled inputs.
-  The calculation path has no compatibility facts.
-  These remain implementation gaps against the [intended compatibility flow](../PLAN.md#61-voluntary-sharing-and-compatibility),
-  not a prohibition on users sharing partner information for a reading.
+  [Linked readings](linked-readings.md) add current compatibility/event facts. Birthday-only
+  positions and overlays are explicit samples, not a possible-day envelope. Missing
+  time/place still precludes own houses; symbolic ratings are not calibrated measures.
 - [Worker retries](worker-queue.md) are bounded and durable. Ambiguous remote context
   calls and Telegram sends can duplicate effects. There is no remote exactly-once
   guarantee, and dead encrypted payloads are erased rather than replayable.

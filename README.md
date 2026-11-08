@@ -12,7 +12,9 @@ and possessions, and compatibility readings. Oria is responsible for secure,
 user-scoped storage and retrieval, correction and deletion. Adult dialogue policies,
 typed contracts and [natural-date clarification](docs/current-time.md) are implemented;
 local encrypted event/entity memory supports conversational lookup, correction and
-removal. Optional [SecondContext linked memory](docs/linked-context.md) adds salience and prior interpretations; linked calculations remain planned. See the
+removal. Optional [SecondContext linked memory](docs/linked-context.md) adds salience and prior interpretations.
+[Linked readings](docs/linked-readings.md) add birthday samples, synastry, event charts
+and all twelve house themes. See the
 [delivery plan](docs/conversation-memory-plan.md).
 
 **Status:** the demo pipeline, privacy commands, deletion, webhook ingress and

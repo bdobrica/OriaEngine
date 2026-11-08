@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from astrology_mcp.engine import calculate, calculate_transits
+from astrology_mcp.linked import calculate_event_chart, calculate_synastry
 from sqlalchemy import delete
 
 from oria_engine.astrology.client import AstrologyUnavailable
@@ -25,6 +26,8 @@ async def conversation(queue, birth_payload):
     astrology = AsyncMock()
     astrology.calculate_natal_chart.side_effect = calculate
     astrology.calculate_transits.side_effect = calculate_transits
+    astrology.calculate_synastry.side_effect = calculate_synastry
+    astrology.calculate_event_chart.side_effect = calculate_event_chart
     provider = AsyncMock()
     provider.respond.return_value = ContextReply(
         response_id="synthetic", text="A reflective reply."
@@ -270,8 +273,14 @@ async def test_voluntary_context_reaches_conversation_without_refusal_or_implici
 ):
     ingress, worker, astrology, provider = conversation
     await confirm(worker.flow)
-    with patch.object(BirthProfileRepository, "get", side_effect=AssertionError("No decrypt")):
-        await worker.process(await ingress.accept(message(text=text)))
+    if "birthday" in text:
+        with patch.object(
+            BirthProfileRepository, "save", side_effect=AssertionError("No own edit")
+        ):
+            await worker.process(await ingress.accept(message(text=text)))
+    else:
+        with patch.object(BirthProfileRepository, "get", side_effect=AssertionError("No decrypt")):
+            await worker.process(await ingress.accept(message(text=text)))
     assert "A reflective reply." in worker.client.send_text.call_args.args[1]
     provider.respond.assert_awaited_once()
     request = provider.respond.call_args.args[1]
@@ -281,6 +290,7 @@ async def test_voluntary_context_reaches_conversation_without_refusal_or_implici
         assert request.filtered_message == text
     else:
         assert "Rate my compatibility with my girlfriend" in request.filtered_message
+        assert request.linked_facts is not None and request.linked_facts.rating is not None
     astrology.calculate_transits.assert_not_awaited()
     astrology.calculate_natal_chart.assert_awaited_once()  # Onboarding only.
     provider.remember.assert_not_awaited()
@@ -335,10 +345,14 @@ async def test_birth_continuations_cannot_leak_via_resolved_date_notes(conversat
             )
         )
     )
-    request = provider.respond.call_args.args[1]
+    # Ambiguous unlabeled continuations are not sufficient calculation inputs.
+    # Ask for the specific gap locally, without forwarding held birth details.
+    provider.respond.assert_not_called()
+    reply = worker.client.send_text.call_args.args[1]
     for value in ("Exampletown", "1992", "12:30", "47.1", "23.6"):
-        assert value not in request.filtered_message
-    assert "rate our compatibility" in request.filtered_message
+        assert value not in reply
+    assert "birth date" in reply
+    astrology.calculate_synastry.assert_not_called()
     astrology.calculate_transits.assert_not_called()
 
 

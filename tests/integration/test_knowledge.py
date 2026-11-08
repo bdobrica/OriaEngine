@@ -502,21 +502,25 @@ async def test_database_edges_cannot_cross_owner_and_ciphertext_cannot_change_re
         await nested.rollback()
 
 
-async def test_explicit_reading_continues_and_failed_provider_cannot_acknowledge_save(
+async def test_explicit_reading_continues_and_failed_calculation_cannot_acknowledge_save(
     store, encryption, birth_payload
 ):
-    from oria_engine.context.contracts import ContextUnavailable
+    from astrology_mcp.linked import calculate_synastry
 
-    flow, _, provider, user_id = await active(store, encryption, birth_payload)
-    provider.respond.side_effect = ContextUnavailable("synthetic")
+    from oria_engine.astrology.client import AstrologyUnavailable
+
+    flow, client, provider, user_id = await active(store, encryption, birth_payload)
+    client.calculate_synastry.side_effect = AstrologyUnavailable("synthetic")
     text = message("My girlfriend Alice was born June 2nd, 1992. Rate our compatibility.")
-    with pytest.raises(ContextUnavailable):
+    with pytest.raises(AstrologyUnavailable):
         await flow.handle(text)
     assert not await saved(store, encryption, user_id)
-    provider.respond.side_effect = None
+    provider.respond.assert_not_called()
+    client.calculate_synastry.side_effect = calculate_synastry
     reply = await flow.handle(text)
     assert "Saved" in reply.text and "A useful discussion" in reply.text
-    assert "1992" not in provider.respond.call_args.args[1].model_dump_json()
+    assert "1992-06-02" not in provider.respond.call_args.args[1].model_dump_json()
+    assert provider.respond.call_args.args[1].linked_facts.rating is not None
     assert "Rate our compatibility" in provider.respond.call_args.args[1].filtered_message
     assert len(await saved(store, encryption, user_id)) == 2
 

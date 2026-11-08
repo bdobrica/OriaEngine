@@ -40,20 +40,24 @@ partial acknowledgements cannot enable ingestion. See the
 | Canonical event summary | Bounded recognized event type, or generic life event; self UUID/revision |
 | Participant link | Event type, checked participant labels and exact canonical references |
 | Significance statement | A bounded explicit high/low importance assertion linked to known records |
-| Prior interpretation | A guarded, filtered, date-free prior reply with flattened canonical source references |
+| Prior interpretation | A guarded, filtered, date-free prior reply, or a minimal qualitative linked-reading summary, with flattened canonical source references |
 
 Aliases, source messages, event descriptions, temporal expressions, dates, clocks,
 places, raw birth profiles, coordinates and provider IDs are not projected. Labels
 containing recognized dates/birth language/secrets become generic entity types.
-Interpretations containing digits, recognized birth/date language or secrets are
-not remembered; mentions of known birth places are also withheld. This conservative
+Ordinary interpretations containing digits, recognized birth/date language or secrets
+are not remembered; linked calculated readings can instead retain a minimal application-owned
+qualitative summary of the supplied contacts with canonical dependencies. No raw inputs
+or chart numbers enter that summary; mentions of known birth places are also withheld. This conservative
 filter can omit useful readings. It does not establish general semantic PII detection.
 All labels and narratives remain untrusted data, even after application validation.
 
 Traditional house themes 1–12 support retrieval. Wedding themes can include home,
 partnership and shared resources; these tags are not calculated houses, measured
-placements, or evidence of an astrological correlation. Synastry, event charts and
-linked calculated features remain slice 5.
+placements, or evidence of an astrological correlation. [Slice 5 linked readings](linked-readings.md)
+add separate current calculation facts, requested symbolic ratings and measured overlays.
+Their source revisions also link generation sessions; pending source delivery/erasure
+uses a local reading rather than sending unlinked facts.
 
 SecondContext's `linked-salience-1` heuristic combines importance (0.60), recency
 (0.15, exponential 30-day scale), exact link relevance (0.20) and topic overlap

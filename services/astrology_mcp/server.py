@@ -16,6 +16,7 @@ from oria_engine.astrology.transits import TransitRequest, TransitResult
 from oria_engine.observability import JsonFormatter
 
 from .engine import calculate, calculate_transits, metadata
+from .linked import calculate_event_chart, calculate_synastry
 
 
 class PrivateErrors(Middleware):
@@ -37,6 +38,15 @@ def create_server() -> FastMCP:
         mask_error_details=True,
         strict_input_validation=True,
         middleware=[PrivateErrors()],
+    )
+
+    server.tool(
+        calculate_event_chart,
+        annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": False},
+    )
+    server.tool(
+        calculate_synastry,
+        annotations={"readOnlyHint": True, "idempotentHint": True, "openWorldHint": False},
     )
 
     @server.tool(

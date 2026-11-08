@@ -124,6 +124,7 @@ class SecondContextProvider:
             "instructions": build_instructions(
                 natal_facts=request.natal_facts,
                 transit_facts=request.transit_facts,
+                linked_facts=request.linked_facts,
                 reference_time_utc=request.reference_time_utc,
             ),
             "stream": False,

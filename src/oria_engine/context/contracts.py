@@ -8,6 +8,7 @@ from pydantic import Field, field_validator
 
 from oria_engine.astrology.contracts import NatalResult, WireModel
 from oria_engine.astrology.transits import TransitResult
+from oria_engine.domain.readings import LinkedReading
 from oria_engine.knowledge.contracts import RecordRef
 
 MemoryKind = Literal[
@@ -55,6 +56,7 @@ class ConversationRequest(WireModel):
     )
     natal_facts: NatalResult | None = None
     transit_facts: TransitResult | None = None
+    linked_facts: LinkedReading | None = None
     reference_time_utc: datetime | None = None
     knowledge_refs: tuple[RecordRef, ...] = Field(default=(), max_length=20)
 

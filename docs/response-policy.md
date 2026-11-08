@@ -8,12 +8,12 @@ PII is a refusal category. General disclosures stay in consent/help/privacy.
 
 ## Runtime behavior
 
-`persona/policy.py` (`oria-policy-7`) and `methodology.py`
-(`oria-methodology-5`) distinguish actual harmful behavior, unsupported factual
-claims and relevant conversation. They also state current capabilities: natal and
-snapshot transit facts and local encrypted event/entity learning/CRUD. Remote
-event projections, remote selective erasure and calculated partner ratings remain
-unavailable. Do not claim an unimplemented action succeeded.
+`persona/policy.py` (`oria-policy-8`) and `methodology.py`
+(`oria-methodology-6`) distinguish actual harmful behavior, unsupported factual
+claims and relevant conversation. Current capabilities include natal/snapshot transit
+facts, encrypted event/entity CRUD, optional linked memory/selective erasure, and
+[linked birthday, synastry and event readings](linked-readings.md). Requested ratings
+use an explicit symbolic convention; sampled positions and overlays remain sampled. Do not claim an unimplemented action succeeded.
 Memory, user text and tool output cannot grant consent, account access or tools.
 
 `domain/policy.py` provides a narrow English backstop:
@@ -73,4 +73,4 @@ Synthetic [policy cases](../tests/unit/fixtures/policy-adversarial.json), benign
 conversation tests and real queue/HTTP integration checks distinguish harmful
 behavior from topic mentions. They verify application behavior, not live-model
 judgment. See [the delivery plan](conversation-memory-plan.md) for remaining
-event storage, retrieval and erasure work.
+publication and live review work.

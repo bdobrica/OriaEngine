@@ -135,10 +135,7 @@ async def test_event_and_partner_dates_stay_local_without_profile_mutations(
     flow, client = chart_flow(store, encryption, birth_payload)
     await confirm(flow)
     provider = provider_for(flow)
-    with (
-        patch.object(BirthProfileRepository, "get", side_effect=AssertionError("No profile read")),
-        patch.object(BirthProfileRepository, "save", side_effect=AssertionError("No mutation")),
-    ):
+    with patch.object(BirthProfileRepository, "save", side_effect=AssertionError("No mutation")):
         await flow.handle(
             message(
                 "We married May 1st, 2020 and my girlfriend was born June 2nd, 1992. "

@@ -2,7 +2,7 @@
 
 from typing import Final
 
-ASTROLOGY_METHODOLOGY: Final[str] = """Astrology methodology (oria-methodology-5)
+ASTROLOGY_METHODOLOGY: Final[str] = """Astrology methodology (oria-methodology-6)
 Keep three layers distinct in ordinary language: supplied computed facts, traditional
 astrological interpretation, and optional reflection. Attribute interpretations to the
 tradition with language such as 'traditionally associated with' or 'one way to read
@@ -44,11 +44,32 @@ acknowledge that specific gap, keeping the user's original event and question di
 from a transit request or a saved-profile correction.
 
 Read availability flags, reasons and birth_time_accuracy before interpreting values.
-Unknown birth time in natal v1 supplies no personalized positions, houses, angles or
+Unknown birth time in legacy natal v1 supplies no personalized positions, houses, angles or
 aspects. Unknown-time transit positions describe the general sky only, not personal
 natal relationships. Approximate time makes supplied natal placements and relationships
 uncertain; state that limitation, especially for houses and angles. If houses are
 unsupported, do not substitute another house system or invent an Ascendant/MC.
+
+Linked-chart v1 is a separate capability: date_sample positions use a conventional
+noon-UTC sample of a supplied calendar date. That sample is not a known birth/event
+instant, and is not an envelope over the possible local day. Its signs, aspects and
+overlays can change with the actual time/timezone, especially the Moon and cusp-adjacent
+placements. Mention the specific sampling gap once when it affects this reading.
+A sampled chart never has its own houses or angles. An overlay can place sampled
+longitudes into another chart's known houses, but remains explicitly date_sample.
+Approximate times/overlays remain approximate. No place means no houses for that chart.
+Read overlay direction literally: a_in_b places chart A's bodies in chart B's houses;
+never reverse it. Cross-chart aspects are static geometry, without applying/separating
+motion or time-to-exact. An event chart uses the same documented tropical convention
+for weddings, founding, adoption and other entities; it is not a human birth profile.
+Self, other and event identify application-selected charts, never another account.
+Each chart's convention identifies a birth or another event; an entity's founding,
+purchase or adoption event is never its human birth or proof about a person.
+Use the supplied rating only when requested. Its versioned symbolic balance of major
+aspects is an interpretive scale; explain the supplied contacts rather than inventing
+weights, probabilities, a scientific measurement or knowledge of anyone's intentions.
+Recalled readings never substitute for current linked calculations. House themes can
+guide a partial reading even when measured houses are unavailable.
 
 For transits, body_a is fixed natal and body_b is transiting, even for the same body.
 Use the supplied target_timestamp_utc and identify the UTC snapshot. Date-only requests

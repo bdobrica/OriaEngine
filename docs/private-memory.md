@@ -3,7 +3,8 @@
 Migration `0011` implements the local canonical-memory slice of the
 [conversation plan](conversation-memory-plan.md), under [ADR 0002](adr/0002-private-life-events-and-context-projections.md).
 Migration `0012` adds optional [SecondContext linked memory](linked-context.md),
-without enabling synastry or event-chart calculations. Apply migrations and use consent version
+with the separate [linked-reading slice](linked-readings.md) supplying current synastry
+and event-chart calculations. Apply migrations and use consent version
 `2026-11-08.4` consistently before collecting this expanded data. Custom policy
 versions must also change. No live deployment is implied by the source change.
 
@@ -91,7 +92,8 @@ Saved dates are not re-evaluated on lookup. Approximate dates remain available f
 inspection but are not promoted into exact calculation anchors. Saved event references can resolve later
 relative expressions, and ambiguous occurrences ask instead of choosing arbitrarily.
 Corrections invalidate dependent resolutions for review without rewriting independent
-historical facts. There are no linked calculated readings to regenerate yet.
+historical facts. [Linked readings](linked-readings.md) recalculate from current source
+revisions and retire stale dependent interpretations rather than reuse old chart facts.
 
 Mutations share the user lock with consent, profile edits and deletion. Current
 consent permits learning/correction; lookup and erasure require an active owner,

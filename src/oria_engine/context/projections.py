@@ -249,11 +249,19 @@ class LinkedContext:
         await self.session.flush()
         return not any(row.pending for row in rows)
 
-    async def retrieve(self, user_id: UUID, text: str) -> tuple[RecordRef, ...]:
+    async def retrieve(
+        self,
+        user_id: UUID,
+        text: str,
+        *,
+        sources: tuple[RecordRef, ...] = (),
+        house_themes: tuple[int, ...] = (),
+    ) -> tuple[RecordRef, ...]:
         rows = await self.repo.rows(user_id)
         if any(r.pending and r.deleted for r in rows):
             return ()
-        refs, houses = await self.references(user_id, text), themes(text)
+        refs = tuple(dict.fromkeys((*await self.references(user_id, text), *sources)))[:32]
+        houses = tuple(sorted(set((*themes(text), *house_themes))))
         if not refs and not houses:
             return ()
         try:
@@ -302,9 +310,19 @@ class LinkedContext:
         return "\n\n".join(lines)[:2400]
 
     async def remember_interpretation(
-        self, user_id: UUID, text: str, used: tuple[RecordRef, ...], operation_id: UUID
+        self,
+        user_id: UUID,
+        text: str,
+        used: tuple[RecordRef, ...],
+        operation_id: UUID,
+        *,
+        canonical_sources: tuple[RecordRef, ...] = (),
+        house_themes: tuple[int, ...] = (),
+        calculated_summary: str | None = None,
     ) -> None:
-        if not used or not safe_text(text):
+        if calculated_summary is not None and not safe_text(text):
+            text = calculated_summary
+        if not (used or canonical_sources) or not safe_text(text):
             return
         profile = await BirthProfileRepository(
             self.session, self.repo.encryption, policy_version=self.repo.policy_version
@@ -335,6 +353,11 @@ class LinkedContext:
         ):
             return
         sources: dict[UUID, RecordRef] = {}
+        for ref in canonical_sources:
+            saved = await self.knowledge.get(user_id, ref)
+            if saved is None or saved.needs_review:
+                return
+            sources[ref.id] = ref
         for row in await self.repo.rows(user_id):
             if not row.deleted and self.repo.ref(row) in used:
                 for ref in self.repo.decode(row).sources:
@@ -354,11 +377,13 @@ class LinkedContext:
                     id=uuid5(NAMESPACE_URL, f"oria:interpretation:{user_id}:{operation_id}"),
                     revision=1,
                 ),
-                label="Prior interpretation",
+                label="Prior interpretation (oria-linked-1)"
+                if calculated_summary
+                else "Prior interpretation",
                 summary=text,
                 knowledge_kind="interpretation",
                 sources=tuple(sources.values()),
-                house_themes=themes(text),
+                house_themes=tuple(sorted(set((*themes(text), *house_themes)))),
                 salience=Salience(score=0.5, basis="inferred", method_version="linked-salience-1"),
             ),
         )

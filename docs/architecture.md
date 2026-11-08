@@ -2,6 +2,7 @@
 
 This reference describes the demo implementation. Versioned [Telegram ingress](../contracts/telegram/webhook-v1.md),
 [astrology schemas](../contracts/astrology/v1.json), [transit schemas](../contracts/astrology/transits-v1.json),
+[linked charts/facts](../contracts/astrology/linked-v1.md),
 [MCP transport](../contracts/astrology/transport-v1.md), [SecondContext](../contracts/second-context/v1.md)
 and [operator telemetry](../contracts/operations/v1.md) define their respective boundaries.
 This document records existing behavior without introducing a new architectural decision.
@@ -9,7 +10,9 @@ This document records existing behavior without introducing a new architectural 
 [Local private memory](private-memory.md) adds canonical encrypted event/entity
 records, scoped links and conversational controls under ADR 0002. SecondContext
 salience/interpretation projections use the optional [linked-context lane](linked-context.md),
-with durable Oria delivery work and owning-service selective erasure. Existing v1
+with durable Oria delivery work and owning-service selective erasure. [Linked readings](linked-readings.md)
+select current canonical inputs locally, recalculate birthday/synastry/event facts
+and bind interpretation/session dependencies to current revisions. Existing v1
 clients remain compatible; storage ownership remains unchanged.
 
 ```mermaid

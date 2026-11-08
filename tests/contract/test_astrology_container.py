@@ -70,6 +70,6 @@ def test_astrology_container():
         )
         assert not result.planets
         logs = compose("logs", "astrology-mcp")
-        assert "2000-01-01" not in logs and "51.5" not in logs
+        assert "2000-01-01" not in logs and "51.5" not in logs and "1992-06-02" not in logs
     finally:
         compose("down", "--volumes", "--remove-orphans")

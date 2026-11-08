@@ -73,6 +73,7 @@ def test_log_metric_catalog_matches_v1_and_never_projects_extra_dimensions():
         "worker_dead",
         "mcp_natal",
         "mcp_transits",
+        "mcp_linked",
         "second_context_respond",
         "second_context_remember",
         "second_context_purge",

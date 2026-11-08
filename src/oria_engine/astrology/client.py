@@ -8,6 +8,13 @@ from fastmcp.client.transports import StreamableHttpTransport
 
 from oria_engine.astrology.contracts import NatalRequest, NatalResult
 from oria_engine.astrology.http import bounded_http_client
+from oria_engine.astrology.linked import (
+    ChartRequest,
+    ChartResult,
+    SynastryRequest,
+    SynastryResult,
+    validate_chart,
+)
 from oria_engine.astrology.transits import TransitRequest, TransitResult
 from oria_engine.observability import observed
 
@@ -21,6 +28,10 @@ class AstrologyClient(Protocol):
 
     async def calculate_transits(self, request: TransitRequest) -> TransitResult: ...
 
+    async def calculate_event_chart(self, request: ChartRequest) -> ChartResult: ...
+
+    async def calculate_synastry(self, request: SynastryRequest) -> SynastryResult: ...
+
 
 class FastMCPAstrologyClient:
     def __init__(self, url: str, *, timeout: float = 20) -> None:
@@ -29,6 +40,43 @@ class FastMCPAstrologyClient:
 
     def transport(self) -> StreamableHttpTransport:
         return StreamableHttpTransport(self.url, httpx_client_factory=bounded_http_client)
+
+    @observed("mcp_linked")
+    async def calculate_event_chart(self, request: ChartRequest) -> ChartResult:
+        try:
+            async with asyncio.timeout(self.timeout):
+                async with Client(self.transport(), timeout=self.timeout) as client:
+                    response = await client.call_tool(
+                        "calculate_event_chart", {"request": request.model_dump(mode="json")}
+                    )
+                    if response.is_error:
+                        raise AstrologyUnavailable()
+                    result = ChartResult.model_validate(response.structured_content)
+                    if result.calculation_id != request.calculation_id:
+                        raise AstrologyUnavailable()
+                    validate_chart(request.chart, result.chart)
+                    return result
+        except Exception:
+            raise AstrologyUnavailable("Linked calculation temporarily unavailable") from None
+
+    @observed("mcp_linked")
+    async def calculate_synastry(self, request: SynastryRequest) -> SynastryResult:
+        try:
+            async with asyncio.timeout(self.timeout):
+                async with Client(self.transport(), timeout=self.timeout) as client:
+                    response = await client.call_tool(
+                        "calculate_synastry", {"request": request.model_dump(mode="json")}
+                    )
+                    if response.is_error:
+                        raise AstrologyUnavailable()
+                    result = SynastryResult.model_validate(response.structured_content)
+                    if result.calculation_id != request.calculation_id:
+                        raise AstrologyUnavailable()
+                    validate_chart(request.chart_a, result.chart_a)
+                    validate_chart(request.chart_b, result.chart_b)
+                    return result
+        except Exception:
+            raise AstrologyUnavailable("Linked calculation temporarily unavailable") from None
 
     @observed("mcp_transits")
     async def calculate_transits(self, request: TransitRequest) -> TransitResult:

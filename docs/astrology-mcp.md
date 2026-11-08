@@ -36,11 +36,16 @@ formatter, and validation/calculation errors returned over MCP are also generic.
 Raw arguments, numerical chart results and library diagnostics are never logged.
 
 `make mcp-test` builds a separate Compose project, waits for readiness, calls
-known- and unknown-time natal and transit requests over real HTTP MCP, validates the typed results,
+known- and unknown-time natal/transit requests and linked synastry/event tools over
+real HTTP MCP, validates the typed results,
 checks container isolation and removes that project's containers/network. It never
 touches developer database volumes. Docker, build-network access and a C compiler
 in the build image are required; the final image has no compiler. The first build
 may take several minutes. `make verify` includes all contract tests and this test.
+
+The additive [linked-chart v1 tools](../contracts/astrology/linked-v1.md) supply
+birthday samples, static synastry and event charts. Their numerical core shares
+the pinned astronomy below; they do not reinterpret natal/transit v1.
 
 ## Version 1 contract
 
