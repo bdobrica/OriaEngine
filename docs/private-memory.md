@@ -5,7 +5,7 @@ Migration `0011` implements the local canonical-memory slice of the
 Migration `0012` adds optional [SecondContext linked memory](linked-context.md),
 with the separate [linked-reading slice](linked-readings.md) supplying current synastry
 and event-chart calculations. Apply migrations and use consent version
-`2026-11-08.4` consistently before collecting this expanded data. Custom policy
+`2026-11-08.5` consistently before collecting this expanded data. Custom policy
 versions must also change. No live deployment is implied by the source change.
 
 ## Conversation

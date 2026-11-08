@@ -13,7 +13,7 @@ published by this task). Apply Oria migration `0012` and SecondContext migration
 compatible `linked-context-1` SecondContext implementation, and configure:
 
 ```dotenv
-ORIA_POLICY_VERSION=2026-11-08.4
+ORIA_POLICY_VERSION=2026-11-08.5
 SECOND_CONTEXT_KNOWLEDGE_ENABLED=true
 SECOND_CONTEXT_SUBJECT_NAMESPACE=oria
 ```

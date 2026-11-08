@@ -158,7 +158,7 @@ async def test_polling_configuration_fails_before_network(production):
         bot.assert_not_called()
 
 
-@pytest.mark.parametrize("old_policy", ["2026-09-01", "2026-09-28", "2026-10-03.2"])
+@pytest.mark.parametrize("old_policy", ["2026-09-01", "2026-09-28", "2026-10-03.2", "2026-11-08.4"])
 async def test_polling_requires_encryption_and_updated_disclosure(encryption, old_policy):
     with patch("oria_engine.telegram.__main__.Bot") as bot:
         with pytest.raises(ConfigurationError, match="encryption"):

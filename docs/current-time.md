@@ -80,7 +80,7 @@ non-birth resolved temporal values can reach SecondContext as untrusted user-sta
 context, not astrology facts or saved events. Raw saved birth values, birth
 candidates and birthday anchor dates are not forwarded. Filtering is bounded and
 cannot detect every unlabeled/encoded input. No new remote route, memory ingestion
-or model-controlled mutation is introduced. Consent version `2026-11-08.4` describes
+or model-controlled mutation is introduced. Consent version `2026-11-08.5` describes
 these temporary records and local own-birthday access; existing users re-consent.
 
 ## Timezone preference and calculation compatibility

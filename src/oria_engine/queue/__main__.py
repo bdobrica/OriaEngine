@@ -105,9 +105,10 @@ def run(settings: Settings, *, health_file: Path | None = None) -> None:
         "2026-11-08.1",
         "2026-11-08.2",
         "2026-11-08.3",
+        "2026-11-08.4",
     }:
         raise ConfigurationError(
-            "Set ORIA_POLICY_VERSION=2026-11-08.4 for the linked memory disclosure"
+            "Set ORIA_POLICY_VERSION=2026-11-08.5 for the linked memory disclosure"
         )
     resolver = LocalPlaceResolver()
     if health_file is not None:

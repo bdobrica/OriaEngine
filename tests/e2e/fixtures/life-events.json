@@ -1,0 +1,11 @@
+[
+  {"text": "My girlfriend Alice was born June 2nd, 1992", "contains": "Saved"},
+  {"text": "We married May 1st, 2020", "contains": "Saved"},
+  {"text": "I bought my house on May 2nd, 2020", "contains": "Saved"},
+  {"text": "I adopted my cat Luna on May 3rd, 2020", "contains": "Saved"},
+  {"text": "I changed my job on May 4th, 2020", "contains": "Saved"},
+  {"text": "I founded my business Acme on May 5th, 2020", "contains": "Saved"},
+  {"text": "My parents got divorced May 6th, 2020", "contains": "Saved"},
+  {"text": "I founded my non-profit on May 7th, 2020", "contains": "Saved"},
+  {"text": "I bought my phone on May 8th, 2020", "contains": "Saved"}
+]

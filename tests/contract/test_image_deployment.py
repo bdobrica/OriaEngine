@@ -42,7 +42,7 @@ def deployment_env():
         "TELEGRAM_WEBHOOK_BASE_URL": "https://oria.example.invalid",
         "PROFILE_ENCRYPTION_KEY": base64.b64encode(secrets.token_bytes(32)).decode(),
         "PROFILE_ENCRYPTION_KEY_VERSION": "v1",
-        "ORIA_POLICY_VERSION": "2026-11-08.4",
+        "ORIA_POLICY_VERSION": "2026-11-08.5",
         "SECOND_CONTEXT_KNOWLEDGE_ENABLED": "false",
         "SECOND_CONTEXT_BASE_URL": "http://context.example.invalid:8080",
         "SECOND_CONTEXT_BEARER_TOKEN": secrets.token_hex(24),
@@ -136,6 +136,16 @@ def test_template_covers_deployment_configuration(deployment_env):
         if line and not line.startswith("#")
     }
     assert names == deployment_env.keys() - {"PATH"}
+
+
+def test_linked_memory_does_not_enable_unrelated_external_knowledge_service(deployment_env):
+    deployment_env["SECOND_CONTEXT_KNOWLEDGE_ENABLED"] = "true"
+    result = render(deployment_env, bundled=True)
+    assert result.returncode == 0
+    services = json.loads(result.stdout)["services"]
+    assert services["secondcontext"]["environment"]["KNOWLEDGE_ENABLED"] == "false"
+    for name in ("gateway", "worker"):
+        assert services[name]["environment"]["SECOND_CONTEXT_KNOWLEDGE_ENABLED"] == "true"
 
 
 def test_bundled_secondcontext_ownership_and_credentials(deployment_env):

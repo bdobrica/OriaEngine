@@ -41,7 +41,7 @@ consent-revision check, retry and erasure rules. Birth fields are never sent to
 SecondContext or application logs. Telegram still retains displayed messages under its
 own policies. See [worker queue](worker-queue.md) and [consent flow](consent-flow.md).
 
-Deploy polling and workers with `ORIA_POLICY_VERSION=2026-11-08.4` (bump custom versions
+Deploy polling and workers with `ORIA_POLICY_VERSION=2026-11-08.5` (bump custom versions
 too) and accept the updated disclosure. Canonical memory requires migration `0011`;
 the [deletion workflow](deletion.md) requires migration `0008`.
 

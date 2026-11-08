@@ -247,14 +247,16 @@ Do not turn health/death/mental-health symbolism into diagnosis or predictions.
 
 Implement each slice with focused tests, then the practical repository gate.
 Keep legacy schemas and consumers working; regenerate schemas from their sources.
-No change to live images or unrelated host containers is part of this plan.
+Source slices do not change live images. The requested release slice follows the
+[coordinated checklist](conversation-memory-release.md) for published images and
+only the identified Oria project; unrelated host containers remain outside scope.
 
 | Slice | Deliverable | Acceptance before enabling |
 | --- | --- | --- |
 | 1. Policy and contracts | Implemented Oria policy/guard foundation, candidate typed temporal/event/entity and projection contracts, ADR 0002 and versioned voluntary-chat disclosure | Synthetic benign/harmful cases and consumer contracts checked; no event storage enabled; proposed lifecycle still needs acceptance/implementation by SecondContext before slice 4 ingestion |
 | 2. Natural-time routing | Implemented bounded English/Gregorian parsing, typed date roles/precision and encrypted 24-hour clarification; local own-birth, same-message and supplied anchors | Design examples, multiple dates, leap days, DST, retries and missing timezone checked; no partner birthday routed to own-profile edit or transit by default; historical event recall awaits slices 3–4; see [current behavior](current-time.md) |
 | 3. Private profile memory | Implemented encrypted entities/events, provenance and bounded conversational learning/CRUD; see [private memory](private-memory.md) | Restart, owner isolation, aliases, correction, deduplication, withdrawal/deletion races and “don't remember” verified; no false save acknowledgements |
-| 4. Context continuity | Implemented optional [linked context](linked-context.md): revisioned projections, salience, interpretations, bounded linked retrieval and encrypted reconciliation | Owning-service HTTP tests cover revision/idempotency fences, selective linked-session erasure and full purge; rollout requires migrations, compatible release, explicit switch and disclosure 2026-11-08.4 |
+| 4. Context continuity | Implemented optional [linked context](linked-context.md): revisioned projections, salience, interpretations, bounded linked retrieval and encrypted reconciliation | Owning-service HTTP tests cover revision/idempotency fences, selective linked-session erasure and full purge; rollout requires migrations, compatible release, explicit switch and disclosure 2026-11-08.5 |
 | 5. Linked astrology | Implemented [birthday samples, static synastry, event charts, directional overlays and requested symbolic ratings](linked-readings.md) through additive linked v1 tools/facts and all twelve house themes | Synthetic birth/partner/wedding readings use current calculations and revisions; source delivery/erasure gates remote generation; correction invalidation and sampling/house precision verified; publication/live review remain slice 6 |
 | 6. Release | Updated consent copy/version, review fixtures, full verification and published images | Existing users accept expanded data use before new storage starts; multi-turn review and end-to-end lifecycle pass; deploy only identified Oria services after publication |
 

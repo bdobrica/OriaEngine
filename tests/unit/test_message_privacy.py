@@ -75,6 +75,8 @@ def test_disclosure_fits_telegram_and_describes_current_capabilities():
     assert "provenance are encrypted locally" in DISCLAIMER
     assert "Inspection and removal remain available" in DISCLAIMER
     assert "do not include identifying" not in DISCLAIMER
+    assert "noon-UTC sample" in DISCLAIMER
+    assert "Ratings are interpretations, not probabilities" in DISCLAIMER
 
 
 def test_clock_compatibility_flag_never_grants_secret_forwarding():

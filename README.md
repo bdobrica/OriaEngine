@@ -58,7 +58,7 @@ See [testing](docs/testing.md) for coverage and limits. `make help` lists all ta
    Configure its URL, service authentication and subject namespace for chat and deletion.
    Its OpenAI credentials belong in SecondContext, not OriaEngine.
 5. Set `SECOND_CONTEXT_DOCKER_URL` to an address reachable from containers and retain
-   `ORIA_POLICY_VERSION=2026-11-08.4`. For polling, leave the webhook secret empty
+   `ORIA_POLICY_VERSION=2026-11-08.5`. For polling, leave the webhook secret empty
    and use a development bot with no registered webhook.
 
 ```sh

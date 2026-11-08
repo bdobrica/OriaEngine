@@ -73,7 +73,7 @@ contract extension. See the [consumer contract](../contracts/second-context/v1.m
 
 ## Demo setup
 
-Use `ORIA_POLICY_VERSION=2026-11-08.4` consistently in polling and workers. Bump custom
+Use `ORIA_POLICY_VERSION=2026-11-08.5` consistently in polling and workers. Bump custom
 policy versions as well. Existing users must accept the new disclosure. It describes
 voluntary personal context, user/storage responsibilities, birth-clause withholding,
 temporary date clarification and local own-birthday access,

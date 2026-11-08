@@ -133,7 +133,7 @@ The disclosure is versioned. The user must explicitly choose an **Agree** action
 Current disclosure source:
 
 [Consent copy](src/oria_engine/domain/consent.py) and [consent-flow reference](docs/consent-flow.md)
-use version `2026-11-08.4` for voluntary context and local encrypted event/entity learning plus optional linked summaries, significance,
+use version `2026-11-08.5` for voluntary context and local encrypted event/entity learning plus optional linked summaries, significance,
 interpretations and selective SecondContext cleanup, with opt-out and retention limits. [Private memory](docs/private-memory.md)
 describes implementation limits and own-birth profile references. [Linked context](docs/linked-context.md)
 implements optional remote summaries, salience and selective linked-session erasure
@@ -331,7 +331,9 @@ ADR 0002 preserves the ownership boundary.
 Slice 2 now implements [bounded natural-time routing](docs/current-time.md), typed
 precision/roles and encrypted 24-hour clarification anchored to original ingress.
 Own-birth anchors remain local. Canonical CRUD and linked recall are implemented;
-[linked astrology](docs/linked-readings.md) is implemented; coordinated release remains.
+[linked astrology](docs/linked-readings.md) is implemented. The [coordinated release](docs/conversation-memory-release.md)
+adds disclosure `2026-11-08.5`, lifecycle replays and published-image verification;
+publication and Oria-only rollout remain the current step.
 
 ---
 
@@ -1180,7 +1182,7 @@ Starts the deterministic edit state machine. Updating any calculation-relevant f
 The current source disclosure covers automatic local learning, sharing responsibility,
 secure storage, isolation, local lookup/correction/removal and separate transcript
 retention. See section 6.2 and [private memory](docs/private-memory.md). Existing
-users must accept version 2026-11-08.4 before collection. Remote projections and
+users must accept version 2026-11-08.5 before collection. Remote projections and
 salience still need owning-service implementation and accurate expanded disclosure.
 
 Explains:

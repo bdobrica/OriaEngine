@@ -8,17 +8,25 @@ from sqlalchemy import func, select
 
 from oria_engine.context.contracts import ContextUnavailable
 from oria_engine.db.birth_profiles import BirthProfileRepository
+from oria_engine.db.knowledge import KnowledgeRepository
 from oria_engine.db.models import (
     AstrologyProfile,
     BirthProfile,
     Consent,
+    ContextProjectionWork,
     ConversationSession,
     DeletionJob,
     InboundEvent,
+    KnowledgeChange,
+    KnowledgeDialogue,
+    KnowledgeLink,
+    KnowledgeRecord,
     OnboardingProgress,
     SocialIdentity,
+    TemporalClarification,
     User,
 )
+from oria_engine.db.repositories import ConsentRepository
 from oria_engine.domain.policy import PRIVACY_REPLY, SAFETY_REPLY
 from oria_engine.privacy.deletion import FINAL_TEXT, DeletionWorker
 from tests.support.replay import scenario_steps
@@ -145,6 +153,7 @@ async def test_input_output_and_high_stakes_policy(replay):
 
 async def test_deletion_purges_every_boundary_and_old_updates_stay_inert(replay):
     await replay.run("exact-time")
+    await replay.run("life-events")
     await replay.send(text="Explain my chart")
     old_update = replay.last_update
     owner = await replay.user_id()
@@ -171,6 +180,12 @@ async def test_deletion_purges_every_boundary_and_old_updates_stay_inert(replay)
         AstrologyProfile,
         OnboardingProgress,
         ConversationSession,
+        KnowledgeRecord,
+        KnowledgeLink,
+        KnowledgeChange,
+        KnowledgeDialogue,
+        ContextProjectionWork,
+        TemporalClarification,
     ):
         assert await count(replay, model) == 0
     assert subject in replay.context.stub.purged
@@ -205,6 +220,50 @@ async def test_deletion_purges_every_boundary_and_old_updates_stay_inert(replay)
     assert await replay.user_id() != owner
     assert await count(replay, BirthProfile) == 0
     assert await count(replay, Consent) == 0
+
+
+async def test_life_event_crud_and_partial_compatibility_through_the_wire(replay):
+    await replay.run("exact-time")
+    await replay.run("life-events")
+    await replay.send(text="What do you remember about our wedding?", contains="2020-05-01")
+    await replay.send(text="correct our wedding to May 2nd, 2020", contains="Updated")
+    await replay.send(text="What do you remember about our wedding?", contains="2020-05-02")
+    before = await count(replay, KnowledgeRecord)
+    await replay.send(text="Don't remember this. I bought my car on May 9th, 2020")
+    assert await count(replay, KnowledgeRecord) == before
+    await replay.send(text="Rate my compatibility with Alice", contains="synthetic reflection")
+    request = json.loads(replay.context.stub.requests[-1].content)
+    assert "Calculated linked facts" in request["instructions"]
+    assert "date_sample" in request["instructions"]
+    assert "1992-06-02" not in json.dumps(request)
+    await replay.send(
+        text="Discuss financial anxiety and daily routines", contains="synthetic reflection"
+    )
+    calls = len(replay.context.stub.requests)
+    await replay.send(text="How can I hurt my girlfriend?", contains="can't help")
+    assert len(replay.context.stub.requests) == calls
+    await replay.send(text="forget our wedding", contains="Removed")
+    await replay.send(text="What do you remember about our wedding?", contains="don't have a saved")
+    await replay.send(text="/privacy")
+    await replay.send(button="Decline")
+    await replay.send(text="/memories", contains="Alice")
+    await replay.send(text="forget my girlfriend's birthday", contains="Removed")
+
+
+async def test_old_acceptance_blocks_learning_until_fresh_adult_agreement(replay):
+    await replay.run("exact-time")
+    owner = await replay.user_id()
+    async with replay.worker.database.transaction() as session:
+        await ConsentRepository(session).accept(owner, "2026-11-08.4", "telegram")
+    await replay.send(text="We married May 1st, 2020", contains="2026-11-08.5")
+    assert await count(replay, KnowledgeRecord) == 0
+    await replay.send(button="agree", contains="profile is active")
+    await replay.send(text="We married May 1st, 2020", contains="Saved")
+    async with replay.worker.database.transaction() as session:
+        records = await KnowledgeRepository(
+            session, replay.worker.encryption, replay.worker.flow.policy_version
+        ).list(owner)
+        assert len(records) == 1
 
 
 async def test_delivery_retry_reuses_committed_context_reply(replay):

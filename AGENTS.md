@@ -58,6 +58,7 @@ If the authoritative sources are ambiguous or incomplete, prefer the change that
 * This server also runs unrelated projects. Restrict container maintenance to explicitly identified Oria Compose projects; the active MVP project is `oria-live-test`.
 * Never use host-wide container, image, network or volume pruning for Oria cleanup. Preserve live storage and secrets; remove only identified disposable Oria resources.
 * Prefer published, versioned Quay images pinned by digest for the MVP. Follow [deployment instructions](docs/deployment.md) and verify publication before changing live image references.
+* For the expanded conversation release, follow the [coordinated release checklist](docs/conversation-memory-release.md). Deploy the same disclosure version to ingress and workers, require fresh acceptance, and verify `linked-context-1` before enabling Oria's linked memory switch. SecondContext's separate external `KNOWLEDGE_ENABLED` integration stays disabled. Health checks alone do not verify provider generation or erasure.
 
 ## Repository and documentation hygiene
 

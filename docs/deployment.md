@@ -21,6 +21,11 @@ SecondContext follows commit `b1a58486218df138af456126fe7514a9f5b60cdd`, whose
 published gateway image contains `/app/migrate` and `/app/migrations`. Select
 release `0.1.1` or a compatible later version/digest.
 
+The expanded conversation/linked-reading release requires newer compatible images
+and migrations. Follow the [coordinated release checklist](conversation-memory-release.md)
+before enabling `SECOND_CONTEXT_KNOWLEDGE_ENABLED`; the old baseline images do not
+implement the required linked tools and erasure capability.
+
 ## Configure
 
 Install Docker with Compose v2 supporting `--wait`, GNU Make and this checkout's

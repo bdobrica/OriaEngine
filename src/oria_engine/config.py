@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     second_context_subject_namespace: str = ""
     second_context_knowledge_enabled: bool = False
     astrology_mcp_url: str = "http://localhost:8000/mcp"
-    oria_policy_version: str = "2026-11-08.4"
+    oria_policy_version: str = "2026-11-08.5"
     inbound_rate_per_minute: int = Field(default=20, ge=1, le=120)
     queued_jobs_per_user: int = Field(default=8, ge=1, le=32)
     llm_processing_enabled: bool = True
@@ -140,9 +140,10 @@ def validate_telegram_ingress(settings: Settings) -> None:
         "2026-11-08.1",
         "2026-11-08.2",
         "2026-11-08.3",
+        "2026-11-08.4",
     }:
         raise ConfigurationError(
-            "Set ORIA_POLICY_VERSION=2026-11-08.4 for the linked memory disclosure"
+            "Set ORIA_POLICY_VERSION=2026-11-08.5 for the linked memory disclosure"
         )
 
 

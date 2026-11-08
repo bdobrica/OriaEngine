@@ -127,7 +127,8 @@ def test_service_namespace_is_opt_in():
     )
 
 
-def test_worker_rejects_old_chat_disclosure_before_any_service_access():
+@pytest.mark.parametrize("policy", ["2026-10-03.2", "2026-11-08.4"])
+def test_worker_rejects_old_chat_disclosure_before_any_service_access(policy):
     from unittest.mock import patch
 
     from oria_engine.config import ConfigurationError
@@ -136,13 +137,13 @@ def test_worker_rejects_old_chat_disclosure_before_any_service_access():
     settings = Settings(
         _env_file=None,
         telegram_bot_token="123456789:" + "a" * 35,
-        oria_policy_version="2026-10-03.2",
+        oria_policy_version=policy,
     )
     with (
         patch("oria_engine.queue.__main__.ProfileEncryption"),
         patch("oria_engine.queue.__main__.LocalPlaceResolver") as resolver,
         patch("oria_engine.queue.__main__.Publisher") as publisher,
-        pytest.raises(ConfigurationError, match="2026-11-08.4"),
+        pytest.raises(ConfigurationError, match="2026-11-08.5"),
     ):
         run(settings)
     resolver.assert_not_called()

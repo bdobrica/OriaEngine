@@ -20,7 +20,7 @@ flowchart LR
 ## Run the demo
 
 Use identical `.env` configuration for polling and workers. Set
-`ORIA_POLICY_VERSION=2026-11-08.4` (bump custom versions too), retain the encryption
+`ORIA_POLICY_VERSION=2026-11-08.5` (bump custom versions too), retain the encryption
 key, and configure `DATABASE_URL`, `REDIS_URL`, `TELEGRAM_BOT_TOKEN` and
 `ASTROLOGY_MCP_URL=http://localhost:8000/mcp`.
 
