@@ -10,13 +10,14 @@ from pydantic import model_validator
 from oria_engine.astrology.client import AstrologyClient, AstrologyUnavailable
 from oria_engine.astrology.contracts import NatalResult, WireModel
 from oria_engine.astrology.transits import TransitRequest, TransitResult, validate_target
-from oria_engine.domain.policy import SAFETY_REPLY, is_high_stakes
+from oria_engine.domain.policy import SAFETY_REPLY, is_harmful_request
 from oria_engine.domain.relative_time import (
     HINT,
     TimeClarification,
     TimezoneRequired,
     resolve_relative,
 )
+from oria_engine.privacy.messages import prepare_active_input
 
 IntentKind = Literal[
     "natal_explanation",
@@ -64,8 +65,11 @@ def route_active(
     text: str, *, received_at: datetime, current_timezone: str | None = None
 ) -> ActiveIntent:
     """English demo grammar. Unrecognized language never authorizes a tool call."""
-    if is_high_stakes(text):
+    if is_harmful_request(text):
         return ActiveIntent(kind="unsupported_high_stakes")
+    if prepare_active_input(text) != text:
+        # Birth-bearing chat is a conversation, not an implicit profile edit/transit.
+        return ActiveIntent(kind="follow_up")
     if received_at.utcoffset() is None:
         raise ValueError("Message time must be timezone aware")
     dates = ISO_DATE.findall(text)

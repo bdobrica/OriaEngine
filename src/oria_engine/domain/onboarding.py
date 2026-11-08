@@ -23,7 +23,7 @@ from oria_engine.domain.places import PlaceResolutionUnavailable, PlaceResolver,
 from oria_engine.domain.policy import PRIVACY_REPLY
 from oria_engine.observability import count
 from oria_engine.privacy.encryption import ProfileEncryption
-from oria_engine.privacy.messages import private_active_input
+from oria_engine.privacy.messages import prepare_active_input, private_active_input
 
 DATE_PROMPT = "What is your birth date? Use YYYY-MM-DD or DD Mon YYYY (for example, 13 Apr 1990)."
 TIME_PROMPT = (
@@ -300,8 +300,13 @@ class OnboardingFlow:
                         count("policy_input_block")
                         return ConsentReply(State.ACTIVE, PRIVACY_REPLY)
                     try:
+                        active_text = (
+                            message.text
+                            if intent.kind == "unsupported_high_stakes"
+                            else prepare_active_input(message.text)
+                        )
                         facts = await prepare_active(
-                            message.text,
+                            active_text,
                             received_at=message.received_at,
                             natal=natal,
                             client=self.astrology,
@@ -317,7 +322,7 @@ class OnboardingFlow:
                                 session,
                                 user_id,
                                 ConversationRequest(
-                                    filtered_message=message.text,
+                                    filtered_message=active_text,
                                     goal=facts.intent.kind,
                                     natal_facts=natal,
                                     transit_facts=facts.transits,

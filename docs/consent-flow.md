@@ -15,13 +15,14 @@ types, SecondContext salience/interpretation projections, user responsibility fo
 sharing and Oria's security, isolation, retrieval, correction and deletion duties.
 Within that accepted data use, do not add consent prompts for every event or require
 another entity to register. Honor “don't remember.” The implementation and version
-described below remain the birth-profile/conversation baseline; this plan does not
-change deployed copy or authorize new storage yet.
+described below now allow voluntary conversational context. They do not authorize
+the planned new event/entity profile storage or projection writes.
 
 The initial copy is `DISCLAIMER` in `domain/consent.py`, using
-`ORIA_POLICY_VERSION` (default `2026-10-03.2`). It covers AI identity, interpretive
+`ORIA_POLICY_VERSION` (default `2026-11-08.1`). It covers AI identity, interpretive
 astrology, high-stakes limitations, birth date/time/place, chart purpose and future
-storage, prohibited unrelated PII, profile/edit controls, deletion limitations, and adult
+storage, voluntary PII and sharing responsibility, secure scoped handling, profile/edit
+controls, unavailable event memory/selective forgetting, deletion limitations, and adult
 use. **I'm 18+ and agree** confirms adulthood and acceptance together; it is a
 self-attestation, not age verification. The copy explicitly describes this demo's
 limits: encrypted birth profiles and drafts are collected, local place lookup and
@@ -36,8 +37,11 @@ This thorough disclosure is the place for general policy explanation and affirma
 adult agreement. After consent, ordinary dialogue should be free and natural, without
 recurring disclaimers or canned professional-support reminders. Respect adults' own
 judgment; explain a specific limitation only where it affects the actual request.
-The [dialogue guide](dialogue/README.md) describes that experience. This does not alter
-the disclosure, consent version, data uses or application authorization checks.
+The [dialogue guide](dialogue/README.md) describes that experience. Version
+`2026-11-08.1` replaces the prior birth-only chat warning with voluntary sharing,
+obvious-secret blocking and coarse local birth-input withholding. Ingress and
+worker startup reject known older policy versions; custom versions must be bumped
+by the operator too. No new storage feature is enabled by this disclosure.
 
 Keep each deployed version associated with its disclosure in source history. Bump
 `ORIA_POLICY_VERSION` when the copy/data use changes and deploy consistently to all

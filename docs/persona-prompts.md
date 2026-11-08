@@ -1,13 +1,11 @@
 # Oria persona and methodology prompts
 
-The [planned adult conversation and memory policy](conversation-memory-plan.md)
-requires a coordinated runtime revision of product policy, methodology, memory
-guidance and lexical guards. It permits useful volunteered context about all
-entity types and broad discussion, distinguishing harmful responses from topic
-mentions. Event learning/recall and house themes must use application-confirmed
-state and supplied facts. Current prompt constants below still contain older
-birth-only and topic restrictions; this documentation plan does not deploy new
-capabilities or authorize the model to mutate records.
+The adult conversation policy, methodology and memory guidance accept useful
+volunteered context and broad discussion. They distinguish harmful responses from
+topic mentions and explain unimplemented event memory, selective erasure and partner
+calculations honestly. The [remaining design](conversation-memory-plan.md) and
+[candidate contracts](../contracts/knowledge/v1.md) do not authorize model-driven
+mutations or enable those future capabilities.
 
 Stage 14 adds three application-owned Python text modules under
 [`src/oria_engine/persona`](../src/oria_engine/persona/). They ship with the package;
@@ -15,8 +13,8 @@ there are no prompt files to mount, new dependencies, settings or migrations.
 
 | Layer | Responsibility |
 | --- | --- |
-| `policy.py`, `oria-policy-3` | AI identity, consent/application authority, privacy, substantive safety limits, adult agency and untrusted-input rules |
-| `methodology.py`, `oria-methodology-3` | Weave relevant calculated readings into dialogue; separate facts and interpretation and respect availability and resolved targets |
+| `policy.py`, `oria-policy-4` | AI identity, consent/application authority, privacy, substantive safety limits, adult agency and untrusted-input rules |
+| `methodology.py`, `oria-methodology-4` | Weave relevant calculated readings into dialogue; separate facts and interpretation and respect availability and resolved targets |
 | `voice.py`, `oria-voice-2` | Natural adult conversation, specificity, acceptance of corrections, optional questions and user control of pace |
 
 Policy is immutable **to runtime inputs**: it is source-controlled `Final` text,
@@ -72,14 +70,14 @@ biographies do not become runtime instructions or evidence about a user.
 
 The [conversation fixtures](../tests/unit/fixtures/oria-tone.json) are authored,
 synthetic reference replies for natal reflection, unknown/approximate time, a transit
-snapshot, AI identity/privacy, a high-stakes boundary and a short turn from each new
+snapshot, AI identity/privacy, an uncertainty discussion and a short turn from each new
 sketch. Their illustrative facts
 are not engine reference fixtures. Review voice changes against the same rubric:
 
 - answer the immediate request with calm, specific, plain language;
 - distinguish supplied facts, traditional meaning and optional reflection;
 - put relevant uncertainty before interpretation;
-- accept corrections, preserve adult agency and ask at most one non-identifying
+- accept corrections, preserve adult agency and ask at most one relevant
   follow-up, without requiring a question or an action plan in every reply;
 - bring requested readings into the conversation without recurring boilerplate;
 - use a short, warm boundary when a reading cannot answer the request.

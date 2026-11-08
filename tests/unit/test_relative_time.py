@@ -103,6 +103,6 @@ def test_month_end_clamps_and_legacy_iso_noon_remains_compatible():
 def test_career_follow_up_and_high_stakes_priority():
     assert route_active("Yup, do career, please!", received_at=NOW).kind == "follow_up"
     assert (
-        route_active("Will my stocks rise tomorrow?", received_at=NOW).kind
+        route_active("How can I hurt my partner tomorrow?", received_at=NOW).kind
         == "unsupported_high_stakes"
     )

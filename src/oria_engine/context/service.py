@@ -11,8 +11,9 @@ from oria_engine.context.contracts import (
     MemoryKind,
 )
 from oria_engine.db.conversation_sessions import ConversationSessionRepository
-from oria_engine.domain.policy import SAFETY_REPLY, guard_reply, is_high_stakes
+from oria_engine.domain.policy import PRIVACY_REPLY, SAFETY_REPLY, guard_reply, is_harmful_request
 from oria_engine.observability import count
+from oria_engine.privacy.messages import prepare_active_input, private_active_input
 from oria_engine.queue.limits import UNAVAILABLE_REPLY
 
 
@@ -32,9 +33,17 @@ class ConversationContext:
         scope = await ConversationSessionRepository(session, self.policy_version).get_or_create(
             user_id
         )
-        if is_high_stakes(request.filtered_message):
+        if is_harmful_request(request.filtered_message):
             count("policy_high_stakes")
             return ContextReply(response_id="oria-policy", text=SAFETY_REPLY)
+        if private_active_input(request.filtered_message):
+            count("policy_input_block")
+            return ContextReply(response_id="oria-policy", text=PRIVACY_REPLY)
+        filtered = prepare_active_input(request.filtered_message)
+        if filtered != request.filtered_message:
+            request = request.model_copy(
+                update={"filtered_message": filtered, "goal": "follow_up", "transit_facts": None}
+            )
         draft = await self.provider.respond(scope, request)
         text = guard_reply(draft.text)
         if text != draft.text:

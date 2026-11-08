@@ -125,3 +125,25 @@ def test_service_namespace_is_opt_in():
         ).second_context_subject_namespace
         == "oria"
     )
+
+
+def test_worker_rejects_old_chat_disclosure_before_any_service_access():
+    from unittest.mock import patch
+
+    from oria_engine.config import ConfigurationError
+    from oria_engine.queue.__main__ import run
+
+    settings = Settings(
+        _env_file=None,
+        telegram_bot_token="123456789:" + "a" * 35,
+        oria_policy_version="2026-10-03.2",
+    )
+    with (
+        patch("oria_engine.queue.__main__.ProfileEncryption"),
+        patch("oria_engine.queue.__main__.LocalPlaceResolver") as resolver,
+        patch("oria_engine.queue.__main__.Publisher") as publisher,
+        pytest.raises(ConfigurationError, match="2026-11-08.1"),
+    ):
+        run(settings)
+    resolver.assert_not_called()
+    publisher.assert_not_called()

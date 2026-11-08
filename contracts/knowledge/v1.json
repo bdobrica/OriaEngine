@@ -1,0 +1,1133 @@
+{
+  "canonical": {
+    "$defs": {
+      "Anniversary": {
+        "additionalProperties": false,
+        "properties": {
+          "anchor": {
+            "$ref": "#/$defs/RecordRef"
+          },
+          "kind": {
+            "const": "anniversary",
+            "default": "anniversary",
+            "title": "Kind",
+            "type": "string"
+          },
+          "leap_day_observance": {
+            "anyOf": [
+              {
+                "enum": [
+                  "february_28",
+                  "march_1",
+                  "february_29_only"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Leap Day Observance"
+          },
+          "occurrence_year": {
+            "anyOf": [
+              {
+                "maximum": 9999,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Occurrence Year"
+          }
+        },
+        "required": [
+          "anchor"
+        ],
+        "title": "Anniversary",
+        "type": "object"
+      },
+      "CalendarDate": {
+        "additionalProperties": false,
+        "properties": {
+          "approximate": {
+            "default": false,
+            "title": "Approximate",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "date",
+            "default": "date",
+            "title": "Kind",
+            "type": "string"
+          },
+          "value": {
+            "format": "date",
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "title": "CalendarDate",
+        "type": "object"
+      },
+      "DateInterval": {
+        "additionalProperties": false,
+        "properties": {
+          "end": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CalendarDate"
+              },
+              {
+                "$ref": "#/$defs/Instant"
+              }
+            ],
+            "title": "End"
+          },
+          "kind": {
+            "const": "interval",
+            "default": "interval",
+            "title": "Kind",
+            "type": "string"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CalendarDate"
+              },
+              {
+                "$ref": "#/$defs/Instant"
+              }
+            ],
+            "title": "Start"
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "DateInterval",
+        "type": "object"
+      },
+      "EntityRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "aliases": {
+            "default": [],
+            "items": {
+              "maxLength": 160,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Aliases",
+            "type": "array"
+          },
+          "contract_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Contract Version",
+            "type": "integer"
+          },
+          "entity_type": {
+            "enum": [
+              "person",
+              "pet",
+              "organization",
+              "possession",
+              "other"
+            ],
+            "title": "Entity Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "entity",
+            "default": "entity",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "relationship_to_user": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Relationship To User"
+          },
+          "revision": {
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "source_message_id": {
+            "format": "uuid",
+            "title": "Source Message Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "entity_type",
+          "label",
+          "source_message_id"
+        ],
+        "title": "EntityRecord",
+        "type": "object"
+      },
+      "EventRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Contract Version",
+            "type": "integer"
+          },
+          "description": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "event_type": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Event Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "event",
+            "default": "event",
+            "title": "Kind",
+            "type": "string"
+          },
+          "natal_profile_revision": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Natal Profile Revision"
+          },
+          "participants": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/Participant"
+            },
+            "maxItems": 32,
+            "title": "Participants",
+            "type": "array"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Place"
+          },
+          "revision": {
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "source_message_id": {
+            "format": "uuid",
+            "title": "Source Message Id",
+            "type": "string"
+          },
+          "temporal": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TemporalEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "event_type",
+          "description",
+          "source_message_id"
+        ],
+        "title": "EventRecord",
+        "type": "object"
+      },
+      "Instant": {
+        "additionalProperties": false,
+        "properties": {
+          "approximate": {
+            "default": false,
+            "title": "Approximate",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "instant",
+            "default": "instant",
+            "title": "Kind",
+            "type": "string"
+          },
+          "value": {
+            "format": "date-time",
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "title": "Instant",
+        "type": "object"
+      },
+      "LocalDateTime": {
+        "additionalProperties": false,
+        "properties": {
+          "approximate": {
+            "default": false,
+            "title": "Approximate",
+            "type": "boolean"
+          },
+          "kind": {
+            "const": "local_datetime",
+            "default": "local_datetime",
+            "title": "Kind",
+            "type": "string"
+          },
+          "value": {
+            "format": "date-time",
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "title": "LocalDateTime",
+        "type": "object"
+      },
+      "PartialDate": {
+        "additionalProperties": false,
+        "properties": {
+          "approximate": {
+            "default": false,
+            "title": "Approximate",
+            "type": "boolean"
+          },
+          "day": {
+            "anyOf": [
+              {
+                "maximum": 31,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Day"
+          },
+          "kind": {
+            "const": "partial_date",
+            "default": "partial_date",
+            "title": "Kind",
+            "type": "string"
+          },
+          "month": {
+            "anyOf": [
+              {
+                "maximum": 12,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Month"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "maximum": 9999,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Year"
+          }
+        },
+        "title": "PartialDate",
+        "type": "object"
+      },
+      "Participant": {
+        "additionalProperties": false,
+        "properties": {
+          "entity_id": {
+            "format": "uuid",
+            "title": "Entity Id",
+            "type": "string"
+          },
+          "role": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entity_id",
+          "role"
+        ],
+        "title": "Participant",
+        "type": "object"
+      },
+      "RecordRef": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "entity",
+              "event",
+              "reading"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "revision"
+        ],
+        "title": "RecordRef",
+        "type": "object"
+      },
+      "TemporalEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "anchor": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RecordRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "expression": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Expression",
+            "type": "string"
+          },
+          "reference_time_utc": {
+            "format": "date-time",
+            "title": "Reference Time Utc",
+            "type": "string"
+          },
+          "resolution_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Resolution Version",
+            "type": "string"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Timezone"
+          },
+          "timezone_source": {
+            "default": "unknown",
+            "enum": [
+              "explicit_event",
+              "current_preference",
+              "unknown"
+            ],
+            "title": "Timezone Source",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "anniversary": "#/$defs/Anniversary",
+                    "date": "#/$defs/CalendarDate",
+                    "instant": "#/$defs/Instant",
+                    "interval": "#/$defs/DateInterval",
+                    "local_datetime": "#/$defs/LocalDateTime",
+                    "partial_date": "#/$defs/PartialDate"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/CalendarDate"
+                  },
+                  {
+                    "$ref": "#/$defs/Instant"
+                  },
+                  {
+                    "$ref": "#/$defs/LocalDateTime"
+                  },
+                  {
+                    "$ref": "#/$defs/PartialDate"
+                  },
+                  {
+                    "$ref": "#/$defs/DateInterval"
+                  },
+                  {
+                    "$ref": "#/$defs/Anniversary"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Value"
+          }
+        },
+        "required": [
+          "expression",
+          "reference_time_utc",
+          "resolution_version"
+        ],
+        "title": "TemporalEvidence",
+        "type": "object"
+      }
+    },
+    "discriminator": {
+      "mapping": {
+        "entity": "#/$defs/EntityRecord",
+        "event": "#/$defs/EventRecord"
+      },
+      "propertyName": "kind"
+    },
+    "oneOf": [
+      {
+        "$ref": "#/$defs/EntityRecord"
+      },
+      {
+        "$ref": "#/$defs/EventRecord"
+      }
+    ]
+  },
+  "projection_matches": {
+    "$defs": {
+      "ContextProjection": {
+        "additionalProperties": false,
+        "properties": {
+          "house_themes": {
+            "default": [],
+            "items": {
+              "maximum": 12,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "maxItems": 12,
+            "title": "House Themes",
+            "type": "array"
+          },
+          "knowledge_kind": {
+            "enum": [
+              "user_statement",
+              "interpretation"
+            ],
+            "title": "Knowledge Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "record": {
+            "$ref": "#/$defs/RecordRef"
+          },
+          "salience": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Salience"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/$defs/RecordRef"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Sources",
+            "type": "array"
+          },
+          "summary": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "record",
+          "label",
+          "summary",
+          "knowledge_kind",
+          "sources"
+        ],
+        "title": "ContextProjection",
+        "type": "object"
+      },
+      "RecordRef": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "entity",
+              "event",
+              "reading"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "revision"
+        ],
+        "title": "RecordRef",
+        "type": "object"
+      },
+      "Salience": {
+        "additionalProperties": false,
+        "properties": {
+          "basis": {
+            "enum": [
+              "user_stated",
+              "inferred"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "method_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Method Version",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "score",
+          "basis",
+          "method_version"
+        ],
+        "title": "Salience",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "contract_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Contract Version",
+        "type": "integer"
+      },
+      "matches": {
+        "items": {
+          "$ref": "#/$defs/ContextProjection"
+        },
+        "maxItems": 20,
+        "title": "Matches",
+        "type": "array"
+      },
+      "operation": {
+        "const": "query",
+        "default": "query",
+        "title": "Operation",
+        "type": "string"
+      },
+      "user": {
+        "pattern": "^(?:[a-z][a-z0-9_-]{0,31}:)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$",
+        "title": "User",
+        "type": "string"
+      }
+    },
+    "required": [
+      "user",
+      "matches"
+    ],
+    "title": "ProjectionMatches",
+    "type": "object"
+  },
+  "projection_receipt": {
+    "$defs": {
+      "RecordRef": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "entity",
+              "event",
+              "reading"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "revision"
+        ],
+        "title": "RecordRef",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "contract_version": {
+        "const": 1,
+        "default": 1,
+        "title": "Contract Version",
+        "type": "integer"
+      },
+      "coverage": {
+        "enum": [
+          "projection_and_indexes",
+          "active_stores_and_linked_history"
+        ],
+        "title": "Coverage",
+        "type": "string"
+      },
+      "operation": {
+        "enum": [
+          "upsert",
+          "delete"
+        ],
+        "title": "Operation",
+        "type": "string"
+      },
+      "operation_id": {
+        "format": "uuid",
+        "title": "Operation Id",
+        "type": "string"
+      },
+      "record": {
+        "$ref": "#/$defs/RecordRef"
+      },
+      "status": {
+        "const": "completed",
+        "title": "Status",
+        "type": "string"
+      },
+      "user": {
+        "pattern": "^(?:[a-z][a-z0-9_-]{0,31}:)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$",
+        "title": "User",
+        "type": "string"
+      }
+    },
+    "required": [
+      "operation",
+      "user",
+      "operation_id",
+      "record",
+      "status",
+      "coverage"
+    ],
+    "title": "ProjectionReceipt",
+    "type": "object"
+  },
+  "projection_request": {
+    "$defs": {
+      "ContextProjection": {
+        "additionalProperties": false,
+        "properties": {
+          "house_themes": {
+            "default": [],
+            "items": {
+              "maximum": 12,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "maxItems": 12,
+            "title": "House Themes",
+            "type": "array"
+          },
+          "knowledge_kind": {
+            "enum": [
+              "user_statement",
+              "interpretation"
+            ],
+            "title": "Knowledge Kind",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "record": {
+            "$ref": "#/$defs/RecordRef"
+          },
+          "salience": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Salience"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/$defs/RecordRef"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "title": "Sources",
+            "type": "array"
+          },
+          "summary": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "record",
+          "label",
+          "summary",
+          "knowledge_kind",
+          "sources"
+        ],
+        "title": "ContextProjection",
+        "type": "object"
+      },
+      "ProjectionDelete": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Contract Version",
+            "type": "integer"
+          },
+          "operation": {
+            "const": "delete",
+            "default": "delete",
+            "title": "Operation",
+            "type": "string"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "record": {
+            "$ref": "#/$defs/RecordRef"
+          },
+          "user": {
+            "pattern": "^(?:[a-z][a-z0-9_-]{0,31}:)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$",
+            "title": "User",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user",
+          "operation_id",
+          "record"
+        ],
+        "title": "ProjectionDelete",
+        "type": "object"
+      },
+      "ProjectionQuery": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Contract Version",
+            "type": "integer"
+          },
+          "house_themes": {
+            "default": [],
+            "items": {
+              "maximum": 12,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "maxItems": 12,
+            "title": "House Themes",
+            "type": "array"
+          },
+          "limit": {
+            "default": 10,
+            "maximum": 20,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "operation": {
+            "const": "query",
+            "default": "query",
+            "title": "Operation",
+            "type": "string"
+          },
+          "references": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/RecordRef"
+            },
+            "maxItems": 32,
+            "title": "References",
+            "type": "array"
+          },
+          "user": {
+            "pattern": "^(?:[a-z][a-z0-9_-]{0,31}:)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$",
+            "title": "User",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user"
+        ],
+        "title": "ProjectionQuery",
+        "type": "object"
+      },
+      "ProjectionUpsert": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Contract Version",
+            "type": "integer"
+          },
+          "operation": {
+            "const": "upsert",
+            "default": "upsert",
+            "title": "Operation",
+            "type": "string"
+          },
+          "operation_id": {
+            "format": "uuid",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "projection": {
+            "$ref": "#/$defs/ContextProjection"
+          },
+          "user": {
+            "pattern": "^(?:[a-z][a-z0-9_-]{0,31}:)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$",
+            "title": "User",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user",
+          "operation_id",
+          "projection"
+        ],
+        "title": "ProjectionUpsert",
+        "type": "object"
+      },
+      "RecordRef": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "entity",
+              "event",
+              "reading"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "revision"
+        ],
+        "title": "RecordRef",
+        "type": "object"
+      },
+      "Salience": {
+        "additionalProperties": false,
+        "properties": {
+          "basis": {
+            "enum": [
+              "user_stated",
+              "inferred"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "method_version": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._-]+$",
+            "title": "Method Version",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "score",
+          "basis",
+          "method_version"
+        ],
+        "title": "Salience",
+        "type": "object"
+      }
+    },
+    "discriminator": {
+      "mapping": {
+        "delete": "#/$defs/ProjectionDelete",
+        "query": "#/$defs/ProjectionQuery",
+        "upsert": "#/$defs/ProjectionUpsert"
+      },
+      "propertyName": "operation"
+    },
+    "oneOf": [
+      {
+        "$ref": "#/$defs/ProjectionUpsert"
+      },
+      {
+        "$ref": "#/$defs/ProjectionDelete"
+      },
+      {
+        "$ref": "#/$defs/ProjectionQuery"
+      }
+    ]
+  },
+  "status": "candidate; not enabled or supported by the current service"
+}

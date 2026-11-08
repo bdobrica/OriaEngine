@@ -16,7 +16,7 @@ from oria_engine.observability import count
 if TYPE_CHECKING:
     from oria_engine.domain.onboarding import OnboardingFlow
 
-# Collection disclosure uses the configured policy version (default 2026-10-03.2).
+# Collection disclosure uses the configured policy version (default 2026-11-08.1).
 # Change the configured version whenever the disclosure/data use changes.
 DISCLAIMER = (
     "Hi — I'm Oria, an AI astrology personality. Astrology is interpretive, not a factual "
@@ -25,8 +25,10 @@ DISCLAIMER = (
     "For personalized chart calculations, I need your birth date, birth time "
     "(exact, approximate, or unknown), and birthplace (city and country). "
     "OriaEngine will store those details for future conversations after you agree. "
-    "I won't ask for unrelated identifying information: legal name, email, phone number, "
-    "home address, employer, passwords, government IDs or payment details.\n\n"
+    "You are responsible for information you choose to share about yourself, other people, "
+    "pets, organizations or possessions. Oria is responsible for secure storage, account "
+    "isolation and the inspection, correction and deletion controls described here. "
+    "I ask relevant questions, not for unrelated identifiers or account secrets.\n\n"
     "Use /profile to inspect confirmed birth details, unfinished edits, chart status and "
     "consent, even after declining. /edit_profile corrects birth details after consent; "
     "selecting a birthplace determines coordinates and timezone. /privacy reviews this "
@@ -42,8 +44,11 @@ DISCLAIMER = (
     "Unfinished payloads expire after 24 hours and are erased when the worker next runs. "
     "Before consent, free text is discarded. Queue metadata and processing status are retained. "
     "Active chat uses SecondContext and its AI provider: filtered messages, replies and "
-    "retrieved context are retained there for conversation continuity. Filtering is limited; "
-    "do not include identifying or birth details in chat. Calculated chart facts are sent "
+    "retrieved context are retained there for conversation continuity. Volunteered personal "
+    "context can be included. Obvious account secrets are held locally. Birth-bearing chat "
+    "is replaced with a general conversational request before model processing; filtering "
+    "is limited. Event/entity profile memory and selective forgetting are not available yet. "
+    "Calculated chart facts are sent "
     "for interpretation and may be quoted in retained replies. Raw saved birth profiles "
     "and onboarding messages are not sent to SecondContext. A blocked AI draft may still "
     "be retained there. Declining stops further conversation processing but does not erase "
@@ -57,7 +62,7 @@ DISCLAIMER = (
     "onboarding, including after accepting; this does not delete identity, consent history "
     "or previously collected birth details.\n\n"
     "This MVP is for adults aged 18 or older. By choosing 'I'm 18+ and agree', you confirm "
-    "that you are at least 18 and consent to the described birth-data use."
+    "that you are at least 18 and consent to the described data use."
 )
 ACCEPTED_TEXT = (
     "Your consent is recorded. The next step is your birth date, but profile setup "

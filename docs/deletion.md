@@ -86,7 +86,7 @@ deletion. A subsequent `/start` creates a fresh UUID and requires fresh consent.
 
 ## Demo setup and verification
 
-Run `make migrate`, set `ORIA_POLICY_VERSION=2026-10-03.2` (bump custom versions too),
+Run `make migrate`, set `ORIA_POLICY_VERSION=2026-11-08.1` (bump custom versions too),
 and restart polling and workers consistently. Existing accepted users re-consent for
 chat, but deletion itself requires no consent. Keep encryption keys available until
 pending final notifications have been delivered or expired.

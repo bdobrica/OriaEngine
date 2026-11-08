@@ -57,8 +57,10 @@ invalidatable caches, not authoritative birth inputs.
 
 Raw birth inputs are decrypted within authorized application profile workflows
 or owner inspection. MCP receives normalized calculation inputs; SecondContext receives
-filtered active text and selected typed chart facts, without birth fields,
-coordinates, birthplace, Telegram identifiers or credentials in the context payload.
+prepared active text and selected typed chart facts. Saved birth fields,
+coordinates, birthplace, Telegram routing identifiers and credentials are not fact
+or metadata inputs. Voluntary personal context can appear in active text; obvious
+secrets are held locally, and birth-bearing chat uses a coarse value-free fallback.
 Facts go in instructions rather than explicit memory ingestion. Transcripts may
 retain generated descriptions of facts or volunteered details missed by filtering.
 See [privacy commands](profile-commands.md) and [policy limits](response-policy.md).

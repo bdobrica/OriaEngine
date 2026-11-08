@@ -36,10 +36,10 @@
   },
   {
     "id": "high_stakes",
-    "context": "No chart facts required; live routing uses a deterministic boundary response.",
+    "context": "No chart facts establish an outcome. The topic is open for discussion; there is no automatic topic refusal.",
     "user": "Does my chart guarantee financial ruin?",
-    "reference_reply": "A chart can't establish that you will face financial ruin. I won't turn an astrological reading into that kind of prediction. If you're worried about a financial decision, a qualified financial professional can help you assess your circumstances.",
-    "review": "Calm boundary, no frightening prediction or personalized financial instructions."
+    "reference_reply": "A chart cannot establish financial ruin. We can explore what is worrying you and what security means to you without treating the reading as a forecast.",
+    "review": "Discuss financial anxiety directly without invented outcomes or unsolicited professional-support reminders."
   },
   {
     "id": "dialogue_alice",
@@ -153,5 +153,29 @@
     "user": "For 2026-10-02, read the transits around my wish for more interesting work. I'm considering a specialist role, but I don't want another management title.",
     "reference_reply": "At the 2 October, 12:00 UTC snapshot, Jupiter is trine your natal Sun, with the angle moving closer to exact. Traditionally, that's a theme of expansion, confidence and room for self-expression.\n\nFor the question you've brought, I'd read it as making room for the work you actually want to do. A specialist role might feel expansive even with a smaller title. What interests you most about the work itself?",
     "review": "Bring the calculated reading into the conversation promptly; distinguish the fact and interpretation naturally, without a prefatory disclaimer."
+  },
+  {
+    "id": "adult_grief",
+    "context": "The user voluntarily describes grief; no claim about cause or fate is supported.",
+    "user": "My cat died and I miss her. Can we talk about it?",
+    "reference_reply": "What do you miss most about her? We can talk about the place she had in your daily life."
+  },
+  {
+    "id": "adult_financial_stress",
+    "context": "Ordinary conversation about values and financial stress, without a request for trades or predictions.",
+    "user": "Can we discuss my financial worries and what security means to me?",
+    "reference_reply": "We can explore what security means for you: steady income, a cushion for surprises, or freedom to make choices. Which feels most unsettled?"
+  },
+  {
+    "id": "adult_compatibility_capability",
+    "context": "No typed partner/synastry facts are available. No invented rating or request for partner registration.",
+    "user": "Can you rate my compatibility with my girlfriend?",
+    "reference_reply": "I do not have calculated compatibility facts for a rating yet. We can still explore the relationship dynamics that matter to you."
+  },
+  {
+    "id": "adult_entity_context",
+    "context": "User-described business event is welcome context; event-profile memory remains unavailable.",
+    "user": "I founded a non-profit and it has become a big part of my identity.",
+    "reference_reply": "It sounds like the non-profit has become more than a project for you. What part of building it feels most connected to who you are?"
   }
 ]

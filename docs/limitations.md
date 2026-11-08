@@ -30,8 +30,8 @@ not completion of operator checks or proof of model safety/astrological predicti
 
 - Natural mixed/event-anchored dates, automatic life-event/entity learning,
   conversational event CRUD and SecondContext salience are planned, not implemented.
-  Current birth-only schemas, fixed memory kinds and lexical topic restrictions
-  need coordinated changes; see the [design and delivery sequence](conversation-memory-plan.md).
+  Current birth-only storage schemas and fixed memory kinds need extension;
+  policy/contract groundwork is implemented, with broader extraction pending. See the [design and delivery sequence](conversation-memory-plan.md).
 - Telegram private text and supported callbacks are the current channel surface.
   Groups, media and other update types are ignored. Use one bot per database and
   one polling process per bot.
@@ -41,9 +41,9 @@ not completion of operator checks or proof of model safety/astrological predicti
 - Raw saved birth fields are excluded from SecondContext requests and explicit
   memory ingestion, but filtered active text and generated replies are retained
   remotely. Blocked drafts can already be in upstream history; local replacement
-  does not erase history. Current guards still reject volunteered birth details
-  and the calculation path has no compatibility facts. These are implementation
-  gaps against the [intended compatibility flow](../PLAN.md#61-voluntary-sharing-and-compatibility),
+  does not erase history. Birth-bearing messages are coarsely withheld locally,
+  without structured extraction; the calculation path has no compatibility facts.
+  These remain implementation gaps against the [intended compatibility flow](../PLAN.md#61-voluntary-sharing-and-compatibility),
   not a prohibition on users sharing partner information for a reading.
 - [Worker retries](worker-queue.md) are bounded and durable. Ambiguous remote context
   calls and Telegram sends can duplicate effects. There is no remote exactly-once

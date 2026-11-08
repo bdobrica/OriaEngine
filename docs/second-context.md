@@ -2,8 +2,8 @@
 
 The [planned event/entity extension](conversation-memory-plan.md#salience-and-linked-interpretation-in-secondcontext)
 uses SecondContext for linked salience and interpretations, with encrypted
-canonical events/entities in Oria. It requires versioned, revision-aware projection
-and selective-erasure support in the owning service. The existing fixed memories
+canonical events/entities in Oria. Its [candidate schemas and consumer requirements](../contracts/knowledge/v1.md)
+define revision-aware projections and selective erasure for the owning service. The existing fixed memories
 and subject-wide purge below do not implement that lifecycle; do not use arbitrary
 memory text or direct database access to bypass the contract.
 
@@ -81,7 +81,7 @@ The adapter supports [active routing and transit facts](transits-and-routing.md)
 The polling/worker demo calls this adapter for eligible active chat and
 [confirmed, durable account deletion](deletion.md) across Oria and SecondContext.
 
-The updated disclosure uses policy version `2026-10-03.2`; deploy it consistently and
+The updated disclosure uses policy version `2026-11-08.1`; deploy it consistently and
 bump custom versions before enabling conversation storage. It describes actual
 SecondContext retention and deletion controls, including the minimal deletion marker.
 

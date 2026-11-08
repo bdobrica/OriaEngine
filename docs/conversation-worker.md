@@ -4,7 +4,7 @@ The production job now injects `ConversationContext(SecondContextProvider(...))`
 into the existing consent/onboarding flow. The job owns and closes the HTTP client.
 All consent, profile, queue, locking and delivery invariants in
 [worker queue](worker-queue.md) still apply. There are no migrations, dependencies,
-new model tools or wire-schema changes.
+new model tools or live wire-schema changes. Candidate event contracts remain inactive.
 
 After consent, a confirmed profile with a current derived cache permits active
 chat. Onboarding, callbacks and profile/privacy commands remain deterministic and
@@ -13,20 +13,18 @@ the birth profile. Follow-ups include current natal facts; date/current-transit
 requests additionally calculate transit facts. Missing transit facts cannot be
 reconstructed from memory. Relative targets use the explicit current timezone
 preference and recorded ingress timestamp. Missing timezone preferences, ambiguous
-dates and recognized high-stakes requests
+dates and recognized harmful requests
 receive local replies. The optional context-free flow remains useful for tests
 and deterministic consumers; the production worker always injects context.
 
-Before generation, the conservative English input gate rejects the entire message
-if it recognizes identifying categories, common volunteered birth/name/location
-phrases, email/URL markers, phone-like numbers or street addresses. It forwards no
-part of a rejected message. One ISO date remains usable as a transit target.
-Unlabeled names/places, other languages and encoded values can evade this lexical
-gate; it is not a guarantee of PII removal. Its blanket rejection of volunteered
-birth details is an implementation gap against the intended
-[voluntary-sharing and compatibility flow](../PLAN.md#61-voluntary-sharing-and-compatibility),
-not a product restriction. No saved birth fields are loaded for comparison or
-sent to the provider.
+Before generation, the input gate holds obvious account secrets locally while
+allowing voluntary personal context. Birth-bearing messages are replaced with a
+value-free conversational goal before routing or model processing, preserving the
+existing raw-birth boundary without a privacy lecture or implicit profile edit.
+This is a coarse fallback, not structured extraction: it can lose context and
+cannot detect every secret or unlabeled birth input. The service repeats preparation
+for direct callers. No saved birth fields are loaded for comparison or forwarded.
+See the [policy implementation](response-policy.md) and [remaining extraction work](conversation-memory-plan.md).
 
 The guarded application service rechecks consent and uses a stable user/session
 scope before the adapter assembles policy, methodology, voice, typed facts and
@@ -63,8 +61,9 @@ contract extension. See the [consumer contract](../contracts/second-context/v1.m
 
 ## Demo setup
 
-Use `ORIA_POLICY_VERSION=2026-10-03.2` consistently in polling and workers. Bump custom
+Use `ORIA_POLICY_VERSION=2026-11-08.1` consistently in polling and workers. Bump custom
 policy versions as well. Existing users must accept the new disclosure. It describes
+voluntary personal context, user/storage responsibilities, birth-input withholding,
 SecondContext/AI processing and retention, quoted chart facts, retained blocked
 drafts, limited filtering, and confirmed account deletion. Decline stops
 further processing but does not purge previous data. Confirmed deletion retains a

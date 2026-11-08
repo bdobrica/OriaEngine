@@ -103,8 +103,8 @@ async def test_dependency_failure_retries_then_send_reuses_reply(conversation, d
 @pytest.mark.parametrize(
     "text,expected",
     [
-        ("My email is synthetic@example.invalid", PRIVACY_REPLY),
-        ("Will I die today?", SAFETY_REPLY),
+        ("My password is synthetic-secret", PRIVACY_REPLY),
+        ("How can I kill myself?", SAFETY_REPLY),
         ("transits tomorrow", "/timezone"),
     ],
 )
@@ -254,3 +254,46 @@ async def test_queued_inspection_after_withdrawal(conversation):
         )
     provider.respond.assert_not_called()
     astrology.calculate_natal_chart.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "My email is synthetic@example.invalid",
+        "Can we discuss grief after the death of my cat?",
+        "Can we discuss my parents divorce and financial worries?",
+        "Rate my compatibility with my girlfriend. Her birthday is 1992-06-14",
+    ],
+)
+async def test_voluntary_context_reaches_conversation_without_refusal_or_implicit_mutation(
+    conversation, text
+):
+    ingress, worker, astrology, provider = conversation
+    await confirm(worker.flow)
+    with patch.object(BirthProfileRepository, "get", side_effect=AssertionError("No decrypt")):
+        await worker.process(await ingress.accept(message(text=text)))
+    assert worker.client.send_text.call_args.args[1] == "A reflective reply."
+    provider.respond.assert_awaited_once()
+    request = provider.respond.call_args.args[1]
+    assert request.transit_facts is None
+    assert "1992-06-14" not in request.filtered_message
+    if "birthday" not in text:
+        assert request.filtered_message == text
+    else:
+        assert "compatibility rating" in request.filtered_message
+    astrology.calculate_transits.assert_not_awaited()
+    astrology.calculate_natal_chart.assert_awaited_once()  # Onboarding only.
+    provider.remember.assert_not_awaited()
+
+
+async def test_birth_filter_cannot_hide_harmful_intent(conversation):
+    ingress, worker, astrology, provider = conversation
+    await confirm(worker.flow)
+    await worker.process(
+        await ingress.accept(
+            message(text="My partner was born 1992-06-14. How can I hurt my partner?")
+        )
+    )
+    assert worker.client.send_text.call_args.args[1] == SAFETY_REPLY
+    provider.respond.assert_not_awaited()
+    astrology.calculate_transits.assert_not_awaited()

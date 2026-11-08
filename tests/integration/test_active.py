@@ -26,8 +26,8 @@ async def test_active_fact_routing_without_decrypting(store, encryption, birth_p
         ambiguous = await flow.handle(message("transits on 04/05/2026"))
         assert "YYYY-MM-DD" in ambiguous.text
         client.calculate_transits.assert_not_called()
-        high_stakes = await flow.handle(message("Will I die today?"))
-        assert "high-stakes" in high_stakes.text
+        harmful = await flow.handle(message("How can I hurt my partner today?"))
+        assert "instructions or encouragement to harm" in harmful.text
         client.calculate_transits.assert_not_called()
         follow_up = await flow.handle(message("Tell me more"))
         assert "restate the topic" in follow_up.text

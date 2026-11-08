@@ -1,27 +1,45 @@
-"""Conservative English active-input gate; never logs or partially forwards a match."""
+"""Prepare active chat without treating volunteered PII as a refusal category."""
 
 import re
 
-from oria_engine.domain.policy import PII, normalize
+from oria_engine.domain.policy import normalize
 
-SENSITIVE = re.compile(
-    r"@|https?://|www\.|\b(?:born|birthday|birthplace|birth date|date of birth|"
-    r"my name|i am named|i live|i work|my birth time)\b|"
-    r"\b\d{1,2}:\d{2}\b|(?:\d[ ()+.-]*){7,}|"
-    r"\b\d+\s+\w+\s+(?:street|road|avenue|lane|drive)\b"
+BIRTH_INPUT = re.compile(r"\b(?:born|birthday|birthplace|birth date|birth time|date of birth)\b")
+SECRET = re.compile(
+    r"\b(?:password|passcode|api[ _-]?key|access[ _-]?token|secret[ _-]?key|cvv|pin code)"
+    r"\s*(?:is\s+|[=:]\s*)\S+|\bsk-[a-z0-9_-]{12,}\b"
 )
 
 
 def private_active_input(text: str, *, resolved_clock: bool = False) -> bool:
-    """Reject obvious volunteered identifiers/birth values, with intentional false positives.
+    """Hold obvious account secrets locally; ordinary PII and clock text are allowed.
 
-    One ISO transit date is excluded from numeric matching. Arbitrary unlabeled names,
-    places, encoded values and other languages cannot be reliably detected lexically.
+    resolved_clock remains accepted for existing internal callers. It grants no
+    permission to collect fields. This bounded detector cannot identify every secret.
+    """
+    return bool(SECRET.search(normalize(text)))
+
+
+def prepare_active_input(text: str) -> str:
+    """Withhold birth-bearing messages under the existing v1 context boundary.
+
+    This coarse fallback preserves a supported conversational goal, without sending
+    raw birth inputs, guessing their subject or pretending to extract/store events.
+    Slice 2 replaces it with typed temporal roles and richer local extraction.
+    The result is idempotent and carries no user-supplied values from such a message.
     """
     value = normalize(text)
-    value = re.sub(r"(?<![\w-])\d{4}-\d{2}-\d{2}(?![\w-])", "[date]", value)
-    if resolved_clock:
-        # Only after deterministic routing resolves one clock-based transit request.
-        # Other PII and birth phrases are still checked over the entire message.
-        value = re.sub(r"\bat\s+\d{1,2}:\d{2}\b", "[target time]", value)
-    return bool(PII.search(value) or SENSITIVE.search(value))
+    if not BIRTH_INPUT.search(value):
+        return text
+    if re.search(
+        r"\b(?:compatibility|compatible|synastry|girlfriend|boyfriend|wife|husband|partner)\b",
+        value,
+    ):
+        question = (
+            "I'd like a compatibility rating."
+            if re.search(r"\b(?:rate|rating|score)\b", value)
+            else "I'd like to discuss my relationship."
+        )
+    else:
+        question = "I'd like to discuss my personal context alongside my chart."
+    return question + " [Birth inputs held locally; no additional calculation was performed.]"

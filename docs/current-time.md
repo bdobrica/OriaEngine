@@ -54,5 +54,6 @@ Ambiguous/nonexistent local times at clock changes, multiple targets, compound o
 fractional offsets, unsupported phrases, explicit competing timezone abbreviations
 and targets outside 1800–2399 ask for clarification. This is not unrestricted natural
 language understanding. No LLM decides timestamps or authorizes tool calls.
-The inbound privacy filter exempts clock text only after deterministic routing
-resolves one target; other birth/identifying markers remain blocked.
+Clock text and volunteered identifiers are no longer blanket input blocks.
+Birth-bearing messages use a coarse local withholding fallback and follow-up route,
+not an automatic transit target. See [response policy](response-policy.md).

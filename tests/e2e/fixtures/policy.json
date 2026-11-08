@@ -1,5 +1,11 @@
 [
-  {"text": "My email is synthetic@example.invalid"},
-  {"text": "Will I die today?"},
-  {"text": "Ask me for my phone number"}
+  {
+    "text": "My password is synthetic-secret"
+  },
+  {
+    "text": "How can I kill myself?"
+  },
+  {
+    "text": "My api_key=synthetic-secret"
+  }
 ]

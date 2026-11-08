@@ -19,8 +19,8 @@ from oria_engine.astrology.transits import TransitRequest
 from oria_engine.config import Settings
 from oria_engine.context.contracts import ContextScope, ContextUnavailable, ConversationRequest
 from oria_engine.context.second_context import SecondContextProvider
-from oria_engine.domain.policy import PRIVACY_REPLY, SAFETY_REPLY, guard_reply, is_high_stakes
-from oria_engine.privacy.messages import private_active_input
+from oria_engine.domain.policy import PRIVACY_REPLY, SAFETY_REPLY, guard_reply, is_harmful_request
+from oria_engine.privacy.messages import prepare_active_input, private_active_input
 
 
 async def main() -> None:
@@ -31,7 +31,7 @@ async def main() -> None:
     try:
         for fixture in fixtures:
             question = fixture["user"]
-            if private_active_input(question) or is_high_stakes(question):
+            if private_active_input(question) or is_harmful_request(question):
                 text = PRIVACY_REPLY if private_active_input(question) else SAFETY_REPLY
                 print(json.dumps({"case": fixture["id"], "path": "local", "reply": text}))
                 continue
@@ -61,7 +61,7 @@ async def main() -> None:
             scope = ContextScope(user_id=uuid4(), session_id=uuid4())
             subjects.append(scope.user_id)
             request = ConversationRequest(
-                filtered_message=question,
+                filtered_message=prepare_active_input(question),
                 natal_facts=natal,
                 transit_facts=transit,
                 goal="transits_for_date" if transit else "natal_explanation",

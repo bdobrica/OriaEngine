@@ -41,11 +41,11 @@ storage or consent mechanism.
 ## Current priority — natural time and life-event memory
 
 [Design, policy and acceptance criteria](docs/conversation-memory-plan.md) expand
-the intended experience beyond natal profiles. These are pending implementation
-slices alongside the remaining MVP release gate. Completed historical stages below
-describe the existing baseline, including guards this work will replace.
+the intended experience beyond natal profiles. The policy/contract foundation is
+implemented; remaining slices sit alongside the MVP release gate. Completed
+historical stages below describe the earlier baseline, including replaced guards.
 
-- [ ] **1 — Policy/contracts:** update runtime policy, methodology, memory guidance and input/output guards for voluntary sharing, relevant questions and broad discussion; use actual harmful/destructive intent and response content rather than topic keywords. Retain consent, truthfulness and application authority. Define versioned event/entity/time and SecondContext lifecycle contracts with the owning component before enabling new data flows.
+- [x] **1 — Oria policy/contract foundation:** runtime policy/methodology/memory guidance and narrow behavioral guards accept voluntary context and broad discussion; a new versioned disclosure preserves consent. ADR 0002 and generated candidate event/entity/time and projection lifecycle contracts define the next slices. Birth-bearing chat uses local withholding, not event extraction. No event storage or projection traffic is enabled; owning-service acceptance/implementation remains a slice 4 prerequisite.
 - [ ] **2 — Natural time:** support absolute, relative, mixed and event-anchored expressions, multiple dates/roles, persisted clarification and date-only/approximate precision. Cover every example in the design, timezone/DST, calendar offsets, anniversaries and retry-stable reference clocks. Partner/event dates must not default to transits or own-profile edits.
 - [ ] **3 — Canonical profile memory:** add encrypted owner-scoped entities, events, relationships and provenance with migrations; learn meaningful volunteered events naturally under current consent. Implement conversational inspection, revisioned corrections, selective deletion and “don't remember”; test deduplication, aliases, isolation and account-deletion/withdrawal races.
 - [ ] **4 — SecondContext continuity:** implement authenticated revision-aware projection upsert/retrieval/selective deletion in the owning service and Oria adapter; add durable reconciliation, salience and linked entity/event retrieval. Verify erasure of dependent summaries/index/graph/history as promised, stale-write fencing and full subject purge before enabling ingestion. Keep raw birth inputs outside semantic memory and disclose the precise context projection.

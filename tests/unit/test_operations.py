@@ -191,7 +191,7 @@ def test_admission_log_links_update_context_to_only_typed_internal_job_id(log_st
     "message,draft,metric",
     [
         ("Tell me more", "Tell me your email.", "policy_output_block"),
-        ("Will I die today?", "unused", "policy_high_stakes"),
+        ("How can I hurt my partner?", "unused", "policy_high_stakes"),
     ],
 )
 async def test_policy_branches_count_without_logging_text(log_stream, message, draft, metric):

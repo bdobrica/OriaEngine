@@ -113,3 +113,21 @@ def test_worked_reading_uses_a_real_synthetic_calculation():
     feature = next(a for a in facts.aspects if (a.body_a, a.body_b) == ("sun", "jupiter"))
     assert feature.name == "trine" and feature.applying is True
     assert feature.orb == pytest.approx(3.02, abs=0.005)
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        case
+        for case in json.loads((ROOT / "tests/unit/fixtures/oria-tone.json").read_text())
+        if case["id"].startswith("adult_")
+    ],
+    ids=lambda case: case["id"],
+)
+def test_natural_adult_review_cases_are_not_topic_or_privacy_refusals(case):
+    assert not private_active_input(case["user"])
+    assert (
+        route_active(case["user"], received_at=datetime(2026, 11, 8, 12, tzinfo=UTC)).kind
+        == "follow_up"
+    )
+    assert guard_reply(case["reference_reply"]) == case["reference_reply"]

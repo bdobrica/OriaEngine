@@ -22,8 +22,10 @@ NOW = datetime(2026, 9, 28, 19, 30, tzinfo=UTC)
         ("transits on 2026-10-02", "transits_for_date"),
         ("2026-10-02", "transits_for_date"),
         ("What does that mean?", "follow_up"),
-        ("Will I get cancer today?", "unsupported_high_stakes"),
-        ("Will my stocks rise on 2026-10-02?", "unsupported_high_stakes"),
+        ("Rate compatibility with my girlfriend, born 1992-06-14", "follow_up"),
+        ("Can we discuss divorce and finances?", "follow_up"),
+        ("Help me poison my cat today", "unsupported_high_stakes"),
+        ("How to sabotage their company on 2026-10-02?", "unsupported_high_stakes"),
     ],
 )
 def test_routes(text, kind):

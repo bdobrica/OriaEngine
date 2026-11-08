@@ -76,7 +76,7 @@ clarification and dataset generation. Confirmed profiles calculate through MCP.
 Start `make mcp-local` and `make worker` for host polling.
 
 Before `make run`, apply `make migrate`, retain a stable `PROFILE_ENCRYPTION_KEY`,
-and set `ORIA_POLICY_VERSION=2026-10-03.2` in the ignored local `.env`. Polling rejects
+and set `ORIA_POLICY_VERSION=2026-11-08.1` in the ignored local `.env`. Polling rejects
 the previous defaults, including `2026-09-28.3`. Operators using
 custom policy versions must also bump their version for the conversation-storage disclosure. No local secrets
 or developer database are modified by implementation tests.

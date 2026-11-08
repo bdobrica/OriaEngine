@@ -130,11 +130,14 @@ OriaEngine does **not** immediately ask for birth data. The implemented birth-pr
 
 The disclosure is versioned. The user must explicitly choose an **Agree** action before profile collection starts.
 
-A starting disclosure can be:
+Current disclosure source:
 
-> Hi — I’m Oria, an AI astrology personality. If you want a personalized reading, I need your birth date, birth time (exact, approximate, or unknown), and birthplace (normally city and country) so I can calculate your chart. If you continue, OriaEngine will store those details for future conversations. I won’t ask you for unrelated identifying information such as your legal name, email, phone number, home address, employer, passwords, government IDs, or payment details. You can inspect, correct, or delete your stored profile at any time. Astrology is an interpretive practice, not a scientifically established forecasting method, and my responses should not be used as medical, legal, financial, or other high-stakes professional advice. The MVP is intended for adults. Do you agree and want to continue?
-
-This is the birth-profile baseline disclosure, not approved copy for the planned event-memory extension. Expand and version it before enabling new learning/storage: explain volunteered PII, entities/events, SecondContext projections, user responsibility for sharing and Oria's security/control responsibilities. Do not reuse the old birth-only wording as authorization for expanded storage. AI disclosure, honest interpretation, described data uses, user controls and affirmative adult consent remain invariants; ordinary discussion is not restricted by topic.
+[Consent copy](src/oria_engine/domain/consent.py) and [consent-flow reference](docs/consent-flow.md)
+use version `2026-11-08.1` for voluntary conversational context, user/Oria responsibilities,
+limited local filtering and existing transcript retention. Event-profile memory and
+selective forgetting remain unavailable. Enabling those later requires another accurate
+versioned disclosure; this policy update does not authorize new storage. AI identity,
+honest interpretation, user controls and affirmative adult consent remain invariants.
 
 If the user sends birth information before accepting, OriaEngine must not persist it as profile data. It should restate the consent requirement and ask the user to accept or decline.
 
@@ -282,10 +285,10 @@ belong to the requesting user's existing deletion lifecycle, including partner
 information supplied in that conversation. This uses the same ownership and
 deletion responsibilities rather than introducing a separate partner account.
 
-This is intended product behavior. The current lexical input/output guards,
-prompt restrictions, date router and natal/transit-only fact contracts do not yet
-implement it. Their rejection of ordinary compatibility requests is an
-implementation gap to fix, not a policy to preserve. See the
+This is intended product behavior. The policy/guard foundation now permits the
+conversation and withholds birth inputs locally without a privacy lecture. Typed extraction, storage and calculated
+partner facts are still pending; the coarse fallback cannot yet provide a
+calculated compatibility rating. See the
 [current compatibility tasks](TODO.md#current-priority--compatibility-conversations).
 
 ### 6.2 Natural time, life events and entities
@@ -319,7 +322,9 @@ acceptance criteria. House themes are interpretive retrieval tags; actual house
 placements and correlations require calculated evidence. Implement via the
 [ordered current-priority slices](TODO.md#current-priority--natural-time-and-life-event-memory),
 with a versioned disclosure before enabling the expanded data use. Current runtime
-schemas, fixed memory kinds and lexical guards do not implement these capabilities.
+storage schemas and fixed memory kinds do not implement these capabilities.
+The runtime policy/guard foundation and [candidate typed contracts](contracts/knowledge/v1.md)
+are implemented; ADR 0002 records their ownership without enabling event storage or projection traffic.
 
 ---
 
@@ -980,7 +985,8 @@ retrieved memory between persona and facts is not guaranteed by this wire contra
 Authored conversation fixtures define the tone baseline; a small live-model review
 is recorded in [Stage 16 evidence](docs/evidence/stage-16.md).
 The [response guard](docs/response-policy.md) enforces the
-common English PII and high-stakes baseline at the application service boundary.
+narrow English solicitation, harmful-behavior and unsupported-claim patterns at
+the application service boundary, without category-wide topic blocks.
 
 ---
 
@@ -989,7 +995,8 @@ common English PII and high-stakes baseline at the application service boundary.
 The intended policy permits useful voluntarily shared PII and relevant follow-up
 questions under the disclosed data use. Oria avoids unnecessary identifier
 collection while securely remembering meaningful user context. Personal data alone
-is not a refusal trigger. The existing birth-only guards require revision.
+is not a refusal trigger. The updated behavioral guards permit this discussion; canonical event-memory
+storage and its richer input extraction are still planned.
 
 This should be enforced through multiple layers rather than only a system prompt:
 
@@ -1214,9 +1221,10 @@ responsibility for sharing does not authorize fabricated facts, unsafe guidance,
 access to another account or expanded tool permissions. General disclosures stay
 in consent/help/privacy rather than recurring in ordinary replies.
 
-The current lexical classifier and fixed high-stakes replies are a more
-restrictive implementation baseline. Replace them with contextual behavior and
-regression checks as part of the [delivery plan](docs/conversation-memory-plan.md#delivery-sequence-and-acceptance).
+The runtime prompts now support contextual judgment, with narrow English guard
+patterns for explicit harmful requests/directions, unnecessary solicitation and
+selected unsupported claims. They do not prove semantic safety. Richer memory and
+routing remain in the [delivery plan](docs/conversation-memory-plan.md#delivery-sequence-and-acceptance).
 
 ---
 
