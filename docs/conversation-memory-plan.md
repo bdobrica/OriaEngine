@@ -1,8 +1,9 @@
 # Natural time, entities and life-event memory
 
 Status: the adult-dialogue policy and Oria-side candidate contract foundation are
-implemented; natural-time extraction, event storage and remote lifecycle integration
-remain planned. [ADR 0002](adr/0002-private-life-events-and-context-projections.md)
+implemented, along with bounded natural-time extraction and encrypted clarification.
+Event storage and remote lifecycle integration remain planned.
+[ADR 0002](adr/0002-private-life-events-and-context-projections.md)
 records ownership; [candidate contracts](../contracts/knowledge/v1.md) are not live
 SecondContext routes. No deployment is implied. Track delivery
 in [TODO](../TODO.md#current-priority--natural-time-and-life-event-memory).
@@ -250,7 +251,7 @@ No change to live images or unrelated host containers is part of this plan.
 | Slice | Deliverable | Acceptance before enabling |
 | --- | --- | --- |
 | 1. Policy and contracts | Implemented Oria policy/guard foundation, candidate typed temporal/event/entity and projection contracts, ADR 0002 and versioned voluntary-chat disclosure | Synthetic benign/harmful cases and consumer contracts checked; no event storage enabled; proposed lifecycle still needs acceptance/implementation by SecondContext before slice 4 ingestion |
-| 2. Natural-time routing | Broaden parsing, typed date roles and persisted clarification state | All examples above resolve with the right role/precision; multiple dates, leap days, DST, retries and missing timezone handled; no partner birthday routed to own-profile edit or transit by default |
+| 2. Natural-time routing | Implemented bounded English/Gregorian parsing, typed date roles/precision and encrypted 24-hour clarification; local own-birth, same-message and supplied anchors | Design examples, multiple dates, leap days, DST, retries and missing timezone checked; no partner birthday routed to own-profile edit or transit by default; historical event recall awaits slices 3–4; see [current behavior](current-time.md) |
 | 3. Private profile memory | Encrypted entities/events, provenance, inspect/update/delete and automatic learning in chat | Restart, owner isolation, aliases, correction, deduplication, withdrawal/deletion races and “don't remember” verified; no false save acknowledgements |
 | 4. Context continuity | Revisioned SecondContext projections, salience, linked retrieval and reconciliation | Real owning-service contract tests for upsert, stale writes, selective erasure and full purge; dependency outages cannot resurrect forgotten records |
 | 5. Linked astrology | Birthday-only support, synastry/event calculations and house-topic retrieval, with versioned facts | Synthetic birth/partner/wedding reading uses actual supplied calculations; no invented times, houses, correlations or precision; corrections invalidate dependent readings |

@@ -41,10 +41,10 @@ HELP_TEXT = (
     "/privacy — review storage and withdraw consent with Decline.\n"
     "/delete_me (or /delete-me) — request account deletion, then explicitly confirm.\n"
     "/help — show these commands.\n\n"
-    "Editing and readings require current consent. Send birth details only when setup "
-    "requests them. With an active profile, ask about your natal chart, transits today, "
+    "Editing and readings require current consent. With an active profile, "
+    "ask about your natal chart, transits today, "
     "tomorrow, in 3 hours, or transits on YYYY-MM-DD. "
-    "Keep identifying and birth details out of chat. "
+    "You can share life events and dates naturally; structured event memory is not available yet. "
     "Declining stops readings and setup but does not erase data. Confirmed deletion stops "
     "processing and retries cleanup across Oria and SecondContext."
 )

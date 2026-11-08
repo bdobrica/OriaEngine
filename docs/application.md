@@ -28,7 +28,7 @@ platform; do not deploy a development `.env` or commit secrets.
 | `SECOND_CONTEXT_BEARER_TOKEN` | Empty; optional bearer authentication |
 | `SECOND_CONTEXT_SUBJECT_NAMESPACE` | Empty for legacy scopes; e.g. `oria` enables service subject headers and requires a bearer token |
 | `ASTROLOGY_MCP_URL` | `http://localhost:8000/mcp`; HTTP(S) |
-| `ORIA_POLICY_VERSION` | `2026-11-08.1`; nonempty version identifier |
+| `ORIA_POLICY_VERSION` | `2026-11-08.2`; nonempty version identifier |
 | `INBOUND_RATE_PER_MINUTE` | `20`; integer 1–120, new updates per sender per 60-second window |
 | `QUEUED_JOBS_PER_USER` | `8`; integer 1–32, canonical nonterminal events per user |
 | `LLM_PROCESSING_ENABLED` | `true`; boolean, disable and restart all workers to stop new generation/memory ingestion |

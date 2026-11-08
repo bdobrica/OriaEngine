@@ -77,7 +77,7 @@ The MVP includes:
 - deterministic natal-chart generation;
 - deterministic transit/aspect calculation for a requested date or the current date;
 - relationship compatibility and synastry from voluntarily supplied partner birth details, including requested interpretive ratings (implementation pending);
-- natural relative/mixed/event-anchored dates, encrypted life-event and entity memory with conversational retrieval/update/deletion, and SecondContext salience (planned; see section 6.2);
+- bounded natural relative/mixed/event-anchored dates and temporary clarification; encrypted life-event/entity memory with conversational retrieval/update/deletion and SecondContext salience remain planned (see section 6.2);
 - astrology calculation service in a separate Docker container using FastMCP;
 - Redis-backed job processing and temporary state;
 - per-user processing locks;
@@ -133,10 +133,12 @@ The disclosure is versioned. The user must explicitly choose an **Agree** action
 Current disclosure source:
 
 [Consent copy](src/oria_engine/domain/consent.py) and [consent-flow reference](docs/consent-flow.md)
-use version `2026-11-08.1` for voluntary conversational context, user/Oria responsibilities,
-limited local filtering and existing transcript retention. Event-profile memory and
+use version `2026-11-08.2` for voluntary conversational context, user/Oria responsibilities,
+limited local filtering, encrypted temporary date clarification, local own-birthday
+access and existing transcript retention. Event-profile memory and
 selective forgetting remain unavailable. Enabling those later requires another accurate
-versioned disclosure; this policy update does not authorize new storage. AI identity,
+versioned disclosure; this policy update authorizes only temporary clarification,
+not long-term event/entity storage. AI identity,
 honest interpretation, user controls and affirmative adult consent remain invariants.
 
 If the user sends birth information before accepting, OriaEngine must not persist it as profile data. It should restate the consent requirement and ask the user to accept or decline.
@@ -286,8 +288,9 @@ information supplied in that conversation. This uses the same ownership and
 deletion responsibilities rather than introducing a separate partner account.
 
 This is intended product behavior. The policy/guard foundation now permits the
-conversation and withholds birth inputs locally without a privacy lecture. Typed extraction, storage and calculated
-partner facts are still pending; the coarse fallback cannot yet provide a
+conversation and withholds birth-bearing clauses locally without a privacy lecture.
+Typed temporal extraction and clarification are implemented; event storage and calculated
+partner facts are still pending. Local extraction cannot yet provide a
 calculated compatibility rating. See the
 [current compatibility tasks](TODO.md#current-priority--compatibility-conversations).
 
@@ -325,6 +328,9 @@ with a versioned disclosure before enabling the expanded data use. Current runti
 storage schemas and fixed memory kinds do not implement these capabilities.
 The runtime policy/guard foundation and [candidate typed contracts](contracts/knowledge/v1.md)
 are implemented; ADR 0002 records their ownership without enabling event storage or projection traffic.
+Slice 2 now implements [bounded natural-time routing](docs/current-time.md), typed
+precision/roles and encrypted 24-hour clarification anchored to original ingress.
+Own-birth anchors remain local. Event/entity CRUD and retrieval remain the next slices.
 
 ---
 

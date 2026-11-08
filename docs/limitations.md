@@ -28,10 +28,11 @@ not completion of operator checks or proof of model safety/astrological predicti
 
 ## Conversation, privacy and reliability
 
-- Natural mixed/event-anchored dates, automatic life-event/entity learning,
-  conversational event CRUD and SecondContext salience are planned, not implemented.
-  Current birth-only storage schemas and fixed memory kinds need extension;
-  policy/contract groundwork is implemented, with broader extraction pending. See the [design and delivery sequence](conversation-memory-plan.md).
+- [Natural dates](current-time.md) use bounded English/Gregorian extraction with typed
+  roles/precision and encrypted temporary clarification. Own-birth, same-message and
+  clarification-supplied anchors work; older event recall requires the planned
+  canonical event/entity memory. Automatic learning, conversational event CRUD and
+  SecondContext salience still need implementation. See the [delivery sequence](conversation-memory-plan.md).
 - Telegram private text and supported callbacks are the current channel surface.
   Groups, media and other update types are ignored. Use one bot per database and
   one polling process per bot.
@@ -41,8 +42,9 @@ not completion of operator checks or proof of model safety/astrological predicti
 - Raw saved birth fields are excluded from SecondContext requests and explicit
   memory ingestion, but filtered active text and generated replies are retained
   remotely. Blocked drafts can already be in upstream history; local replacement
-  does not erase history. Birth-bearing messages are coarsely withheld locally,
-  without structured extraction; the calculation path has no compatibility facts.
+  does not erase history. Birth-bearing clauses/continuations and typed birth
+  candidates stay local; bounded extraction/filtering can miss unlabeled inputs.
+  The calculation path has no compatibility facts.
   These remain implementation gaps against the [intended compatibility flow](../PLAN.md#61-voluntary-sharing-and-compatibility),
   not a prohibition on users sharing partner information for a reading.
 - [Worker retries](worker-queue.md) are bounded and durable. Ambiguous remote context

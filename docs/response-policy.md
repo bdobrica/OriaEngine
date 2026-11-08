@@ -8,8 +8,8 @@ PII is a refusal category. General disclosures stay in consent/help/privacy.
 
 ## Runtime behavior
 
-`persona/policy.py` (`oria-policy-4`) and `methodology.py`
-(`oria-methodology-4`) distinguish actual harmful behavior, unsupported factual
+`persona/policy.py` (`oria-policy-5`) and `methodology.py`
+(`oria-methodology-5`) distinguish actual harmful behavior, unsupported factual
 claims and relevant conversation. They also state current capabilities: natal and
 snapshot transit facts, with no event-profile storage, selective forgetting or
 calculated partner ratings yet. Do not claim an unimplemented action succeeded.
@@ -37,12 +37,14 @@ HTTP adapter remains a wire adapter; callers use the application service.
 
 `privacy/messages.py` holds obvious account secrets locally. Names, contact details,
 work history, URLs and clock text are not category-wide blocks. Under the existing
-birth-input boundary, `prepare_active_input` replaces a birth-bearing message with
-a value-free conversational goal. A partner birthday can therefore lead to useful
-relationship discussion without a privacy lecture, profile edit or automatic
-transit calculation. This fallback withholds the whole message and can lose nuance;
-structured extraction and richer date roles belong to slice 2. It is not event
-storage, a birth-data parser or a general guarantee of PII/secret detection.
+birth-input boundary, `prepare_active_input` withholds birth-bearing clauses and
+obvious continuations, preserving other clauses and the conversational goal. A
+partner birthday can lead to useful relationship discussion without a privacy
+lecture, profile edit or automatic transit calculation. Typed [natural-date
+candidates](current-time.md) stay local for birth inputs; non-birth resolved values
+can accompany filtered text as untrusted user-stated context. Encrypted temporary
+clarification is not event-profile storage. These bounded rules can lose nuance
+or miss unlabeled/encoded inputs; they are not a general PII/secret detector.
 
 The service repeats input preparation for direct callers. Onboarding retains its
 closed natal schema and deterministic consent-checked state machine; relevant chat
@@ -68,4 +70,4 @@ Synthetic [policy cases](../tests/unit/fixtures/policy-adversarial.json), benign
 conversation tests and real queue/HTTP integration checks distinguish harmful
 behavior from topic mentions. They verify application behavior, not live-model
 judgment. See [the delivery plan](conversation-memory-plan.md) for remaining
-extraction, storage, retrieval and erasure work.
+event storage, retrieval and erasure work.

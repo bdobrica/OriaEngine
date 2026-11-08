@@ -1,5 +1,6 @@
 """Deterministic, consent-gated onboarding. No Telegram types or model calls."""
 
+from dataclasses import replace
 from unicodedata import normalize
 from uuid import UUID, uuid4
 
@@ -12,6 +13,7 @@ from oria_engine.db.astrology_profiles import AstrologyProfileRepository
 from oria_engine.db.birth_profiles import BirthProfileRepository, ConsentRequiredError
 from oria_engine.db.onboarding import OnboardingRepository
 from oria_engine.db.repositories import ConsentRepository, UserRepository, UserUnavailableError
+from oria_engine.db.temporal import TemporalRepository
 from oria_engine.domain.active import prepare_active, render_active, route_active
 from oria_engine.domain.birth_profile import BirthPlace
 from oria_engine.domain.birth_time import birth_zone, utc_candidates
@@ -21,6 +23,8 @@ from oria_engine.domain.consent import OnboardingState as State
 from oria_engine.domain.onboarding_data import OnboardingDraft, parse_birth_date, parse_birth_time
 from oria_engine.domain.places import PlaceResolutionUnavailable, PlaceResolver, TooManyPlaces
 from oria_engine.domain.policy import PRIVACY_REPLY
+from oria_engine.domain.temporal import clarification
+from oria_engine.domain.temporal_dialogue import prepare_temporal_dialogue
 from oria_engine.observability import count
 from oria_engine.privacy.encryption import ProfileEncryption
 from oria_engine.privacy.messages import prepare_active_input, private_active_input
@@ -270,14 +274,25 @@ class OnboardingFlow:
         if command == "timezone":
             from oria_engine.domain.timezone import timezone_reply
 
-            return timezone_reply(user, message)
+            reply = timezone_reply(user, message)
+            parts = message.text.strip().split()
+            pending = await TemporalRepository(session, self.encryption, self.policy_version).get(
+                user_id
+            )
+            if pending is None or len(parts) != 2 or user.current_timezone != parts[1]:
+                return reply
+            # Explicit preference selection can also finish the pending question.
+            message, command = replace(message, text=parts[1]), None
+        elif command in {"edit_profile", "edit-profile"}:
+            await TemporalRepository(session, self.encryption, self.policy_version).clear(user_id)
         drafts = OnboardingRepository(session, self.encryption, self.policy_version)
         profiles = BirthProfileRepository(
             session, self.encryption, policy_version=self.policy_version
         )
         draft = await drafts.get(user_id)
         if draft is None:
-            # Active questions need only a valid derived cache, never decrypted birth inputs.
+            # Active readings use the derived cache; explicit own-birth anchors
+            # may read local inputs inside the temporal application flow.
             if (
                 self.astrology is not None
                 and command is None
@@ -294,15 +309,41 @@ class OnboardingFlow:
                         received_at=message.received_at,
                         current_timezone=user.current_timezone,
                     )
-                    if self.context is not None and private_active_input(
+                    if private_active_input(
                         message.text, resolved_clock=intent.target_timestamp_utc is not None
                     ):
                         count("policy_input_block")
                         return ConsentReply(State.ACTIVE, PRIVACY_REPLY)
                     try:
+                        dialogue = None
+                        if intent.kind != "unsupported_high_stakes":
+                            dialogue = await prepare_temporal_dialogue(
+                                session,
+                                user_id,
+                                encryption=self.encryption,
+                                policy_version=self.policy_version,
+                                consent_id=consent.id,
+                                text=message.text,
+                                received_at=message.received_at,
+                                source_update_id=message.provider_update_id,
+                                timezone=user.current_timezone,
+                            )
+                            if dialogue.unresolved is not None:
+                                assert dialogue.unresolved.issue is not None
+                                return ConsentReply(
+                                    State.ACTIVE, clarification(dialogue.unresolved.issue)
+                                )
+                            intent = route_active(
+                                dialogue.text,
+                                received_at=dialogue.reference,
+                                current_timezone=dialogue.timezone,
+                                anchors=dialogue.anchors,
+                            )
                         active_text = (
                             message.text
                             if intent.kind == "unsupported_high_stakes"
+                            else dialogue.model_text()
+                            if dialogue is not None
                             else prepare_active_input(message.text)
                         )
                         facts = await prepare_active(
@@ -311,6 +352,7 @@ class OnboardingFlow:
                             natal=natal,
                             client=self.astrology,
                             current_timezone=user.current_timezone,
+                            intent=intent,
                         )
                         if (
                             self.context is not None
@@ -326,7 +368,9 @@ class OnboardingFlow:
                                     goal=facts.intent.kind,
                                     natal_facts=natal,
                                     transit_facts=facts.transits,
-                                    reference_time_utc=message.received_at,
+                                    reference_time_utc=dialogue.reference
+                                    if dialogue is not None
+                                    else message.received_at,
                                 ),
                             )
                             text = response.text
@@ -346,6 +390,12 @@ class OnboardingFlow:
                             return ConsentReply(State.ACTIVE, text)
                         if facts.intent.kind == "unsupported_high_stakes":
                             count("policy_high_stakes")
+                        if (
+                            dialogue is not None
+                            and facts.intent.kind == "follow_up"
+                            and dialogue.analysis.mentions
+                        ):
+                            return ConsentReply(State.ACTIVE, dialogue.model_text())
                         return ConsentReply(State.ACTIVE, render_active(facts))
                     except AstrologyUnavailable:
                         if self.context is not None:

@@ -30,7 +30,7 @@ async def client():
         telegram_webhook_base_url="https://example.invalid",
         telegram_webhook_secret=secrets.token_urlsafe(32),
         profile_encryption_key=base64.b64encode(secrets.token_bytes(32)).decode(),
-        oria_policy_version="2026-11-08.1",
+        oria_policy_version="2026-11-08.2",
     )
     bot = Bot(settings.telegram_bot_token.get_secret_value())
     ingress = AsyncMock(spec=EventIngress)

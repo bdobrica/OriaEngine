@@ -50,6 +50,7 @@ def test_elapsed_offsets_do_not_require_a_timezone(text):
         "tomorrow or Friday",
         "tomorrow and yesterday",
         "in 3 hours tomorrow",
+        "transits in two hours tonight",
         "tomorrow at 25:00",
         "tomorrow at 5",
         "in 100000 years",

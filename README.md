@@ -9,8 +9,9 @@ The project showcases natural, ongoing conversations with consenting adults.
 Adults are responsible for what they share. Oria's intended experience includes
 natural relative dates, remembered life events about people, pets, organizations
 and possessions, and compatibility readings. Oria is responsible for secure,
-user-scoped storage and retrieval, correction and deletion. The adult dialogue policy and typed contract foundation are implemented; event
-memory and linked calculations remain planned. See the [design and delivery plan](docs/conversation-memory-plan.md).
+user-scoped storage and retrieval, correction and deletion. Adult dialogue policies,
+typed contracts and [natural-date clarification](docs/current-time.md) are implemented;
+event memory and linked calculations remain planned. See the [delivery plan](docs/conversation-memory-plan.md).
 
 **Status:** the demo pipeline, privacy commands, deletion, webhook ingress and
 Docker development stack are implemented. The [Stage 25 release gate](TODO.md#stage-25--mvp-release-gate)
@@ -53,7 +54,7 @@ See [testing](docs/testing.md) for coverage and limits. `make help` lists all ta
    Configure its URL, service authentication and subject namespace for chat and deletion.
    Its OpenAI credentials belong in SecondContext, not OriaEngine.
 5. Set `SECOND_CONTEXT_DOCKER_URL` to an address reachable from containers and retain
-   `ORIA_POLICY_VERSION=2026-11-08.1`. For polling, leave the webhook secret empty
+   `ORIA_POLICY_VERSION=2026-11-08.2`. For polling, leave the webhook secret empty
    and use a development bot with no registered webhook.
 
 ```sh

@@ -46,6 +46,8 @@ def test_obvious_secrets_stay_local(text):
         "birthday 1990-04-13",
         "I'd like you to rate my compatibility with my girlfriend. Her birthday is 1992-06-14",
         "She was born in Exampletown. 1992-06-14 at 12:30; 47.1, 23.6",
+        "She was ｂｏｒｎ in Exampletown. 1992-06-14 at 12:30; 47.1, 23.6",
+        "She was bo\u200brn in Exampletown. In Exampletown. At 12:30.",
     ],
 )
 def test_birth_inputs_are_held_without_a_privacy_refusal_or_external_forwarding(text):

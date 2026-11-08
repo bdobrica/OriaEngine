@@ -142,7 +142,7 @@ def test_worker_rejects_old_chat_disclosure_before_any_service_access():
         patch("oria_engine.queue.__main__.ProfileEncryption"),
         patch("oria_engine.queue.__main__.LocalPlaceResolver") as resolver,
         patch("oria_engine.queue.__main__.Publisher") as publisher,
-        pytest.raises(ConfigurationError, match="2026-11-08.1"),
+        pytest.raises(ConfigurationError, match="2026-11-08.2"),
     ):
         run(settings)
     resolver.assert_not_called()

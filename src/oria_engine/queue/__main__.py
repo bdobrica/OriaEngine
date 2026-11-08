@@ -98,9 +98,10 @@ def run(settings: Settings, *, health_file: Path | None = None) -> None:
         "2026-10-03",
         "2026-10-03.1",
         "2026-10-03.2",
+        "2026-11-08.1",
     }:
         raise ConfigurationError(
-            "Set ORIA_POLICY_VERSION=2026-11-08.1 for the adult conversation disclosure"
+            "Set ORIA_POLICY_VERSION=2026-11-08.2 for the natural-date clarification disclosure"
         )
     resolver = LocalPlaceResolver()
     if health_file is not None:

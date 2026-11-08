@@ -280,7 +280,7 @@ async def test_voluntary_context_reaches_conversation_without_refusal_or_implici
     if "birthday" not in text:
         assert request.filtered_message == text
     else:
-        assert "compatibility rating" in request.filtered_message
+        assert "Rate my compatibility with my girlfriend" in request.filtered_message
     astrology.calculate_transits.assert_not_awaited()
     astrology.calculate_natal_chart.assert_awaited_once()  # Onboarding only.
     provider.remember.assert_not_awaited()
@@ -297,3 +297,46 @@ async def test_birth_filter_cannot_hide_harmful_intent(conversation):
     assert worker.client.send_text.call_args.args[1] == SAFETY_REPLY
     provider.respond.assert_not_awaited()
     astrology.calculate_transits.assert_not_awaited()
+
+
+async def test_date_clarification_retries_reuse_original_reference(conversation):
+    ingress, worker, astrology, provider = conversation
+    await confirm(worker.flow)
+    original = message(text="We married this day last year at 3pm")
+    first = await ingress.accept(original)
+    await worker.process(first)
+    assert "Which timezone" in worker.client.send_text.call_args.args[1]
+    provider.respond.assert_not_called()
+    provider.respond.side_effect = ContextUnavailable()
+    answer = await ingress.accept(message(text="UTC"))
+    await worker.process(answer)
+    assert (await row(worker, answer)).status == "pending"
+    provider.respond.side_effect = None
+    await due(worker, answer)
+    await worker.process(answer)
+    assert (await row(worker, answer)).status == "sent"
+    assert provider.respond.call_args.args[1].reference_time_utc == original.received_at
+    count = provider.respond.await_count
+    await worker.process(answer)
+    assert provider.respond.await_count == count
+    astrology.calculate_transits.assert_not_called()
+
+
+async def test_birth_continuations_cannot_leak_via_resolved_date_notes(conversation):
+    ingress, worker, astrology, provider = conversation
+    await confirm(worker.flow)
+    await worker.process(
+        await ingress.accept(
+            message(
+                text=(
+                    "She was born in Exampletown. 1992-06-14 at 12:30; 47.1, 23.6. "
+                    "Can you rate our compatibility?"
+                )
+            )
+        )
+    )
+    request = provider.respond.call_args.args[1]
+    for value in ("Exampletown", "1992", "12:30", "47.1", "23.6"):
+        assert value not in request.filtered_message
+    assert "rate our compatibility" in request.filtered_message
+    astrology.calculate_transits.assert_not_called()

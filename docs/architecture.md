@@ -60,7 +60,11 @@ or owner inspection. MCP receives normalized calculation inputs; SecondContext r
 prepared active text and selected typed chart facts. Saved birth fields,
 coordinates, birthplace, Telegram routing identifiers and credentials are not fact
 or metadata inputs. Voluntary personal context can appear in active text; obvious
-secrets are held locally, and birth-bearing chat uses a coarse value-free fallback.
+secrets and birth-bearing clauses/continuations are held locally. Typed natural-time
+candidates distinguish narratives from calculation targets; explicit own-birth anchors
+can read the saved date locally. Encrypted pending date clarification lasts up to
+24 hours from original ingress and is cleared on withdrawal/account deletion.
+Non-birth resolved values can accompany filtered active text as user-stated context.
 Facts go in instructions rather than explicit memory ingestion. Transcripts may
 retain generated descriptions of facts or volunteered details missed by filtering.
 See [privacy commands](profile-commands.md) and [policy limits](response-policy.md).

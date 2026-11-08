@@ -136,6 +136,23 @@ class AstrologyProfile(Base):
     )
 
 
+class TemporalClarification(Base):
+    """Short-lived encrypted active-chat progress, not canonical life-event memory."""
+
+    __tablename__ = "temporal_clarifications"
+    __table_args__ = (
+        CheckConstraint("octet_length(encrypted_payload) >= 29", name="encrypted_envelope"),
+    )
+
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    id: Mapped[UUID] = mapped_column(default=uuid4)
+    encrypted_payload: Mapped[bytes]
+    encryption_key_version: Mapped[str] = mapped_column(String(64))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
 class InboundEvent(Base):
     """Canonical idempotency anchor; sensitive transient fields are encrypted."""
 

@@ -3,6 +3,7 @@
 import re
 
 from oria_engine.domain.policy import normalize
+from oria_engine.domain.temporal import BIRTH, clauses
 
 BIRTH_INPUT = re.compile(r"\b(?:born|birthday|birthplace|birth date|birth time|date of birth)\b")
 SECRET = re.compile(
@@ -20,17 +21,39 @@ def private_active_input(text: str, *, resolved_clock: bool = False) -> bool:
     return bool(SECRET.search(normalize(text)))
 
 
-def prepare_active_input(text: str) -> str:
-    """Withhold birth-bearing messages under the existing v1 context boundary.
+def held_birth_spans(text: str) -> tuple[tuple[int, int], ...]:
+    """Include obvious multi-sentence continuations; labels need not repeat 'born'."""
+    held = []
+    birth_context = False
+    for start, end in clauses(text):
+        clause = text[start:end].strip()
+        normalized = normalize(clause)
+        if BIRTH.search(normalized):
+            birth_context = True
+            held.append((start, end))
+            continue
+        if birth_context and re.match(
+            r"(?:\d|at\b|in\b|on\b|time\b|date\b|place\b|city\b|coordinates\b)", normalized
+        ):
+            held.append((start, end))
+            continue
+        if clause:
+            birth_context = False
+    return tuple(held)
 
-    This coarse fallback preserves a supported conversational goal, without sending
-    raw birth inputs, guessing their subject or pretending to extract/store events.
-    Slice 2 replaces it with typed temporal roles and richer local extraction.
-    The result is idempotent and carries no user-supplied values from such a message.
+
+def prepare_active_input(text: str) -> str:
+    """Hold birth-bearing clauses locally while preserving other conversational goals.
+
+    A clause may contain unparsed birthplaces/times as well as recognized dates, so
+    removing only date spans would leak inputs. This bounded English preparation
+    keeps other clauses and never forwards a typed birth candidate to the model.
     """
     value = normalize(text)
     if not BIRTH_INPUT.search(value):
         return text
+    held = held_birth_spans(text)
+    kept = [text[start:end].strip() for start, end in clauses(text) if (start, end) not in held]
     if re.search(
         r"\b(?:compatibility|compatible|synastry|girlfriend|boyfriend|wife|husband|partner)\b",
         value,
@@ -42,4 +65,6 @@ def prepare_active_input(text: str) -> str:
         )
     else:
         question = "I'd like to discuss my personal context alongside my chart."
-    return question + " [Birth inputs held locally; no additional calculation was performed.]"
+    remaining = ". ".join(part for part in kept if part)
+    marker = " [Birth inputs held locally; no additional calculation was performed.]"
+    return (remaining or question)[: 4096 - len(marker)] + marker

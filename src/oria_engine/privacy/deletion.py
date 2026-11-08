@@ -19,6 +19,7 @@ from oria_engine.db.models import (
     InboundEvent,
     OnboardingProgress,
     SocialIdentity,
+    TemporalClarification,
     User,
 )
 from oria_engine.db.repositories import UserRepository, UserUnavailableError
@@ -195,6 +196,7 @@ class DeletionWorker:
                     AstrologyProfile,
                     BirthProfile,
                     OnboardingProgress,
+                    TemporalClarification,
                     ConversationSession,
                     Consent,
                 ):

@@ -9,13 +9,13 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field
 from redis.asyncio import Redis
 from redis.exceptions import LockNotOwnedError, RedisError
-from sqlalchemy import exists, func, select
+from sqlalchemy import delete, exists, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from oria_engine.astrology.client import AstrologyUnavailable
 from oria_engine.context.contracts import ContextUnavailable
-from oria_engine.db.models import InboundEvent, SocialIdentity, User
+from oria_engine.db.models import InboundEvent, SocialIdentity, TemporalClarification, User
 from oria_engine.db.repositories import ConsentRepository, SocialIdentityRepository
 from oria_engine.db.session import Database
 from oria_engine.domain.channel import ChannelButton, ChannelClient, ChannelMessage
@@ -422,6 +422,9 @@ async def recoverable(database: Database) -> list[UUID]:
     """Bounded scan; Redis loss or an enqueue/crash gap cannot strand canonical work."""
     async with database.transaction() as session:
         now = datetime.now(UTC)
+        await session.execute(
+            delete(TemporalClarification).where(TemporalClarification.expires_at <= now)
+        )
         expired = (
             await session.scalars(
                 select(InboundEvent)

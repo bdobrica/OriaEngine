@@ -16,7 +16,7 @@ from oria_engine.observability import count
 if TYPE_CHECKING:
     from oria_engine.domain.onboarding import OnboardingFlow
 
-# Collection disclosure uses the configured policy version (default 2026-11-08.1).
+# Collection disclosure uses the configured policy version (default 2026-11-08.2).
 # Change the configured version whenever the disclosure/data use changes.
 DISCLAIMER = (
     "Hi — I'm Oria, an AI astrology personality. Astrology is interpretive, not a factual "
@@ -45,9 +45,13 @@ DISCLAIMER = (
     "Before consent, free text is discarded. Queue metadata and processing status are retained. "
     "Active chat uses SecondContext and its AI provider: filtered messages, replies and "
     "retrieved context are retained there for conversation continuity. Volunteered personal "
-    "context can be included. Obvious account secrets are held locally. Birth-bearing chat "
-    "is replaced with a general conversational request before model processing; filtering "
-    "is limited. Event/entity profile memory and selective forgetting are not available yet. "
+    "context can be included. Obvious account secrets are held locally. Recognized "
+    "birth-bearing clauses are withheld before model processing; filtering is limited. "
+    "Unfinished date questions are temporarily encrypted locally for up to 24 hours from "
+    "the original message, then erased when the worker next runs. Replies can complete "
+    "these questions; withdrawal clears them. Your saved birth date can resolve your own "
+    "explicit birthday references locally. Event/entity profile memory and selective "
+    "forgetting are not available yet. "
     "Calculated chart facts are sent "
     "for interpretation and may be quoted in retained replies. Raw saved birth profiles "
     "and onboarding messages are not sent to SecondContext. A blocked AI draft may still "

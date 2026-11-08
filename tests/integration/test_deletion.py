@@ -22,6 +22,7 @@ from oria_engine.db.models import (
     InboundEvent,
     OnboardingProgress,
     SocialIdentity,
+    TemporalClarification,
     User,
 )
 from oria_engine.db.repositories import UserUnavailableError
@@ -91,6 +92,7 @@ async def assert_local_erased(worker, user_id, *, completed):
             BirthProfile,
             AstrologyProfile,
             OnboardingProgress,
+            TemporalClarification,
             ConversationSession,
             Consent,
         ):
@@ -128,6 +130,9 @@ async def test_complete_deletion_http_purge_replay_and_fresh_account(deletion):
     scope = ContextScope(user_id=user_id, session_id=session_id)
     await runner.context.remember(scope, "concise_readings")
     assert stub.memories and stub.sessions
+    await worker.process(await ingress.accept(message(text="We married May 1st, 2020 at")))
+    async with worker.database.transaction() as session:
+        assert await session.get(TemporalClarification, user_id) is not None
     # Unrelated owner must survive both local and remote cleanup.
     _, other_event = await send(ingress, worker, user="43", command="start")
     other_id = (await row(worker, other_event)).user_id

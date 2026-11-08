@@ -4,7 +4,8 @@ After onboarding, the Telegram worker can answer `Explain my natal chart`,
 `transits today`, and `transits on 2026-10-02` with readable calculated facts.
 Use the [conversation worker setup](conversation-worker.md) to connect these facts
 to SecondContext interpretation, with updated consent and privacy guards.
-Existing natal caches remain valid; no new migration is required.
+Existing natal caches remain valid. Migration `0010` adds encrypted date clarification,
+separate from transit calculation and canonical event-profile storage.
 
 The context-free flow retains deterministic fact summaries. The production worker
 uses persona prompts and output policy validation through the guarded service.
@@ -24,7 +25,7 @@ there is no guessed previous transit date or implicit tool authorization.
 | `follow_up` | Current natal facts and context; no new calculation |
 | `unsupported_high_stakes` | Fixed bounded response; no calculation or model call |
 | `clarify_date` | Ask for one unambiguous supported target; no calculation |
-| `clarify_timezone` | Ask the user to set `/timezone`; no calculation |
+| `clarify_timezone` | Ask for an event timezone, optionally saving it with `/timezone`; no calculation |
 
 Current snapshots use the persisted message timestamp, so queue delays and retries
 do not silently select another instant. “Today” is a snapshot, not a local-day
@@ -35,21 +36,25 @@ inferred. See [current time](current-time.md) for supported relative expressions
 clock-change behavior and snapshot conventions. Supported target years are 1800–2399.
 
 Slash commands and onboarding callbacks retain their existing handlers. The
-router gives recognized high-stakes requests priority over dates and chart terms.
-Multiple, invalid, slash-formatted or incomplete dates and unsupported relative
-expressions ask for clarification. The user can reply with a complete ISO date;
-no separate pending clarification state is needed. This bounded rule vocabulary
-is not a general natural-language parser. High-stakes detection now shares the
-Stage 15 policy vocabulary and fixed boundary reply.
+router gives recognized harmful requests priority over dates and chart terms.
+[Typed temporal candidates](current-time.md) distinguish events, birth inputs,
+anniversaries, profile corrections and requested targets. Multiple conversation
+dates do not automatically become tool requests. Invalid/ambiguous requests ask a
+focused question and persist encrypted short-lived state; a date, timezone, year
+or clock answer can resume it against the original reference after restart. This
+bounded English grammar is not a general natural-language parser. The legacy
+`unsupported_high_stakes` name now denotes recognized harmful requests.
 
 Consent, the user lock, completed onboarding and cache validity gate active work.
-Active questions load only derived facts, without decrypting the birth profile.
+Active questions load only derived facts, except explicit own-birth anchors resolved
+locally from the encrypted profile. Birth inputs stay outside model context.
 Edits/stale caches return through the existing profile recovery path. Transit
 failure enters bounded worker retries without replacing the natal cache (the
 context-free flow retains its local retry message).
 Calls are bounded to 20 seconds inside the existing worker deadline. The queue
 commits the encrypted reply before delivery and resends it after a send failure
-without recalculation. There is no persistent transit cache or new database state.
+without recalculation. There is no persistent transit cache; clarification state
+has its separate 24-hour retention and deletion lifecycle.
 
 ## Transit MCP v1
 

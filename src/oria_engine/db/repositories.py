@@ -3,11 +3,11 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from oria_engine.db.models import Consent, SocialIdentity, User
+from oria_engine.db.models import Consent, SocialIdentity, TemporalClarification, User
 
 
 class UserUnavailableError(LookupError):
@@ -159,6 +159,10 @@ class ConsentRepository:
             declined_at=now if status == "declined" else None,
         )
         self.session.add(consent)
+        if status != "accepted":
+            await self.session.execute(
+                delete(TemporalClarification).where(TemporalClarification.user_id == user_id)
+            )
         await self.session.flush()
         return consent
 
@@ -180,5 +184,8 @@ class ConsentRepository:
             revoked_at=now,
         )
         self.session.add(consent)
+        await self.session.execute(
+            delete(TemporalClarification).where(TemporalClarification.user_id == user_id)
+        )
         await self.session.flush()
         return consent

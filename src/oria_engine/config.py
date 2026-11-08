@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     second_context_bearer_token: SecretStr = SecretStr("")
     second_context_subject_namespace: str = ""
     astrology_mcp_url: str = "http://localhost:8000/mcp"
-    oria_policy_version: str = "2026-11-08.1"
+    oria_policy_version: str = "2026-11-08.2"
     inbound_rate_per_minute: int = Field(default=20, ge=1, le=120)
     queued_jobs_per_user: int = Field(default=8, ge=1, le=32)
     llm_processing_enabled: bool = True
@@ -134,9 +134,10 @@ def validate_telegram_ingress(settings: Settings) -> None:
         "2026-10-03",
         "2026-10-03.1",
         "2026-10-03.2",
+        "2026-11-08.1",
     }:
         raise ConfigurationError(
-            "Set ORIA_POLICY_VERSION=2026-11-08.1 for the adult conversation disclosure"
+            "Set ORIA_POLICY_VERSION=2026-11-08.2 for the natural-date clarification disclosure"
         )
 
 

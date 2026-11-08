@@ -10,6 +10,7 @@ from pydantic import model_validator
 from oria_engine.astrology.client import AstrologyClient, AstrologyUnavailable
 from oria_engine.astrology.contracts import NatalResult, WireModel
 from oria_engine.astrology.transits import TransitRequest, TransitResult, validate_target
+from oria_engine.domain.birth_time import birth_zone
 from oria_engine.domain.policy import SAFETY_REPLY, is_harmful_request
 from oria_engine.domain.relative_time import (
     HINT,
@@ -17,7 +18,14 @@ from oria_engine.domain.relative_time import (
     TimezoneRequired,
     resolve_relative,
 )
-from oria_engine.privacy.messages import prepare_active_input
+from oria_engine.domain.temporal import (
+    MONTH_PATTERN,
+    READING,
+    EventAnchor,
+    analyze_temporal,
+    clarification,
+)
+from oria_engine.knowledge.contracts import CalendarDate, DateInterval, Instant
 
 IntentKind = Literal[
     "natal_explanation",
@@ -33,6 +41,7 @@ IntentKind = Literal[
 class ActiveIntent(WireModel):
     kind: IntentKind
     target_timestamp_utc: datetime | None = None
+    clarification_text: str | None = None
 
     @model_validator(mode="after")
     def valid_target(self) -> Self:
@@ -62,23 +71,112 @@ NATAL = re.compile(
 
 
 def route_active(
-    text: str, *, received_at: datetime, current_timezone: str | None = None
+    text: str,
+    *,
+    received_at: datetime,
+    current_timezone: str | None = None,
+    anchors: tuple[EventAnchor, ...] = (),
 ) -> ActiveIntent:
     """English demo grammar. Unrecognized language never authorizes a tool call."""
     if is_harmful_request(text):
         return ActiveIntent(kind="unsupported_high_stakes")
-    if prepare_active_input(text) != text:
-        # Birth-bearing chat is a conversation, not an implicit profile edit/transit.
-        return ActiveIntent(kind="follow_up")
     if received_at.utcoffset() is None:
         raise ValueError("Message time must be timezone aware")
+    analysis = analyze_temporal(
+        text, received_at=received_at, current_timezone=current_timezone, anchors=anchors
+    )
+    if (
+        not analysis.mentions
+        and not re.search(r"\d", text)
+        and not HINT.search(text)
+        and not READING.search(text)
+    ):
+        return ActiveIntent(kind="natal_explanation" if NATAL.search(text) else "follow_up")
+    targets = [m for m in analysis.mentions if m.role == "target"]
+    if not targets and any(isinstance(m.evidence.value, DateInterval) for m in analysis.mentions):
+        return ActiveIntent(kind="follow_up")
+    if not analysis.narrative and not targets and len(analysis.mentions) == 1:
+        mention = analysis.mentions[0]
+        if re.search(
+            MONTH_PATTERN + r"|this day (?:last|next) year|\bat\s+\d",
+            mention.evidence.expression,
+            re.I,
+        ):
+            targets = [mention]
+    # Volunteered events never turn into tool requests just because they have dates.
+    if not targets and (
+        analysis.narrative
+        or any(
+            m.role in {"birth_input", "profile_correction", "life_event", "anniversary"}
+            for m in analysis.mentions
+        )
+    ):
+        return ActiveIntent(kind="follow_up")
+    if targets or any(m.anchor_label for m in analysis.mentions):
+        candidates = targets or list(analysis.mentions)
+        if len(candidates) != 1:
+            return ActiveIntent(kind="clarify_date")
+        mention = candidates[0]
+        if mention.issue:
+            return ActiveIntent(
+                kind="clarify_timezone" if mention.issue == "timezone" else "clarify_date",
+                clarification_text=clarification(mention.issue),
+            )
+        if mention.role not in {"target", "context"}:
+            return ActiveIntent(kind="follow_up")
+        temporal = mention.evidence.value
+        if mention.evidence.expression.casefold() in {"today", "now"}:
+            return ActiveIntent(
+                kind="current_transits", target_timestamp_utc=received_at.astimezone(UTC)
+            )
+        if not mention.anchor_label:
+            try:
+                legacy = resolve_relative(
+                    mention.evidence.expression, received_at, mention.evidence.timezone
+                )
+                if legacy is not None:
+                    return ActiveIntent(kind="transits_for_date", target_timestamp_utc=legacy)
+            except (TimeClarification, ValueError, OverflowError):
+                pass
+        if isinstance(temporal, Instant):
+            try:
+                return ActiveIntent(kind="transits_for_date", target_timestamp_utc=temporal.value)
+            except ValueError:
+                return ActiveIntent(kind="clarify_date")
+        if isinstance(temporal, CalendarDate):
+            if re.fullmatch(r"\d{4}-\d{2}-\d{2}", mention.evidence.expression):
+                target = datetime.combine(temporal.value, time(12), tzinfo=UTC)
+            elif mention.evidence.timezone is None:
+                return ActiveIntent(
+                    kind="clarify_timezone", clarification_text=clarification("timezone")
+                )
+            else:
+                target = datetime.combine(
+                    temporal.value, time(12), tzinfo=birth_zone(mention.evidence.timezone)
+                ).astimezone(UTC)
+            try:
+                return ActiveIntent(kind="transits_for_date", target_timestamp_utc=target)
+            except ValueError:
+                return ActiveIntent(kind="clarify_date")
+        if temporal is not None and temporal.kind == "local_datetime":
+            return ActiveIntent(
+                kind="clarify_timezone", clarification_text=clarification("timezone")
+            )
+        return ActiveIntent(
+            kind="clarify_date",
+            clarification_text=(
+                "Which single date and time should I sample? A date range needs more than "
+                "the available single-instant calculation."
+            ),
+        )
+    # Keep published v1 snapshot conventions for the existing date-only grammar.
     dates = ISO_DATE.findall(text)
     remainder = ISO_DATE.sub("", text)
     if not dates and (DATE_HINT.search(text) or HINT.search(text)):
         try:
-            target = resolve_relative(text, received_at, current_timezone)
-            if target is not None:
-                return ActiveIntent(kind="transits_for_date", target_timestamp_utc=target)
+            relative_target = resolve_relative(text, received_at, current_timezone)
+            if relative_target is not None:
+                return ActiveIntent(kind="transits_for_date", target_timestamp_utc=relative_target)
         except TimezoneRequired:
             return ActiveIntent(kind="clarify_timezone")
         except (TimeClarification, ValueError, OverflowError):
@@ -96,6 +194,28 @@ def route_active(
                 return ActiveIntent(kind="transits_for_date", target_timestamp_utc=target)
             except ValueError:
                 pass
+        if len(analysis.mentions) == 1:
+            mention = analysis.mentions[0]
+            if ISO_DATE.fullmatch(mention.evidence.expression):
+                return ActiveIntent(kind="clarify_date")
+            if mention.issue:
+                return ActiveIntent(
+                    kind="clarify_timezone" if mention.issue == "timezone" else "clarify_date",
+                    clarification_text=clarification(mention.issue),
+                )
+            temporal = mention.evidence.value
+            if isinstance(temporal, CalendarDate):
+                if current_timezone is None:
+                    return ActiveIntent(
+                        kind="clarify_timezone", clarification_text=clarification("timezone")
+                    )
+                try:
+                    target = datetime.combine(
+                        temporal.value, time(12), tzinfo=birth_zone(current_timezone)
+                    ).astimezone(UTC)
+                    return ActiveIntent(kind="transits_for_date", target_timestamp_utc=target)
+                except ValueError:
+                    pass
         return ActiveIntent(kind="clarify_date")
     if CURRENT.search(text) or re.search(r"\btransits?\b", text, re.IGNORECASE):
         if re.search(r"\d", text):
@@ -123,9 +243,12 @@ async def prepare_active(
     natal: NatalResult,
     client: AstrologyClient,
     current_timezone: str | None = None,
+    intent: ActiveIntent | None = None,
 ) -> ActiveFacts:
     """Accept only the caller's consent-scoped, current derived cache, never raw profile data."""
-    intent = route_active(text, received_at=received_at, current_timezone=current_timezone)
+    intent = intent or route_active(
+        text, received_at=received_at, current_timezone=current_timezone
+    )
     if intent.kind == "natal_explanation":
         return ActiveFacts(intent=intent, natal=natal)
     if intent.target_timestamp_utc is not None:
@@ -148,6 +271,8 @@ def render_active(facts: ActiveFacts) -> str:
     """Bounded factual demo output until the persona/policy/LLM stages are connected."""
     if facts.intent.kind == "unsupported_high_stakes":
         return SAFETY_REPLY
+    if facts.intent.clarification_text:
+        return facts.intent.clarification_text
     if facts.intent.kind == "clarify_timezone":
         return (
             "Which timezone should I use for your day? Set it with /timezone Europe/Bucharest "

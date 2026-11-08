@@ -1,59 +1,102 @@
-# Current timezone and relative requests
+# Natural dates, current timezone and clarification
 
-This reference describes the implemented bounded resolver. The
-[planned natural-time extension](conversation-memory-plan.md#natural-dates-and-time)
-adds mixed expressions, event/anniversary anchors, multiple temporal roles and
-date-only event precision. Relative language is intended to be ordinary input;
-the current grammar and its clarification fallbacks are implementation limits,
-not a product requirement to use absolute dates. Existing transit snapshot
-conventions remain until an explicit compatible transition is implemented.
+The application resolves bounded English/Gregorian expressions using the message's
+persisted aware UTC arrival time, never the worker or model clock. Typed candidates
+distinguish life events, birth inputs, anniversaries, own-profile corrections,
+calculation targets and other context. A narrative date does not authorize a transit
+calculation or a profile mutation. Multiple clauses can have different roles.
+Long-term event/entity storage and recall still belong to the later
+[memory slices](conversation-memory-plan.md#delivery-sequence-and-acceptance).
 
-Telegram supplies no current user timezone. After consent, `/timezone` explains
-the optional preference; `/timezone Europe/Bucharest` saves an explicitly selected
-IANA timezone from the bundled rules. `/timezone UTC` is also valid. `/profile`
-shows the preference and `/timezone clear` removes it. Neither a birthplace nor a
-model/retrieved memory selects this value. Users travelling to another zone can
-change it without altering their birth chart or recalculating natal facts.
+## Supported expressions and precision
 
-Migration `0009` adds nullable `users.current_timezone`. This is a plaintext account
-preference in Oria's private database, separate from the encrypted birth profile.
-Existing accounts remain unset. The setting command explicitly opts into storage;
-it requires existing current consent, and does not change that consent or trigger
-another disclosure for ordinary readings. Withdrawal stops changes and readings;
-confirmed deletion clears the preference during local cleanup. It is not logged,
-embedded into memory or forwarded to SecondContext. No new public HTTP endpoint,
-setting, dependency or astrology wire field is introduced.
+| Input | Local resolution |
+| --- | --- |
+| `in two hours`, `30 minutes from now`, `two hours ago` | Elapsed UTC duration; no timezone required |
+| `today`, `tomorrow`, `yesterday`, `this day last year` | Local calendar date for an event |
+| `exactly nine months ago`, `in two weeks`, `next month` | Calendar offset, with month-end clamping |
+| `May 1st, 2020`, `1 May 2020`, `2020-05-01` | Date-only; no invented event time |
+| `May 1st, last year` | Month/day plus the ingress-relative local year |
+| `around May 2020`, `May 1st` | Approximate or partial date; missing components stay absent |
+| `we married this day last year at 3pm` | Event clock in the selected zone; no automatic transit |
+| `May 1st, 2020 at 3pm` without a zone | Local date/time with unknown offset; a calculation asks for a timezone |
+| `a week before my birthday next year` | Calendar offset from the selected anniversary occurrence |
+| `between May 1st, 2020 and May 3rd, 2020` | Date interval, not a calculation covering a period |
 
-Time resolution uses the inbound message's persisted, aware UTC arrival timestamp.
-Worker delay and retry do not move that reference time. The model receives this
-UTC reference in instructions, alongside any calculated target facts; it receives
-neither the timezone name nor raw birth inputs. Telegram replies display the
-resolved target in the selected local zone as a snapshot before the interpretation.
+English month names and abbreviations, ordinal day suffixes, ISO dates, weekdays
+and the existing relative grammar are supported. Ambiguous numeric formats such as
+`04/05/2026`, impossible dates, compound/fractional offsets and unrecognized forms
+ask for clarification when used as a date request. This is not unrestricted natural
+language understanding or support for every locale/calendar.
 
-The bounded English grammar accepts:
+Explicit event IANA timezone names or `UTC` override the current preference for
+that clause. Abbreviations such as `EST` do not silently choose an offset. Unknown
+zones, competing zones and skipped/repeated DST clocks require clarification.
+Local days/weeks/months/years use calendar arithmetic; hours/minutes/seconds are
+elapsed UTC durations. Month/year offsets clamp month ends, including February 29.
+Recurring February 29 birthdays separately ask about February 28/March 1 observance
+when needed; their original historical date stays intact.
 
-- `in 3 hours`, `in three hours`, `30 minutes from now`, `two hours ago`;
-  seconds/minutes/hours are elapsed UTC durations and need no timezone;
-- `tomorrow`, `yesterday`, `day after tomorrow`, `day before yesterday`;
-  these select noon in the chosen local timezone;
-- `next Friday`, `last Friday`, `this Friday`; unqualified/next weekday means
-  the next occurrence, including seven days later if today has that weekday;
-  `this` includes today and otherwise the next occurrence;
-- `in 2 days`, `in 2 weeks`, `next week`, `next month`, `next year`, and numeric
-  month/year offsets; these preserve local wall time, clamping month ends;
-- `tomorrow at 15:30`, `tomorrow at 5pm`, `today at noon`;
-- `tomorrow morning` (09:00), `this afternoon` (15:00), `this evening` (18:00),
-  `tonight` (21:00), noon (12:00) and midnight (00:00 on the selected date).
+## Event anchors
 
-Day/calendar/clock requests require an explicit timezone. `today`/`now` without
-a clock retain the existing ingress-instant convention; an explicit `YYYY-MM-DD`
-retains noon UTC for compatibility, even with a timezone preference. A snapshot
-does not cover an entire day, week or month. The user sees the resolved clock time.
+An anchor is supplied by the application within the current user's scope. The
+resolver accepts a label, date, recurrence and optional event UUID/revision. It
+cannot select an account or grant access based on a label. Missing or ambiguous
+anchors ask for the event date. Missing anniversary years ask which occurrence;
+`the day I was born` means the historical date, while `my birthday next year`
+means an annual recurrence. Known anchors retain their supplied revision.
 
-Ambiguous/nonexistent local times at clock changes, multiple targets, compound or
-fractional offsets, unsupported phrases, explicit competing timezone abbreviations
-and targets outside 1800–2399 ask for clarification. This is not unrestricted natural
-language understanding. No LLM decides timestamps or authorizes tool calls.
-Clock text and volunteered identifiers are no longer blanket input blocks.
-Birth-bearing messages use a coarse local withholding fallback and follow-up route,
-not an automatic transit target. See [response policy](response-policy.md).
+The active flow can read the user's encrypted birth date for an explicit own-birth
+anchor. Ordinary readings and partner dates still use only the derived natal cache.
+Dates stated earlier in the same message can provisionally anchor subsequent
+wedding/birth references. A clarification can supply another event's anchor date.
+These are temporary inputs, not saved profile events. Retrieval of old weddings,
+pets, businesses or other entity events requires slice 3 storage and later recall.
+
+## Pending questions and privacy
+
+Migration `0010` adds one owner-scoped `temporal_clarifications` row per user. Its
+payload uses AES-GCM with user UUID, row UUID, purpose and key version as associated
+data. It contains the original request/reference, consent UUID, timezone provenance,
+local anchors and unresolved mention. No text or date enters broker messages or logs.
+It expires 24 hours after the original arrival; answering does not extend that window.
+The worker recovery scan erases expired rows. Reads also remove expired/stale-consent
+state. Existing owner locks serialize clarification, withdrawal and deletion.
+
+An IANA timezone answer, `next year`, a date, `February 28`/`March 1` or `at 3pm`
+can complete the relevant pending question after restart, without repeating the
+story. A timezone answer applies to that request; only `/timezone` changes the saved
+preference. `/timezone Europe/Berlin` can both save the preference and resume the
+pending question. New conversation abandons the previous question. Withdrawal,
+account deletion and starting an own-profile edit clear pending state. Recognized
+“don't remember/save/store” requests suppress this extra temporary state; ordinary
+queue and transcript retention still follows the consent disclosure.
+
+Birth-bearing clauses and obvious continuations remain local. Other clauses and
+non-birth resolved temporal values can reach SecondContext as untrusted user-stated
+context, not astrology facts or saved events. Raw saved birth values, birth
+candidates and birthday anchor dates are not forwarded. Filtering is bounded and
+cannot detect every unlabeled/encoded input. No new remote route, memory ingestion
+or model-controlled mutation is introduced. Consent version `2026-11-08.2` describes
+these temporary records and local own-birthday access; existing users re-consent.
+
+## Timezone preference and calculation compatibility
+
+Telegram supplies no current timezone. `/timezone Europe/Berlin` explicitly saves
+one; `/timezone UTC` and `/timezone clear` are supported. Neither birthplace nor a
+model/memory guess selects it. Migration `0009`'s nullable `users.current_timezone`
+remains a private plaintext preference, shown by `/profile` and removed on account
+deletion. It is not a natal-profile field or a semantic memory.
+
+The published single-instant transit v1 conventions remain compatible: bare
+`today`/`now` sample ingress, and ISO date-only targets sample noon UTC. Existing
+relative calendar-offset targets preserve local wall time; named relative days
+sample local noon, with existing named day-part conventions. New named/mixed or
+anchored date targets sample local noon only after timezone selection. Explicit
+clocks select that clock. These sampling rules never become known canonical event
+times. Targets must be within 1800–2399; otherwise valid historical event dates
+are not limited by the calculation range. Ranges and multiple requested targets
+can be discussed, but request a single sample before invoking the current tool.
+
+Synthetic verification and its limits are recorded in the
+[slice 2 evidence](evidence/natural-date-clarification.md).
