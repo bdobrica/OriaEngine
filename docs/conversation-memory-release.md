@@ -54,7 +54,9 @@ project with this bot or prune unrelated host resources.
    Store sensitive backups privately outside the checkout; do not commit them.
 2. Privately select the three digests and `ORIA_POLICY_VERSION=2026-11-08.5`.
    Keep linked memory off and callers stopped while starting the selected
-   infrastructure, owning migration jobs, SecondContext and MCP. Run the synthetic
+   infrastructure, owning migration jobs, SecondContext and MCP. Run Oria's migration
+   with `run --rm --no-deps migrate`; `up --wait secondcontext` waits for its migration
+   dependency. Run the synthetic
    check below with `run --rm --no-deps -T worker` instead of `exec -T worker` to
    verify capability/provider/erasure before ingestion starts. Then set
    `SECOND_CONTEXT_KNOWLEDGE_ENABLED=true`, run `make deploy-check` and

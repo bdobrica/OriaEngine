@@ -2,8 +2,8 @@
 
 Slice 5 connects the encrypted event/profile inputs to new, additive
 [linked-chart tools and context facts](../contracts/astrology/linked-v1.md).
-The implementation is local source work, not a published or live release.
-Deploy matching application and Astrology MCP images before using these tools.
+Application and Astrology MCP release `0.2.0` include these tools.
+Deploy matching images using the [coordinated release checklist](conversation-memory-release.md).
 Optional memory still requires the separately verified
 [SecondContext linked-context capability](linked-context.md).
 
@@ -100,9 +100,10 @@ existing generic retry path, without invented or partially accepted results.
 
 With optional linked memory disabled, ordinary v1 generation/retention remains
 unchanged; selective remote session erasure is not promised. The current expanded
-consent `2026-11-08.5` already discloses calculated facts and filtered interpretations;
-this slice adds no raw-input forwarding or new storage category. Coordinated
-publication, live-provider review and rollout remain slice 6.
+consent `2026-11-08.5` discloses calculated facts and filtered interpretations;
+linked calculations add no raw-input forwarding or new storage category. See the
+[release evidence](evidence/conversation-memory-release.md) for publication, provider
+checks and rollout status.
 
 [Verification evidence](evidence/linked-readings.md) records the aggregate gate,
 synthetic reading cases and real HTTP MCP checks.

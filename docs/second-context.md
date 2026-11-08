@@ -97,7 +97,7 @@ Run `make test-contract` for adapter tests,
 
 [Linked context](linked-context.md) adds a separate `linked-context-1` projection
 lane, migration 000004 in SecondContext and 0012 in Oria. It is disabled by default;
-existing published images do not gain the capability from this source change.
+The published `0.2.1` gateway includes this capability; the `0.1.1` baseline does not.
 After a compatible release, use `SECOND_CONTEXT_KNOWLEDGE_ENABLED=true`, scoped
 service authentication and disclosure 2026-11-08.5. The owning-service contract
 adds only explicit knowledge upsert/query/delete/capabilities routes and optional

@@ -18,7 +18,8 @@ and all twelve house themes. See the
 [delivery plan](docs/conversation-memory-plan.md).
 
 **Status:** the demo pipeline, privacy commands, deletion, webhook ingress and
-Docker development stack are implemented. The [Stage 25 release gate](TODO.md#stage-25--mvp-release-gate)
+Docker development stack are implemented. The expanded conversation features shipped
+in [release 0.2.0](docs/evidence/conversation-memory-release.md). The [Stage 25 release gate](TODO.md#stage-25--mvp-release-gate)
 is still pending; the project is not MVP-complete.
 
 Astrology is an interpretive framework, not a scientifically established forecasting

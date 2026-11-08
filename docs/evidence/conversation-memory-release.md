@@ -1,8 +1,8 @@
 # Conversation-memory release evidence
 
-Date: 2026-11-08. Source verification complete; publication and live rollout pending.
+Date: 2026-11-08. Published and deployed to `oria-live-test`.
 
-The candidate uses Oria application/MCP image version `0.2.0`, SecondContext gateway
+The release uses Oria application/MCP image version `0.2.0`, SecondContext gateway
 `0.2.1` and disclosure `2026-11-08.5`. Versioned consent covers the expanded
 learning/retention lifecycle, birthday samples, house themes and symbolic ratings.
 No ordinary reading gains a recurring general disclaimer.
@@ -30,13 +30,56 @@ No ordinary reading gains a recurring general disclaimer.
 - SecondContext `0.2.1` source `683fa7e83512afa0172e79f14f38c31a2c61d47a`
   passed both [CI jobs](https://github.com/bdobrica/SecondContext/actions/runs/42515453500)
   and [publication](https://github.com/bdobrica/SecondContext/actions/runs/42515453537).
-- Application/MCP publication and live rollout remain pending.
+- Application/MCP `0.2.0` source `c4e142953ade5fcdc40d08af09babefa1dc66ca6`
+  passed [CI](https://github.com/bdobrica/OriaEngine/actions/runs/42516316507) and
+  [publication](https://github.com/bdobrica/OriaEngine/actions/runs/42516316551).
+  Both release manifests include linux/amd64 and linux/arm64; pulled source/version
+  labels match the expected commits.
+
+## Deployment and live checks
+
+- Only the existing `oria-live-test` project was deployed. Published digests below
+  match the running application, worker, MCP and SecondContext images. Seven services
+  are healthy; both migration jobs exited zero. Oria reports schema `0012`;
+  SecondContext's own migration tool reports version 4, not dirty.
+- Callers were drained before owner-specific database backups and a cold Qdrant
+  storage archive. Archive structure was checked; a backup restore was not exercised.
+  Private configuration/key backups remain outside the repository. Existing private
+  settings, encryption key, namespace and webhook were preserved; `deploy/.env`
+  remains mode `0600`. No unrelated host containers were maintained or pruned.
+- Before enabling ingestion, the published worker image ran
+  `scripts/check_linked_release.py --generate` against the new private services.
+  The configured real AI provider generated linked readings; the first passed the
+  application response guard unchanged. Real MCP calls supplied sampled event
+  charts, static synastry and supported overlays. No synthetic model replies were
+  used in this live check.
+- The same check passed authenticated capabilities, duplicate upserts, typed
+  retrieval, independent subject isolation, correction/stale-reference rejection,
+  selective erasure, duplicate delete, denied resurrection, full purge and delayed
+  write fencing. Fresh synthetic subjects were purged in cleanup. Owning-service
+  receipts prove declared active-store/linked-history coverage; the rollout did not
+  inspect another component's database. Dependency-backed source tests separately
+  verify stored session/draft/context removal.
+- Linked memory is enabled; gateway and worker both report `2026-11-08.5`.
+  Existing users need fresh adult acceptance before new learning/readings. The
+  separate external SecondContext knowledge integration remains disabled.
+- Telegram authentication and the existing webhook URL were checked without
+  registering a new webhook or sending messages. There were zero pending updates
+  at the check. This does not establish a new private Telegram conversation.
 
 ## Live review boundary
 
-Tests above use synthetic model replies. They establish deterministic routing,
-storage and transport behavior, not real provider quality or Telegram delivery.
-The [release checklist](../conversation-memory-release.md) provides the separate
-synthetic-subject live check and private Telegram review. No live data, credentials,
+Repository replays use synthetic model replies; the separate live check above uses
+the configured provider and synthetic subjects. Private Telegram interaction and
+broader model-quality review remain manual Stage 25 work. The [release checklist](../conversation-memory-release.md)
+describes that review. No live data, credentials,
 generated replies or backup contents belong in this record. The broader Stage 25
 MVP checklist remains separate.
+
+## Published images
+
+| Component | Immutable image |
+| --- | --- |
+| Application `0.2.0` | `quay.io/bdobrica/oria-engine@sha256:066a35b6e7525d0f40323ca6023dd0b4ba10c85e2118e101178173259618757c` |
+| Astrology MCP `0.2.0` | `quay.io/bdobrica/oria-astrology-mcp@sha256:347ea24ad7d1fcf4a4d483ad4ba843f176449b5fada9694fbbcf0d8b61bb0ad4` |
+| SecondContext `0.2.1` | `quay.io/bdobrica/secondcontext-gateway@sha256:6190173c24ff79094ab7beef24e429b65c55b455a498499cf8dbe4326b9cdf8e` |

@@ -4,7 +4,7 @@
 
 OriaEngine is the application runtime for **Oria**, an AI astrology personality that lives inside messaging and social platforms and maintains an ongoing relationship with each user.
 
-The first MVP will run as a **Telegram bot**. Users explicitly consent to the disclosed data use, create a persistent birth profile, and ask for personalized astrological interpretations and conversational insights. The intended next extension learns meaningful volunteered life events and entities, understands natural time expressions, and maintains user-controlled memory; see the [design and staged delivery plan](docs/conversation-memory-plan.md). Natural dates and local encrypted event/entity memory are implemented; optional SecondContext projections/salience are implemented; [linked calculations](docs/linked-readings.md) are implemented; coordinated release remains.
+The first MVP will run as a **Telegram bot**. Users explicitly consent to the disclosed data use, create a persistent birth profile, and ask for personalized astrological interpretations and conversational insights. The intended next extension learns meaningful volunteered life events and entities, understands natural time expressions, and maintains user-controlled memory; see the [design and staged delivery plan](docs/conversation-memory-plan.md). Natural dates and local encrypted event/entity memory are implemented; optional SecondContext projections/salience are implemented; [linked calculations](docs/linked-readings.md) are implemented and shipped in the [coordinated release](docs/evidence/conversation-memory-release.md).
 
 OriaEngine is intended to build on the ideas and infrastructure of [SecondContext](https://github.com/bdobrica/SecondContext): persistent user-scoped context, structured memory, retrieval, and conversation continuity. OriaEngine adds the channel integration, consent/profile state machine, privacy boundary, astrology calculation service, and Oria-specific policy/persona layer.
 
@@ -332,8 +332,9 @@ Slice 2 now implements [bounded natural-time routing](docs/current-time.md), typ
 precision/roles and encrypted 24-hour clarification anchored to original ingress.
 Own-birth anchors remain local. Canonical CRUD and linked recall are implemented;
 [linked astrology](docs/linked-readings.md) is implemented. The [coordinated release](docs/conversation-memory-release.md)
-adds disclosure `2026-11-08.5`, lifecycle replays and published-image verification;
-publication and Oria-only rollout remain the current step.
+ships disclosure `2026-11-08.5`, lifecycle replays, published images and the verified
+Oria-only rollout. Remaining private Telegram and broader MVP validation belong to
+[Stage 25](TODO.md#stage-25--mvp-release-gate); see [release evidence](docs/evidence/conversation-memory-release.md).
 
 ---
 

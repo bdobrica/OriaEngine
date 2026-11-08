@@ -32,7 +32,7 @@ The stages are intentionally ordered so each stage leaves the repository in a te
 sharing and partner compatibility part of the intended MVP experience. This work
 belongs in the current implementation path, alongside the remaining release gate.
 Users are responsible for what they share; a separate partner signup or consent
-flow is not a prerequisite. Existing runtime restrictions are implementation gaps.
+flow is not a prerequisite. Linked compatibility readings are implemented and released.
 
 Compatibility delivery is included in the broader sequence below; keep the
 partner-birthday refusal as a regression case throughout, rather than a separate
@@ -40,17 +40,18 @@ storage or consent mechanism.
 
 ## Current priority — natural time and life-event memory
 
-[Design, policy and acceptance criteria](docs/conversation-memory-plan.md) expand
-the intended experience beyond natal profiles. The policy/contract foundation is
-implemented; remaining slices sit alongside the MVP release gate. Completed
-historical stages below describe the earlier baseline, including replaced guards.
+The six [delivery slices](docs/conversation-memory-plan.md#delivery-sequence-and-acceptance)
+are implemented and released: natural dates, encrypted canonical memory, linked
+SecondContext salience/interpretations and twelve-house compatibility/event readings.
+The [coordinated release](docs/conversation-memory-release.md) uses disclosure
+`2026-11-08.5`, published application/MCP `0.2.0` and SecondContext `0.2.1`.
+See [verification and Oria-only rollout evidence](docs/evidence/conversation-memory-release.md).
 
-- [x] **1 — Oria policy/contract foundation:** runtime policy/methodology/memory guidance and narrow behavioral guards accept voluntary context and broad discussion; a new versioned disclosure preserves consent. ADR 0002 and generated candidate event/entity/time and projection lifecycle contracts define the next slices. Birth-bearing chat uses local withholding, not event extraction. No event storage or projection traffic is enabled; owning-service acceptance/implementation remains a slice 4 prerequisite.
-- [x] **2 — Natural time:** bounded English/Gregorian extraction supports absolute, relative, mixed and event-anchored expressions, multiple dates/roles, date-only/partial/approximate precision and encrypted 24-hour clarification. Birth inputs stay local; event/partner dates do not default to transits/profile edits. Local own-birthday, same-message and clarification-supplied anchors work; historical canonical event recall is supplied by slice 3; linked semantic retrieval remains slice 4. See [resolver behavior and limits](docs/current-time.md).
-- [x] **3 — Canonical profile memory:** encrypted local entities/events, relationships, provenance and revision/deletion fences with conversational learning, inspection, corrections, selective removal and opt-out. Migration 0011 introduced this storage; the current expanded disclosure is 2026-11-08.5. See [private memory](docs/private-memory.md) for bounded English behavior; slice 4 adds the separate remote lifecycle.
-- [x] **4 — SecondContext continuity:** optional authenticated `linked-context-1` projections, encrypted durable reconciliation, salience, linked interpretations and bounded retrieval are implemented with owning-service lifecycle tests. Selective erasure includes dependent summaries/indexes/links and entire linked response sessions; stale-write/dependency fences and full-subject purge cover the new lane. Migration 0012, SecondContext 000004 and disclosure 2026-11-08.5 are required; the feature defaults off pending coordinated publication/rollout. See [linked context](docs/linked-context.md).
-- [x] **5 — Linked readings:** additive `oria-linked-1` MCP/context facts connect birthday samples, static synastry and event charts, directional overlays, all twelve traditional house themes and requested symbolic ratings. Current owner-scoped source revisions drive recalculation and interpretation invalidation. Optional memory uses source-linked generation or a local reading while delivery/erasure is pending. See [behavior and precision limits](docs/linked-readings.md); matching app/MCP publication and live review remain slice 6.
-- [ ] **6 — Release:** disclosure `2026-11-08.5`, stale-version startup guards, expanded synthetic lifecycle replays and the [coordinated release checklist](docs/conversation-memory-release.md) are implemented; the full aggregate gate passed. Publish application/MCP `0.2.0` and select the verified SecondContext `0.2.1` image; back up and migrate only `oria-live-test`, then check provider generation and scoped erasure before enabling ingestion. Keep private Telegram review separate from synthetic replay evidence.
+Remaining work is private Telegram review and the broader
+[Stage 25 MVP gate](#stage-25--mvp-release-gate), including model-quality review,
+backup/restore and operational exercises. Automated replays and a real-provider
+synthetic-subject smoke check do not replace those manual checks. Keep the partner
+birthday scenario as a regression case; no new partner consent flow is needed.
 
 ```mermaid
 flowchart LR

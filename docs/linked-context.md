@@ -8,8 +8,8 @@ Neither component reads the other's database or internal implementation types.
 
 ## Enablement
 
-The verified owning-service source is SecondContext commit `287e201` (not yet
-published by this task). Apply Oria migration `0012` and SecondContext migration `000004`, deploy the
+SecondContext gateway `0.2.1` includes the verified owning-service implementation
+from commit `287e201`. Apply Oria migration `0012` and SecondContext migration `000004`, deploy the
 compatible `linked-context-1` SecondContext implementation, and configure:
 
 ```dotenv
@@ -19,9 +19,9 @@ SECOND_CONTEXT_SUBJECT_NAMESPACE=oria
 ```
 
 Use the existing private scoped service credential, never a model-selected subject.
-The feature defaults off for compatibility with published images. Do not enable it
-against the existing MVP images: source verification does not publish or deploy a
-release. Both ingress and workers need the new disclosure version; custom policy
+The feature defaults off for compatibility with older images. Do not enable it
+against the `0.1.1` baseline; follow the [coordinated release checklist](conversation-memory-release.md)
+and verify the capability. Both ingress and workers need the new disclosure version; custom policy
 versions must also change. Users re-consent before new projection collection.
 Existing canonical records are projected on an eligible active turn after consent;
 old transcripts are never bulk-imported.
@@ -142,5 +142,6 @@ also removes projection content, operations, links and record fences while retai
 the existing minimal subject fence against delayed requests. No API can resurrect a
 deleted UUID; a genuinely new intentional record gets a new UUID.
 
-See [verification evidence](evidence/linked-context.md). Published images and live
-provider/Telegram validation are separate release work.
+See [source verification evidence](evidence/linked-context.md) and the
+[coordinated release evidence](evidence/conversation-memory-release.md), which distinguishes
+published-image/provider checks from private Telegram review.
