@@ -12,6 +12,7 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Identity,
     String,
+    Text,
     UniqueConstraint,
     func,
 )
@@ -278,6 +279,8 @@ class InboundEvent(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     failure_code: Mapped[str | None] = mapped_column(String(32))
+    is_control: Mapped[bool] = mapped_column(server_default="false")
+    admitted_consent_id: Mapped[UUID | None]
 
 
 class ConversationSession(Base):
@@ -289,6 +292,45 @@ class ConversationSession(Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     session_id: Mapped[UUID]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    history_invalidated: Mapped[bool] = mapped_column(server_default="false")
+    delivery_unconfirmed: Mapped[bool] = mapped_column(server_default="false")
+
+
+class ConversationHistoryWork(Base):
+    """One encrypted transient exchange per ingress event; no local transcript archive."""
+
+    __tablename__ = "conversation_history_work"
+    __table_args__ = (
+        CheckConstraint(
+            "phase IN ('prepared','finalize','accepted','abandon','terminal')", name="phase"
+        ),
+        CheckConstraint(
+            "delivery IN ('not_attempted','unknown','failed','sent','cancelled')", name="delivery"
+        ),
+        CheckConstraint(
+            "phase NOT IN ('abandon','terminal') OR "
+            "(encrypted_prepared IS NULL AND encrypted_finalize IS NULL)",
+            name="terminal_payload",
+        ),
+    )
+
+    event_id: Mapped[UUID] = mapped_column(
+        ForeignKey("inbound_events.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    session_id: Mapped[UUID]
+    consent_id: Mapped[UUID]
+    policy_version: Mapped[str] = mapped_column(String(64))
+    profile_revision: Mapped[int | None]
+    phase: Mapped[str] = mapped_column(String(16))
+    delivery: Mapped[str] = mapped_column(String(16), default="not_attempted")
+    encrypted_prepared: Mapped[bytes | None]
+    encrypted_finalize: Mapped[bytes | None]
+    encryption_key_version: Mapped[str] = mapped_column(String(64))
+    receipt: Mapped[str | None] = mapped_column(Text)
+    accept_attempted: Mapped[bool] = mapped_column(default=False)
+    cleanup_until: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    next_cleanup_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class DeletionJob(Base):

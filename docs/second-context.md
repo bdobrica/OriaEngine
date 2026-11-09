@@ -81,7 +81,7 @@ The adapter supports [active routing and transit facts](transits-and-routing.md)
 The polling/worker demo calls this adapter for eligible active chat and
 [confirmed, durable account deletion](deletion.md) across Oria and SecondContext.
 
-The updated disclosure uses policy version `2026-11-08.5`; deploy it consistently and
+The updated disclosure uses policy version `2026-11-10.1`; deploy it consistently and
 bump custom versions before enabling conversation storage. It describes actual
 SecondContext retention and deletion controls, including the minimal deletion marker.
 
@@ -99,7 +99,7 @@ Run `make test-contract` for adapter tests,
 lane, migration 000004 in SecondContext and 0012 in Oria. It is disabled by default;
 The published `0.2.1` gateway includes this capability; the `0.1.1` baseline does not.
 After a compatible release, use `SECOND_CONTEXT_KNOWLEDGE_ENABLED=true`, scoped
-service authentication and disclosure 2026-11-08.5. The owning-service contract
+service authentication and disclosure 2026-11-10.1. The owning-service contract
 adds only explicit knowledge upsert/query/delete/capabilities routes and optional
 `knowledge_refs` on responses. Legacy response, fixed-memory and purge behavior
 remain compatible. Selective cleanup retries after withdrawal/disablement.

@@ -26,8 +26,9 @@ class Settings(BaseSettings):
     second_context_bearer_token: SecretStr = SecretStr("")
     second_context_subject_namespace: str = ""
     second_context_knowledge_enabled: bool = False
+    second_context_history_enabled: bool = False
     astrology_mcp_url: str = "http://localhost:8000/mcp"
-    oria_policy_version: str = "2026-11-08.5"
+    oria_policy_version: str = "2026-11-10.1"
     inbound_rate_per_minute: int = Field(default=20, ge=1, le=120)
     queued_jobs_per_user: int = Field(default=8, ge=1, le=32)
     llm_processing_enabled: bool = True
@@ -78,6 +79,8 @@ class Settings(BaseSettings):
             )
         if self.second_context_knowledge_enabled and not namespace:
             raise ValueError("second_context_knowledge_enabled: requires scoped service credential")
+        if self.second_context_history_enabled and not self.second_context_knowledge_enabled:
+            raise ValueError("second_context_history_enabled: requires linked source lifecycle")
         key = self.profile_encryption_key.get_secret_value()
         if key:
             try:
@@ -141,9 +144,10 @@ def validate_telegram_ingress(settings: Settings) -> None:
         "2026-11-08.2",
         "2026-11-08.3",
         "2026-11-08.4",
+        "2026-11-08.5",
     }:
         raise ConfigurationError(
-            "Set ORIA_POLICY_VERSION=2026-11-08.5 for the linked memory disclosure"
+            "Set ORIA_POLICY_VERSION=2026-11-10.1 for the conversation history disclosure"
         )
 
 

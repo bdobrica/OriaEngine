@@ -45,6 +45,7 @@ async def run_polling(settings: Settings) -> None:
                 encryption,
                 settings.oria_policy_version,
                 limits=InboundLimits(publisher.client, settings),
+                history_enabled=settings.second_context_history_enabled,
             ),
             publisher=publisher,
         )

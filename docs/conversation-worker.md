@@ -46,6 +46,11 @@ a fixed request for a shorter reading. The encrypted validated reply commits wit
 local state, then Telegram delivery rechecks consent. No arbitrary memory ingestion
 or model-driven profile mutation is introduced.
 
+The optional [managed history workflow](conversation-history.md) adds migration
+`0013`, encrypted preparation/finalization, exact acceptance receipts and independent
+delivery. It defaults off; the legacy behavior described below remains available.
+Managed processing requires the new disclosure and acknowledged current source links.
+
 ## Failures and remote effects
 
 Active MCP and context failures propagate to the existing five-attempt queue retry
@@ -63,7 +68,7 @@ downstream response sizes. `LLM_PROCESSING_ENABLED=false`, followed by restartin
 all workers, disables new generation and memory ingestion while preserving
 deterministic commands and deletion. Running calls and committed replies may finish.
 
-SecondContext has no response idempotency key. Worker retry after a lost response,
+The legacy lane has no response idempotency key. Worker retry after a lost response,
 timeout, or crash before the local reply commit can repeat remote transcript writes
 and generation. The stable session prevents scope proliferation, **not duplicate
 transcripts**. This is an at-least-once integration; only local domain mutations
@@ -73,7 +78,7 @@ contract extension. See the [consumer contract](../contracts/second-context/v1.m
 
 ## Demo setup
 
-Use `ORIA_POLICY_VERSION=2026-11-08.5` consistently in polling and workers. Bump custom
+Use `ORIA_POLICY_VERSION=2026-11-10.1` consistently in polling and workers. Bump custom
 policy versions as well. Existing users must accept the new disclosure. It describes
 voluntary personal context, user/storage responsibilities, birth-clause withholding,
 temporary date clarification and local own-birthday access,

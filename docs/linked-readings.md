@@ -100,7 +100,7 @@ existing generic retry path, without invented or partially accepted results.
 
 With optional linked memory disabled, ordinary v1 generation/retention remains
 unchanged; selective remote session erasure is not promised. The current expanded
-consent `2026-11-08.5` discloses calculated facts and filtered interpretations;
+consent `2026-11-10.1` discloses calculated facts and filtered interpretations;
 linked calculations add no raw-input forwarding or new storage category. See the
 [release evidence](evidence/conversation-memory-release.md) for publication, provider
 checks and rollout status.

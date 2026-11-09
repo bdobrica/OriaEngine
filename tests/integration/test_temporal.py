@@ -227,7 +227,9 @@ async def test_choice_between_relative_targets_keeps_original_day(store, encrypt
     await confirm(flow)
     provider = provider_for(flow)
     await flow.handle(message("/timezone UTC"), command="timezone")
-    reference = datetime.now(UTC).replace(hour=23, minute=30) - timedelta(days=1)
+    # Keep the synthetic original inside its live retention window even after
+    # 23:30 UTC; the reply still crosses midnight relative to that original.
+    reference = datetime.now(UTC).replace(hour=23, minute=30)
     await flow.handle(replace(message("transits tomorrow or Friday"), received_at=reference))
     provider.respond.assert_not_called()
     await flow.handle(replace(message("tomorrow"), received_at=reference + timedelta(hours=2)))

@@ -20,7 +20,7 @@ flowchart LR
 ## Run the demo
 
 Use identical `.env` configuration for polling and workers. Set
-`ORIA_POLICY_VERSION=2026-11-08.5` (bump custom versions too), retain the encryption
+`ORIA_POLICY_VERSION=2026-11-10.1` (bump custom versions too), retain the encryption
 key, and configure `DATABASE_URL`, `REDIS_URL`, `TELEGRAM_BOT_TOKEN` and
 `ASTROLOGY_MCP_URL=http://localhost:8000/mcp`.
 
@@ -64,7 +64,10 @@ receipts from the old owner; delayed accepted updates remain inert.
 | `sent` | Send returned successfully; payloads erased |
 | `dead` | Attempts exhausted, expired, owner unavailable or reply consent changed; payloads erased |
 
-Only the earliest nonterminal event for a user can run. Other users proceed
+Ordinary work runs the earliest nonterminal event for a user. Privacy, inspection,
+consent and erasure controls have an independently ordered bypass of a stuck head.
+The [managed history workflow](conversation-history.md) uses this bypass and adds
+post-commit acceptance before delivery. Other users proceed
 independently. Redis uses `oria:user:<uuid>:conversation-lock` with a 120-second TTL
 and token-checked Lua release via redis-py. A whole attempt has a 60-second async
 timeout. PostgreSQL `FOR NO KEY UPDATE` on the owner is the final serialization

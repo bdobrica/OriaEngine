@@ -82,3 +82,18 @@ def test_disclosure_fits_telegram_and_describes_current_capabilities():
 def test_clock_compatibility_flag_never_grants_secret_forwarding():
     assert not private_active_input("tomorrow at 15:30", resolved_clock=True)
     assert private_active_input("password=synthetic tomorrow at 15:30", resolved_clock=True)
+
+
+def test_history_disclosure_covers_replay_local_delivery_and_decisions():
+    for phrase in (
+        "accepted dialogue",
+        "eligible prepared local exchanges",
+        "Telegram delivery fails",
+        "Rejected drafts are excluded from replay",
+        "accepted history remains until",
+        "OpenAI Decisions",
+        "separately from generation",
+        "cancels late writes/delivery",
+        "Replay does not automatically extract memories",
+    ):
+        assert phrase in DISCLAIMER

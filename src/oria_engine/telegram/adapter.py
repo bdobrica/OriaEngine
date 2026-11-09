@@ -8,6 +8,7 @@ from typing import Any
 
 from aiogram import BaseMiddleware, Bot, Dispatcher, Router
 from aiogram.enums import ChatType
+from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError, TelegramRetryAfter
 from aiogram.filters import Command, CommandObject
 from aiogram.methods import AnswerCallbackQuery, SendMessage
 from aiogram.types import (
@@ -20,7 +21,12 @@ from aiogram.types import (
 )
 
 from oria_engine.db.repositories import UserUnavailableError
-from oria_engine.domain.channel import ChannelButton, ChannelClient, ChannelMessage
+from oria_engine.domain.channel import (
+    ChannelButton,
+    ChannelClient,
+    ChannelMessage,
+    DeliveryRejected,
+)
 from oria_engine.domain.consent import ConsentFlow
 from oria_engine.observability import correlation_scope, count, measurement, observed
 from oria_engine.queue.broker import Publisher
@@ -72,9 +78,12 @@ class TelegramChannelClient:
             if buttons
             else None
         )
-        await self.bot.send_message(
-            chat_id=int(provider_chat_id), text=text, parse_mode=None, reply_markup=markup
-        )
+        try:
+            await self.bot.send_message(
+                chat_id=int(provider_chat_id), text=text, parse_mode=None, reply_markup=markup
+            )
+        except (TelegramBadRequest, TelegramForbiddenError, TelegramRetryAfter):
+            raise DeliveryRejected("Channel rejected delivery") from None
 
 
 def normalize_callback(update: Update, bot_id: int) -> ChannelMessage | None:

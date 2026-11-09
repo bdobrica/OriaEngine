@@ -255,7 +255,7 @@ async def test_old_acceptance_blocks_learning_until_fresh_adult_agreement(replay
     owner = await replay.user_id()
     async with replay.worker.database.transaction() as session:
         await ConsentRepository(session).accept(owner, "2026-11-08.4", "telegram")
-    await replay.send(text="We married May 1st, 2020", contains="2026-11-08.5")
+    await replay.send(text="We married May 1st, 2020", contains="2026-11-10.1")
     assert await count(replay, KnowledgeRecord) == 0
     await replay.send(button="agree", contains="profile is active")
     await replay.send(text="We married May 1st, 2020", contains="Saved")

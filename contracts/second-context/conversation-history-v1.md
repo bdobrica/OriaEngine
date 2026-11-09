@@ -1,7 +1,7 @@
 # Oria / SecondContext conversation history — v1
 
-Status: accepted consumer contract, 2026-11-09; **OCH2 adapter implemented;
-OCH3 worker integration and rollout pending**.
+Status: accepted consumer contract, 2026-11-09; **OCH2/OCH3 adapter and worker implemented;
+cross-service validation and rollout pending**.
 [ADR 0003](../../docs/adr/0003-accepted-conversation-history.md) records the decision.
 This extends [the existing adapter contract](v1.md), not astrology, canonical records,
 linked-context ownership or credential authority.
@@ -158,8 +158,9 @@ Review outcome: disclosure `2026-11-08.5` describes retained filtered messages,
 blocked drafts and linked erasure, but not explicit history replay, sending prepared
 local exchanges, or classification of previous dialogue. These are additional
 processing to disclose. OCH3/OCH5 MUST publish a new version and require fresh
-acceptance in ingress and workers before enabling the feature. Do not change the
-live policy in this contract-only slice or claim history already works.
+acceptance in ingress and workers before enabling the feature. The OCH3 implementation publishes `2026-11-10.1` for this data use; enablement
+requires consistent ingress/worker deployment and fresh acceptance. No live deployment
+is implied by the implementation.
 
 Required release copy must explain: bounded earlier accepted dialogue may be sent
 again to SecondContext's model; eligible prepared local exchanges are included;
@@ -175,7 +176,7 @@ statements in consent/help/privacy, not recurring conversational disclaimers.
 
 Schema fixture tests and snapshot comparison establish the agreed wire shapes.
 OCH2 implements [DTO/HTTP/receipt validation](../../docs/conversation-history-adapter.md),
-OCH3 adds durable transactions/recovery and OCH4
+OCH3 implements [durable transactions/recovery](../../docs/conversation-history.md); OCH4 adds
 real integration replay checks, including incorrect receipt identities, local input
 exclusions, replaced drafts, lost acknowledgements, terminal delivery failure,
 withdrawal/reacceptance, missing source links and selective/full deletion races.

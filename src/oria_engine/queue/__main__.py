@@ -16,6 +16,7 @@ from redis.asyncio import Redis
 
 from oria_engine.astrology.client import FastMCPAstrologyClient
 from oria_engine.config import ConfigurationError, Settings, load_settings
+from oria_engine.context.history_recovery import recover_history
 from oria_engine.context.projections import recover_projections
 from oria_engine.context.second_context import SecondContextProvider
 from oria_engine.context.service import ConversationContext
@@ -55,9 +56,15 @@ async def process(settings: Settings, resolver: LocalPlaceResolver, event_id: st
                 ),
             ),
         )
-        await EventWorker(database, redis, encryption, flow, TelegramChannelClient(bot)).process(
-            UUID(event_id)
-        )
+        await EventWorker(
+            database,
+            redis,
+            encryption,
+            flow,
+            TelegramChannelClient(bot),
+            history_provider=context,
+            history_enabled=settings.second_context_history_enabled,
+        ).process(UUID(event_id))
     finally:
         await context.aclose()
         await redis.aclose()
@@ -79,6 +86,13 @@ async def recover(settings: Settings, publisher: Publisher) -> None:
         ).recover()
         await recover_projections(
             database, ProfileEncryption(settings), settings.oria_policy_version, context
+        )
+        await recover_history(
+            database,
+            ProfileEncryption(settings),
+            settings.oria_policy_version,
+            context,
+            enabled=settings.second_context_history_enabled and settings.llm_processing_enabled,
         )
         for identifier in await recoverable(database):
             await asyncio.to_thread(publisher.send, str(identifier))
@@ -106,9 +120,10 @@ def run(settings: Settings, *, health_file: Path | None = None) -> None:
         "2026-11-08.2",
         "2026-11-08.3",
         "2026-11-08.4",
+        "2026-11-08.5",
     }:
         raise ConfigurationError(
-            "Set ORIA_POLICY_VERSION=2026-11-08.5 for the linked memory disclosure"
+            "Set ORIA_POLICY_VERSION=2026-11-10.1 for the conversation history disclosure"
         )
     resolver = LocalPlaceResolver()
     if health_file is not None:

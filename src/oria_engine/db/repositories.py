@@ -166,6 +166,9 @@ class ConsentRepository:
         )
         self.session.add(consent)
         if status != "accepted":
+            from oria_engine.db.history import cancel_history
+
+            await cancel_history(self.session, user_id, "consent_changed")
             await self.session.execute(
                 delete(TemporalClarification).where(TemporalClarification.user_id == user_id)
             )
@@ -193,6 +196,9 @@ class ConsentRepository:
             revoked_at=now,
         )
         self.session.add(consent)
+        from oria_engine.db.history import cancel_history
+
+        await cancel_history(self.session, user_id, "consent_changed")
         await self.session.execute(
             delete(TemporalClarification).where(TemporalClarification.user_id == user_id)
         )

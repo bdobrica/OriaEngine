@@ -9,13 +9,22 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field
 from redis.asyncio import Redis
 from redis.exceptions import LockNotOwnedError, RedisError
-from sqlalchemy import delete, exists, func, select
+from sqlalchemy import delete, exists, func, or_, select, true
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from oria_engine.astrology.client import AstrologyUnavailable
 from oria_engine.context.contracts import ContextUnavailable
+from oria_engine.context.history import HistoryFailure, validate_history_receipt
+from oria_engine.context.history_workflow import FreezeHistory, HistoryAttempt
+from oria_engine.context.second_context import SecondContextProvider
+from oria_engine.db.conversation_sessions import ConversationSessionRepository
+from oria_engine.db.history import REMOTE_PENDING_LIFETIME, HistoryRepository, stop_history
+from oria_engine.db.knowledge import MemoryProgress
 from oria_engine.db.models import (
+    ConversationHistoryWork,
+    ConversationSession,
     InboundEvent,
     KnowledgeDialogue,
     SocialIdentity,
@@ -68,6 +77,30 @@ def terminal(event: InboundEvent, status: str, code: str | None = None) -> None:
     event.encrypted_reply = None
 
 
+def dispatch_head() -> ColumnElement[bool]:
+    head = (
+        select(InboundEvent.id)
+        .where(InboundEvent.user_id == User.id, InboundEvent.status.not_in(TERMINAL))
+        .order_by(InboundEvent.sequence)
+        .limit(1)
+        .correlate(User)
+        .scalar_subquery()
+    )
+    control = (
+        select(InboundEvent.id)
+        .where(
+            InboundEvent.user_id == User.id,
+            InboundEvent.status.not_in(TERMINAL),
+            InboundEvent.is_control.is_(True),
+        )
+        .order_by(InboundEvent.sequence)
+        .limit(1)
+        .correlate(User)
+        .scalar_subquery()
+    )
+    return or_(InboundEvent.id == head, InboundEvent.id == control)
+
+
 class EventIngress:
     def __init__(
         self,
@@ -76,22 +109,16 @@ class EventIngress:
         policy_version: str,
         *,
         limits: InboundLimits | None = None,
+        history_enabled: bool = False,
     ):
         self.database = database
         self.encryption = encryption
         self.policy_version = policy_version
         self.limits = limits
+        self.history_enabled = history_enabled
 
     async def publishable(self, identifier: UUID) -> bool:
         async with self.database.transaction() as session:
-            head = (
-                select(InboundEvent.id)
-                .where(InboundEvent.user_id == User.id, InboundEvent.status.not_in(TERMINAL))
-                .order_by(InboundEvent.sequence)
-                .limit(1)
-                .correlate(User)
-                .scalar_subquery()
-            )
             return bool(
                 await session.scalar(
                     select(
@@ -100,7 +127,7 @@ class EventIngress:
                             InboundEvent.user_id == User.id,
                             InboundEvent.status.not_in(TERMINAL),
                             InboundEvent.next_attempt_at <= datetime.now(UTC),
-                            InboundEvent.id == head,
+                            dispatch_head(),
                         )
                     )
                 )
@@ -154,32 +181,20 @@ class EventIngress:
             if existing is not None:
                 count("update_deduplicated")
                 return existing.id
-            if self.limits is not None:
-                backlog = await session.scalar(
-                    select(func.count())
-                    .select_from(InboundEvent)
-                    .where(
-                        InboundEvent.user_id == user.id,
-                        InboundEvent.status.not_in(TERMINAL),
-                    )
-                )
-                if backlog is not None and backlog >= self.limits.backlog:
-                    await self.limits.reject(
-                        message.provider, message.provider_user_id, LIMIT_REPLY
-                    )
+            control_command = command in {
+                "privacy",
+                "profile",
+                "memories",
+                "memory",
+                "delete_me",
+                "delete-me",
+                "help",
+            }
+            control_callback = bool(
+                message.callback_data and message.callback_data.startswith(("consent:", "delete:"))
+            )
+            control_text = privacy_control(message.text)
             consent = await ConsentRepository(session).current(user.id, self.policy_version)
-            # Never durably collect unsolicited birth text before affirmative current consent.
-            # The transport normalizes commands. Discard arbitrary callbacks.
-            callback = message.callback_data
-            buttons = ConsentFlow(self.database, self.policy_version).buttons
-            if (
-                callback not in {button.data for button in buttons}
-                and not (
-                    consent and callback and callback.startswith("onboard:") and len(callback) <= 64
-                )
-                and not (callback and callback.startswith("delete:") and len(callback) <= 64)
-            ):
-                callback = "stale" if callback is not None else None
             # Explicit inspection/erasure controls remain usable after withdrawal.
             # Only bounded selection answers to an existing owner-scoped control
             # are retained; arbitrary pre-consent chat is still discarded.
@@ -192,8 +207,53 @@ class EventIngress:
                     message.text.strip(),
                     re.I,
                 )
-                and await session.get(KnowledgeDialogue, user.id) is not None
             )
+            if control_answer:
+                progress_row = await session.get(KnowledgeDialogue, user.id)
+                control_answer = False
+                if progress_row is not None and progress_row.expires_at > datetime.now(UTC):
+                    # Admission hint only, without waiting on slow owner work. The
+                    # domain handler revalidates selection/consent under its lock.
+                    progress = MemoryProgress.model_validate_json(
+                        self.encryption.decrypt_event(
+                            progress_row.encrypted_payload,
+                            user_id=user.id,
+                            event_id=progress_row.id,
+                            kind="knowledge-dialogue",
+                            key_version=progress_row.encryption_key_version,
+                        )
+                    )
+                    control_answer = progress.action in {
+                        "read",
+                        "delete",
+                    } and progress.consent_id == (consent.id if consent else None)
+            if self.limits is not None and not (
+                control_command or control_callback or control_text or control_answer
+            ):
+                backlog = await session.scalar(
+                    select(func.count())
+                    .select_from(InboundEvent)
+                    .where(
+                        InboundEvent.user_id == user.id,
+                        InboundEvent.status.not_in(TERMINAL),
+                    )
+                )
+                if backlog is not None and backlog >= self.limits.backlog:
+                    await self.limits.reject(
+                        message.provider, message.provider_user_id, LIMIT_REPLY
+                    )
+            # Never durably collect unsolicited birth text before affirmative current consent.
+            # The transport normalizes commands. Discard arbitrary callbacks.
+            callback = message.callback_data
+            buttons = ConsentFlow(self.database, self.policy_version).buttons
+            if (
+                callback not in {button.data for button in buttons}
+                and not (
+                    consent and callback and callback.startswith("onboard:") and len(callback) <= 64
+                )
+                and not (callback and callback.startswith("delete:") and len(callback) <= 64)
+            ):
+                callback = "stale" if callback is not None else None
             retain = consent or privacy_control(message.text) or control_answer
             message = replace(message, text=message.text if retain else "", callback_data=callback)
             identifier = uuid4()
@@ -213,6 +273,10 @@ class EventIngress:
                         kind="input",
                     ),
                     encryption_key_version=self.encryption.key_version,
+                    is_control=bool(
+                        control_command or control_callback or control_text or control_answer
+                    ),
+                    admitted_consent_id=consent.id if consent and self.history_enabled else None,
                     expires_at=now + timedelta(hours=24),
                     next_attempt_at=now,
                 )
@@ -237,12 +301,17 @@ class EventWorker:
         encryption: ProfileEncryption,
         flow: ConsentFlow,
         client: ChannelClient,
+        *,
+        history_provider: SecondContextProvider | None = None,
+        history_enabled: bool = False,
     ) -> None:
         self.database = database
         self.redis = redis
         self.encryption = encryption
         self.flow = flow
         self.client = client
+        self.history_provider = history_provider
+        self.history_enabled = history_enabled
 
     async def process(self, event_id: UUID) -> None:
         with correlation_scope(internal_job_id=event_id), measurement("worker_dispatch"):
@@ -271,9 +340,10 @@ class EventWorker:
                 try:
                     with measurement("worker_process"):
                         await self.calculate(event_id, user_id)
+                        await self.finalize(event_id, user_id)
                         await self.deliver(event_id, user_id)
-                except Exception:
-                    await self.failed(event_id, user_id)
+                except Exception as error:
+                    await self.failed(event_id, user_id, error)
         except TimeoutError:
             await self.failed(event_id, user_id)
         finally:
@@ -311,8 +381,8 @@ class EventWorker:
                 return False
             now = datetime.now(UTC)
             if event.expires_at <= now or event.attempts >= MAX_ATTEMPTS:
-                terminal(
-                    event, "dead", "expired" if event.expires_at <= now else "attempts_exhausted"
+                await stop_history(
+                    session, event, "expired" if event.expires_at <= now else "attempts_exhausted"
                 )
                 return False
             # A crashed claim becomes eligible after its recovery lease. Pending/ready retry
@@ -324,11 +394,24 @@ class EventWorker:
                     exists().where(
                         InboundEvent.user_id == user_id,
                         InboundEvent.sequence < event.sequence,
+                        InboundEvent.is_control.is_(True) if event.is_control else true(),
                         InboundEvent.status.not_in(TERMINAL),
                     )
                 )
             )
             if earlier:
+                return False
+            work = await session.get(ConversationHistoryWork, event.id)
+            if work is not None and work.phase == "prepared":
+                work.cleanup_until = now + REMOTE_PENDING_LIFETIME
+            if not event.is_control and await session.scalar(
+                select(
+                    exists().where(
+                        ConversationHistoryWork.user_id == user_id,
+                        ConversationHistoryWork.phase == "abandon",
+                    )
+                )
+            ):
                 return False
             event.attempts += 1
             event.status = "ready" if event.encrypted_reply is not None else "processing"
@@ -346,14 +429,53 @@ class EventWorker:
         )
 
     async def calculate(self, event_id: UUID, user_id: UUID) -> None:
+        # A preparation pass rolls back domain changes, commits only the frozen request,
+        # then reruns domain work under a fresh lock in the same bounded queue attempt.
+        if await self._calculate(event_id, user_id):
+            await self._calculate(event_id, user_id)
+
+    async def _calculate(self, event_id: UUID, user_id: UUID) -> bool:
         async with self.database.transaction() as session:
             event = await self.locked(session, event_id, user_id)
             if event is None or event.status in TERMINAL or event.encrypted_reply is not None:
-                return
+                return False
             user = await session.get(User, user_id)
             if user is None or user.deleted_at is not None:
-                terminal(event, "dead", "user_unavailable")
-                return
+                await stop_history(session, event, "user_unavailable")
+                return False
+            repo = HistoryRepository(session, self.encryption, self.flow.policy_version)
+            work = await session.get(ConversationHistoryWork, event_id)
+            current = await ConsentRepository(session).current(user_id, self.flow.policy_version)
+            enabled = self.history_enabled and (
+                self.flow.onboarding is None
+                or self.flow.onboarding.context is None
+                or self.flow.onboarding.context.enabled
+            )
+            if work is not None and (not enabled or not await repo.valid(work)):
+                await stop_history(session, event, "history_cancelled")
+                return False
+            if (
+                not event.is_control
+                and event.admitted_consent_id is not None
+                and (current is None or current.id != event.admitted_consent_id)
+            ):
+                await stop_history(session, event, "consent_changed")
+                return False
+            attempt = None
+            session.info["managed_history_required"] = self.history_enabled
+            if enabled and not event.is_control and current is not None:
+                if self.history_provider is None:
+                    raise ContextUnavailable("Managed history provider unavailable")
+                attempt = HistoryAttempt(
+                    session,
+                    user_id,
+                    event_id,
+                    self.encryption,
+                    self.flow.policy_version,
+                    self.history_provider,
+                    work,
+                )
+                session.info["history_attempt"] = attempt
             assert event.encrypted_input is not None
             payload = InputPayload.model_validate_json(
                 self.decrypt(event, event.encrypted_input, "input")
@@ -366,8 +488,8 @@ class EventWorker:
                 )
             )
             if identity is None:
-                terminal(event, "dead", "user_unavailable")
-                return
+                await stop_history(session, event, "user_unavailable")
+                return False
             try:
                 # A final downstream failure must not commit partial domain mutations.
                 async with session.begin_nested():
@@ -378,10 +500,35 @@ class EventWorker:
                         command=payload.command,
                     )
                 text, buttons = reply.text, reply.buttons
+            except FreezeHistory as freeze:
+                # The savepoint has rolled back local learning/projections/clarifications.
+                # Only mapping + exact prepared body commit in this transaction.
+                await ConversationSessionRepository(
+                    session, self.flow.policy_version
+                ).get_or_create(user_id)
+                mapping = await session.get(ConversationSession, user_id)
+                assert mapping is not None
+                mapping.session_id, mapping.history_invalidated = (
+                    UUID(freeze.prepared.session_id),
+                    False,
+                )
+                await repo.create(event, freeze.prepared)
+                return True
             except (AstrologyUnavailable, ContextUnavailable):
-                if event.attempts < MAX_ATTEMPTS:
+                if work is not None or self.history_enabled or event.attempts < MAX_ATTEMPTS:
                     raise
                 text, buttons = UNAVAILABLE_REPLY, ()
+            if attempt is not None and attempt.accepted is not None:
+                if work is None:
+                    assert attempt.local_prepared is not None
+                    work = await repo.create(event, attempt.local_prepared)
+                # Final application adornments (e.g. calculated snapshot label) are
+                # part of the exact reply. Mutation receipts are excluded upstream.
+                accepted = attempt.accepted.model_copy(update={"assistant_text": text})
+                repo.stage(work, accepted)
+            elif work is not None:
+                await stop_history(session, event, "history_cancelled")
+                return False
             consent = await ConsentRepository(session).latest(user_id)
             output = ReplyPayload(
                 text=text,
@@ -396,16 +543,88 @@ class EventWorker:
             event.encryption_key_version = self.encryption.key_version
             event.encrypted_input = None
             event.status = "ready"
-            # Domain mutation + encrypted reply are committed atomically.
+            # Domain mutation + encrypted reply + finalization are committed atomically.
+            return False
+
+    async def finalize(self, event_id: UUID, user_id: UUID) -> None:
+        # Persist ambiguity BEFORE the external mutation; a crash cannot label it unattempted.
+        async with self.database.transaction() as session:
+            event = await self.locked(session, event_id, user_id)
+            work = await session.get(ConversationHistoryWork, event_id)
+            if (
+                event is None
+                or event.status in TERMINAL
+                or work is None
+                or work.phase == "accepted"
+            ):
+                return
+            repo = HistoryRepository(session, self.encryption, self.flow.policy_version)
+            if event.expires_at <= datetime.now(UTC) or not await repo.valid(work):
+                await stop_history(session, event, "history_cancelled")
+                return
+            if work.phase != "finalize" or self.history_provider is None:
+                raise ContextUnavailable("History finalization unavailable")
+            work.accept_attempted = True
+            work.cleanup_until = datetime.now(UTC) + REMOTE_PENDING_LIFETIME
+        async with self.database.transaction() as session:
+            event = await self.locked(session, event_id, user_id)
+            work = await session.get(ConversationHistoryWork, event_id)
+            if (
+                event is None
+                or event.status in TERMINAL
+                or work is None
+                or work.phase == "accepted"
+            ):
+                return
+            repo = HistoryRepository(session, self.encryption, self.flow.policy_version)
+            if event.expires_at <= datetime.now(UTC) or not await repo.valid(work):
+                await stop_history(session, event, "history_cancelled")
+                return
+            assert self.history_provider is not None
+            request = repo.finalization(work)
+            receipt = await self.history_provider.finalize_history(repo.scope(work), request)
+            validate_history_receipt(request, receipt)
+            work.receipt, work.phase = receipt.model_dump_json(), "accepted"
+            work.encrypted_finalize = None
 
     async def deliver(self, event_id: UUID, user_id: UUID) -> None:
+        previously_ambiguous = False
+        async with self.database.transaction() as session:
+            event = await self.locked(session, event_id, user_id)
+            work = await session.get(ConversationHistoryWork, event_id)
+            if event is None or event.status in TERMINAL:
+                return
+            if work is not None:
+                if work.phase != "accepted":
+                    return
+                # A later explicit rejection cannot disprove an earlier ambiguous send.
+                previously_ambiguous = work.delivery == "unknown"
+                # A timeout/crash after sending is ambiguous even if the DB transaction rolls back.
+                work.delivery = "unknown"
+        try:
+            await self._deliver(event_id, user_id)
+        except Exception as error:
+            from oria_engine.domain.channel import DeliveryRejected
+
+            if isinstance(error, DeliveryRejected) and not previously_ambiguous:
+                async with self.database.transaction() as session:
+                    event = await self.locked(session, event_id, user_id)
+                    work = await session.get(ConversationHistoryWork, event_id)
+                    if event is not None and event.status not in TERMINAL and work is not None:
+                        work.delivery = "failed"
+            raise
+
+    async def _deliver(self, event_id: UUID, user_id: UUID) -> None:
         async with self.database.transaction() as session:
             event = await self.locked(session, event_id, user_id)
             if event is None or event.status in TERMINAL:
                 return
             user = await session.get(User, user_id)
             if user is None or user.deleted_at is not None:
-                terminal(event, "dead", "user_unavailable")
+                await stop_history(session, event, "user_unavailable")
+                return
+            if event.expires_at <= datetime.now(UTC):
+                await stop_history(session, event, "expired")
                 return
             assert event.encrypted_reply is not None
             output = ReplyPayload.model_validate_json(
@@ -415,19 +634,40 @@ class EventWorker:
             if output.policy_version != self.flow.policy_version or output.consent_id != (
                 consent.id if consent else None
             ):
-                terminal(event, "dead", "consent_changed")
+                await stop_history(session, event, "consent_changed")
                 return
+            work = await session.get(ConversationHistoryWork, event_id)
+            if work is not None:
+                repo = HistoryRepository(session, self.encryption, self.flow.policy_version)
+                if work.phase != "accepted" or not await repo.valid(work):
+                    await stop_history(session, event, "history_cancelled")
+                    return
             await self.client.send_text(output.chat_id, output.text, buttons=output.buttons)
+            if work is not None:
+                work.phase, work.delivery = "terminal", "sent"
+                work.encrypted_prepared = work.encrypted_finalize = None
             terminal(event, "sent")
             # A crash after send may duplicate a reply, never the domain mutation.
 
-    async def failed(self, event_id: UUID, user_id: UUID) -> None:
+    async def failed(self, event_id: UUID, user_id: UUID, error: Exception | None = None) -> None:
         async with self.database.transaction() as session:
             event = await self.locked(session, event_id, user_id)
             if event is None or event.status in TERMINAL:
                 return
-            if event.attempts >= MAX_ATTEMPTS:
-                terminal(event, "dead", "attempts_exhausted")
+            if (
+                event.attempts >= MAX_ATTEMPTS
+                or isinstance(error, HistoryFailure)
+                and not error.retryable
+            ):
+                await stop_history(
+                    session,
+                    event,
+                    error.code if isinstance(error, HistoryFailure) else "attempts_exhausted",
+                )
+                if isinstance(error, HistoryFailure) and error.code == "session_deleted":
+                    mapping = await session.get(ConversationSession, user_id)
+                    if mapping is not None:
+                        mapping.history_invalidated = True
                 count("worker_dead")
                 logger.error("worker_dead")
             else:
@@ -460,19 +700,8 @@ async def recoverable(database: Database) -> list[UUID]:
             )
         ).all()
         for event in expired:
-            terminal(event, "dead", "expired")
+            await stop_history(session, event, "expired")
         await session.flush()
-        earlier = (
-            select(InboundEvent.id)
-            .where(
-                InboundEvent.user_id == User.id,
-                InboundEvent.status.not_in(TERMINAL),
-            )
-            .order_by(InboundEvent.sequence)
-            .limit(1)
-            .correlate(User)
-            .scalar_subquery()
-        )
         return list(
             await session.scalars(
                 select(InboundEvent.id)
@@ -480,7 +709,7 @@ async def recoverable(database: Database) -> list[UUID]:
                 .where(
                     InboundEvent.status.not_in(TERMINAL),
                     InboundEvent.next_attempt_at <= now,
-                    InboundEvent.id == earlier,
+                    dispatch_head(),
                 )
                 .order_by(InboundEvent.sequence)
                 .limit(100)

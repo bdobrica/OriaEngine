@@ -93,6 +93,13 @@ class ProjectionRepository:
         row.attempts, row.next_attempt_at = 0, datetime.now(UTC)
 
     async def invalidate(self, user_id: UUID, ids: set[UUID], *, erase: bool) -> None:
+        from oria_engine.db.history import cancel_history
+        from oria_engine.db.models import ConversationSession
+
+        mapping = await self.session.get(ConversationSession, user_id)
+        if mapping is not None:
+            mapping.history_invalidated = True
+        await cancel_history(self.session, user_id, "history_source_changed")
         # Called in the canonical mutation transaction, including when remote use
         # has subsequently been disabled. No deleted sensitive payload stays queued.
         for row in await self.rows(user_id):

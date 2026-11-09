@@ -46,7 +46,7 @@ Stopped workers resume cleanup on restart. Database failures leave progress dura
 
 The local step removes encrypted birth profiles, derived charts, encrypted drafts,
 consent history, canonical events/entities and their provenance/receipts,
-temporary date/record clarification, encrypted projection work and conversation-session mappings, and wipes
+temporary date/record clarification, encrypted projection/history work and conversation-session mappings, and wipes
 inbound/reply ciphertext.
 The subject purge uses the existing [SecondContext v1 contract](../contracts/second-context/v1.md).
 Only its validated subject-specific completion acknowledgement advances the job.
@@ -88,7 +88,7 @@ deletion. A subsequent `/start` creates a fresh UUID and requires fresh consent.
 
 ## Demo setup and verification
 
-Run `make migrate`, set `ORIA_POLICY_VERSION=2026-11-08.5` (bump custom versions too),
+Run `make migrate`, set `ORIA_POLICY_VERSION=2026-11-10.1` (bump custom versions too),
 and restart polling and workers consistently. Existing accepted users re-consent for
 chat, but deletion itself requires no consent. Keep encryption keys available until
 pending final notifications have been delivered or expired.

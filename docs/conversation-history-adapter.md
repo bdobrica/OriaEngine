@@ -1,10 +1,9 @@
 # Conversation history adapter
 
 OCH2 implements the [accepted consumer contract](../contracts/second-context/conversation-history-v1.md)
-under [ADR 0003](adr/0003-accepted-conversation-history.md). It adds no deployment
-switch or worker behavior: ordinary `respond()` still uses the legacy Responses
-path. OCH3 must implement durable acceptance, consent/disclosure and delivery before
-the worker calls the new methods. No provider database or internal types are used.
+under [ADR 0003](adr/0003-accepted-conversation-history.md). OCH3 now connects it to the
+optional [durable worker workflow](conversation-history.md). Ordinary `respond()`
+still uses the legacy Responses path. No provider database or internal types are used.
 
 ## Adapter boundary
 
@@ -69,13 +68,11 @@ the write failed. HTTP failures and ambiguous read/write/deadline failures are n
 automatically retried. OCH3 owns the bounded retry policy and persisted exact body,
 including receipt comparison across retries and terminal/uncertain outcomes.
 
-## Remaining integration
+## Worker integration
 
-OCH3 must atomically persist the validated reply and encrypted finalization work,
-recheck consent/source revisions post-commit, finalize before independent Telegram
-delivery, and resolve earlier pending work before generating another turn. Privacy
-and erasure bypass that barrier. It must also implement the local-exchange allowlist,
-cancellation, expiry and fresh-consent disclosure. No schema or policy version is
-changed here. OCH4 proves cross-service replay and recovery; OCH5 coordinates rollout.
+OCH3 implements encrypted preparation, atomic reply/finalization work, independent
+delivery, source/consent checks, bounded recovery and the new disclosure. See the
+[workflow](conversation-history.md) and its [evidence](evidence/conversation-history-workflow.md).
+OCH4 proves cross-service replay; OCH5 coordinates rollout. The feature defaults off.
 
-See [verification evidence](evidence/conversation-history-adapter.md).
+See [adapter verification evidence](evidence/conversation-history-adapter.md).

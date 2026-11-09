@@ -133,7 +133,7 @@ The disclosure is versioned. The user must explicitly choose an **Agree** action
 Current disclosure source:
 
 [Consent copy](src/oria_engine/domain/consent.py) and [consent-flow reference](docs/consent-flow.md)
-use version `2026-11-08.5` for voluntary context and local encrypted event/entity learning plus optional linked summaries, significance,
+use version `2026-11-10.1` for voluntary context and local encrypted event/entity learning plus optional linked summaries, significance,
 interpretations and selective SecondContext cleanup, with opt-out and retention limits. [Private memory](docs/private-memory.md)
 describes implementation limits and own-birth profile references. [Linked context](docs/linked-context.md)
 implements optional remote summaries, salience and selective linked-session erasure
@@ -341,11 +341,13 @@ Oria-only rollout. Remaining private Telegram and broader MVP validation belong 
 ## 6.3 Planned conversation continuity and OpenAI compatibility
 
 Status: OCH1/CH1 contracts accepted, SecondContext CH2/CH3 implemented, and OCH2
-consumer adapter implemented. OCH3–OCH5 workflow, validation and rollout remain pending.
+consumer adapter and OCH3 durable workflow implemented. OCH4/OCH5 cross-service
+validation and rollout remain pending.
 [ADR 0003](docs/adr/0003-accepted-conversation-history.md) and the
 [consumer contract](contracts/second-context/conversation-history-v1.md) freeze wire
-shapes, local eligibility, recovery and disclosure requirements. The adapter exposes
-the managed protocol without enabling it in the conversation worker. Oria's existing
+shapes, local eligibility, recovery and disclosure requirements. The adapter is
+connected through the optional [durable worker workflow](docs/conversation-history.md);
+`SECOND_CONTEXT_HISTORY_ENABLED` defaults off. Oria's existing
 legacy path still identifies stored exchanges without opting into replay. Memory
 recall alone does not establish multi-turn continuity. This work is part of the
 remaining MVP path; track execution in [the current checklist](TODO.md#current-priority--conversation-history).
@@ -393,9 +395,10 @@ ingress UUID; it can be encrypted and restored without rebuilding time/facts.
 Capability caching is per subject/provider instance, limited to 128 entries and
 60 seconds, with explicit refresh/invalidation. Finalization remains callable for
 recovery without new-capture readiness. See [adapter reference](docs/conversation-history-adapter.md).
-OCH3 must connect these methods only after durable preparation, acceptance/delivery
-state, consent/source checks and the new disclosure exist. No enablement setting or
-worker behavior changes in OCH2.
+OCH3 connects these methods with encrypted preparation/finalization, independent
+delivery, privacy bypass and source/consent cancellation. Migration `0013` and
+disclosure `2026-11-10.1` are implemented; fresh consent and coordinated rollout are
+required before enabling the default-off history switch.
 
 ### Accepted replies and durable delivery
 
@@ -444,12 +447,13 @@ linked revisions and deletion fences. Pending erasure suppresses stale history b
 classification as well as generation. The OCH1 disclosure review requires a new
 policy version and fresh acceptance
 for replay/local capture, and disclosure of Decisions processing before observation.
-Publish that actual copy/configuration with OCH3 before enabling managed processing.
+OCH3 publishes that copy/configuration; deployment and fresh consent remain rollout requirements.
 
 ### Coordinated delivery
 
 Sequence: OCH1/CH1 contract agreement → CH2 OpenAI compatibility and CH3 history
-lifecycle → OCH2 adapter (complete) → OCH3 durable acceptance (next) → OCH4 baseline replay checks.
+lifecycle → OCH2 adapter (complete) → OCH3 durable acceptance (complete) →
+OCH4 baseline replay checks (next).
 CH4 Decisions observation and CH5 cache measurement follow the working baseline;
 CH6 adaptive selection and optional same-session older recall remain gated by
 evaluation. OCH5/CH7 coordinate publication, capability checks and rollout.

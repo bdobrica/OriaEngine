@@ -27,8 +27,10 @@ platform; do not deploy a development `.env` or commit secrets.
 | `SECOND_CONTEXT_BASE_URL` | `http://localhost:8080`; HTTP(S) |
 | `SECOND_CONTEXT_BEARER_TOKEN` | Empty; optional bearer authentication |
 | `SECOND_CONTEXT_SUBJECT_NAMESPACE` | Empty for legacy scopes; e.g. `oria` enables service subject headers and requires a bearer token |
+| `SECOND_CONTEXT_KNOWLEDGE_ENABLED` | `false`; requires scoped linked-context capability and credentials |
+| `SECOND_CONTEXT_HISTORY_ENABLED` | `false`; requires linked memory, current disclosure and managed-history capability; see [workflow](conversation-history.md) |
 | `ASTROLOGY_MCP_URL` | `http://localhost:8000/mcp`; HTTP(S) |
-| `ORIA_POLICY_VERSION` | `2026-11-08.5`; nonempty version identifier |
+| `ORIA_POLICY_VERSION` | `2026-11-10.1`; nonempty version identifier |
 | `INBOUND_RATE_PER_MINUTE` | `20`; integer 1–120, new updates per sender per 60-second window |
 | `QUEUED_JOBS_PER_USER` | `8`; integer 1–32, canonical nonterminal events per user |
 | `LLM_PROCESSING_ENABLED` | `true`; boolean, disable and restart all workers to stop new generation/memory ingestion |

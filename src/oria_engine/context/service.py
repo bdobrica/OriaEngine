@@ -58,6 +58,19 @@ class ConversationContext:
             request = request.model_copy(
                 update={"filtered_message": filtered, "goal": "follow_up", "transit_facts": None}
             )
+        if isinstance(session.info, dict) and session.info.get("managed_history_required") is True:
+            from oria_engine.context.history_workflow import (
+                approved_text,
+                history_attempt,
+                local_reading,
+            )
+
+            attempt = history_attempt(session)
+            if attempt is None or attempt.excluded:
+                return ContextReply(
+                    response_id="oria-history-local", text=approved_text(local_reading(request))
+                )
+            return await attempt.respond(request)
         linked = None
         calculated = request.linked_facts
         sources = calculated.sources if calculated is not None else ()

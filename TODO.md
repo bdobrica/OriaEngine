@@ -32,9 +32,8 @@ Implement [PLAN section 6.3](PLAN.md#63-planned-conversation-continuity-and-open
 with SecondContext's companion
 [CH1–CH7 checklist](https://github.com/bdobrica/SecondContext/blob/main/TODO.md#current-priority--openai-compatible-conversation-history)
 (`../SecondContext/PLAN.md` contains its detailed local execution plan).
-OCH1 contracts and OCH2 adapter are complete; OCH3–OCH5 remain pending.
-The adapter is not connected to live conversation processing until OCH3's durable
-workflow and new disclosure are implemented. See [adapter evidence](docs/evidence/conversation-history-adapter.md).
+OCH1–OCH3 are complete; OCH4/OCH5 remain pending. The optional worker workflow
+defaults off and is not deployed. See [workflow evidence](docs/evidence/conversation-history-workflow.md).
 See the accepted [consumer contract](contracts/second-context/conversation-history-v1.md)
 and [ADR 0003](docs/adr/0003-accepted-conversation-history.md).
 This is current MVP continuity work, not a claim that
@@ -62,17 +61,17 @@ session reuse or existing memory tests prove dialogue continuity.
 
 ### OCH3 — Durable accepted-turn and delivery workflow (depends on OCH2)
 
-- [ ] Commit validated reply/replacement plus encrypted finalization work atomically;
+- [x] Commit validated reply/replacement plus encrypted finalization work atomically;
   finalize post-commit, then deliver the saved reply with independent delivery state.
-- [ ] Recover after crashes and lost acknowledgements without duplicate accepted
+- [x] Recover after crashes and lost acknowledgements without duplicate accepted
   turns; resolve pending work before later generation and define bounded failure recovery.
-- [ ] Include allowlisted prepared local exchanges; exclude onboarding, profile
+- [x] Include allowlisted prepared local exchanges; exclude onboarding, profile
   displays, raw birth fields, secrets and private temporary clarification inputs.
-- [ ] Publish the new replay/local-exchange disclosure and fresh-consent requirement
+- [x] Publish the new replay/local-exchange disclosure and fresh-consent requirement
   before feature enablement; include Decisions processing before observation mode.
-- [ ] Recheck consent; cancel disallowed late writes and preserve required erasure
+- [x] Recheck consent; cancel disallowed late writes and preserve required erasure
   after withdrawal, disablement and deletion. Never resurrect canceled work.
-- [ ] Preserve source-linked correction/erasure, current-fact recalculation and
+- [x] Preserve source-linked correction/erasure, current-fact recalculation and
   account isolation across replay, accepted replacements and local exchanges.
 
 ### OCH4 — Prove conversation continuity (depends on OCH3 and CH3)

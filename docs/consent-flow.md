@@ -16,7 +16,7 @@ disclosed summaries, significance and prior interpretations, plus selective
 linked-session erasure; it requires a verified owning-service capability.
 
 The initial copy is `DISCLAIMER` in `domain/consent.py`, using
-`ORIA_POLICY_VERSION` (default `2026-11-08.5`). It covers AI identity, interpretive
+`ORIA_POLICY_VERSION` (default `2026-11-10.1`). It covers AI identity, interpretive
 astrology, high-stakes limitations, birth date/time/place, chart purpose and future
 storage, voluntary PII and sharing responsibility, secure scoped handling, profile/edit
 controls, encrypted event/entity storage, local selective removal and its retention limits, and adult
@@ -35,7 +35,9 @@ adult agreement. After consent, ordinary dialogue should be free and natural, wi
 recurring disclaimers or canned professional-support reminders. Respect adults' own
 judgment; explain a specific limitation only where it affects the actual request.
 The [dialogue guide](dialogue/README.md) describes that experience. Version
-`2026-11-08.5` includes optional linked projections and session erasure alongside local learning,
+`2026-11-10.1` also covers [accepted dialogue replay](conversation-history.md), prepared
+local exchanges, accepted replies with unconfirmed delivery and optional Decisions
+processing. It includes optional linked projections and session erasure alongside local learning,
 aliases/relationships, corrections,
 inspection/removal without consent, opt-out and 24-hour encrypted conversation
 focus/clarification. It distinguishes local record erasure from prior chat/provider

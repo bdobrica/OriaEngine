@@ -334,11 +334,23 @@ class OnboardingFlow:
                         dialogue = None
                         memory_receipt = None
                         follow_up = None
+                        from oria_engine.context.history_workflow import history_attempt
+
+                        history = history_attempt(session)
+                        if history is not None and (
+                            await TemporalRepository(
+                                session, self.encryption, self.policy_version
+                            ).get(user_id)
+                            is not None
+                        ):
+                            history.excluded = True
                         if intent.kind != "unsupported_high_stakes":
                             knowledge = KnowledgeConversation(
                                 session, self.encryption, self.policy_version
                             )
                             turn = await knowledge.resume(user_id, message)
+                            if history is not None and turn.source is not None:
+                                history.excluded = True
                             if turn.reply is not None:
                                 return ConsentReply(State.ACTIVE, turn.reply)
                             message = turn.message
@@ -402,6 +414,8 @@ class OnboardingFlow:
                                 ):
                                     return ConsentReply(State.ACTIVE, memory_reply)
                                 memory_receipt = memory_reply
+                                if history is not None:
+                                    history.excluded = True
                             intent = route_active(
                                 dialogue.text,
                                 received_at=dialogue.reference,
@@ -528,7 +542,30 @@ class OnboardingFlow:
                             and dialogue.analysis.mentions
                         ):
                             return ConsentReply(State.ACTIVE, dialogue.model_text())
-                        return ConsentReply(State.ACTIVE, render_active(facts))
+                        text = render_active(facts)
+                        # Only these explicit ordinary/calculated branches may capture locally.
+                        # Private clarifications, policy/status and mutation receipts return above.
+                        if (
+                            facts.intent.kind != "follow_up"
+                            and facts.intent.kind != "unsupported_high_stakes"
+                            and facts.intent.kind != "clarify_date"
+                            and facts.intent.kind != "clarify_timezone"
+                            and not memory_receipt
+                        ):
+                            from oria_engine.context.history_workflow import capture_local
+
+                            await capture_local(
+                                session,
+                                ConversationRequest(
+                                    filtered_message=active_text,
+                                    goal=facts.intent.kind,
+                                    natal_facts=natal,
+                                    transit_facts=facts.transits,
+                                    reference_time_utc=message.received_at,
+                                ),
+                                text,
+                            )
+                        return ConsentReply(State.ACTIVE, text)
                     except AstrologyUnavailable:
                         if self.context is not None:
                             raise  # The durable worker owns bounded retries.

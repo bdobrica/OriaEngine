@@ -15,6 +15,7 @@ from oria_engine.db.models import (
     BirthProfile,
     Consent,
     ContextProjectionWork,
+    ConversationHistoryWork,
     ConversationSession,
     DeletionJob,
     InboundEvent,
@@ -114,6 +115,9 @@ async def deletion_command(
     job.next_attempt_at = now
     job.confirmation_token = None
     job.confirmation_expires_at = None
+    from oria_engine.db.history import cancel_history
+
+    await cancel_history(session, user_id, "user_unavailable")
     user.deleted_at = now  # Same owner lock as all conversation/consent/profile mutations.
     return ConsentReply(
         OnboardingState.CLOSED, "Deletion requested. Conversation processing is stopped."
@@ -211,6 +215,7 @@ class DeletionWorker:
                     KnowledgeLink,
                     KnowledgeOperation,
                     KnowledgeRecord,
+                    ConversationHistoryWork,
                     ConversationSession,
                     Consent,
                 ):

@@ -23,6 +23,10 @@ class ChannelButton:
     data: str
 
 
+class DeliveryRejected(RuntimeError):
+    """The channel explicitly rejected the send; network failures remain ambiguous."""
+
+
 class ChannelClient(Protocol):
     async def send_text(
         self, provider_chat_id: str, text: str, *, buttons: tuple[ChannelButton, ...] = ()
@@ -47,6 +51,9 @@ HELP_TEXT = (
     "tomorrow, in 3 hours, or transits on YYYY-MM-DD. "
     "Share life events and dates naturally; meaningful disclosures can be saved locally. "
     "Say “don’t remember this” to skip profile memory. "
+    "When enabled, accepted dialogue and eligible local exchanges are replayed, including "
+    "replies with unconfirmed delivery; optional OpenAI Decisions assesses context relevance. "
+    "See /privacy for retention and processing details. "
     "Declining stops readings and setup but does not erase data. Confirmed deletion stops "
     "processing and retries cleanup across Oria and SecondContext."
 )

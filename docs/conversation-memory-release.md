@@ -6,7 +6,10 @@ The broader [MVP gate](../TODO.md#stage-25--mvp-release-gate) remains separate.
 
 ## Consent and compatibility
 
-The disclosure version is `2026-11-08.5`. It covers voluntary sharing and local
+The current source disclosure version is `2026-11-10.1`; the earlier release used
+`2026-11-08.5` (see its [historical evidence](evidence/conversation-memory-release.md)).
+The new version additionally covers [conversation history](conversation-history.md)
+and optional Decisions processing. It covers voluntary sharing and local
 learning, the optional projection/session lifecycle, opt-out, calculated readings,
 date-only noon-UTC samples and symbolic ratings. It fits Telegram's single-message
 limit even with a 64-character custom version. Known older versions are rejected
@@ -17,7 +20,9 @@ erasure remain available without acceptance; withdrawal keeps pending erasure al
 No additional consent from mentioned people or registration for entities is needed.
 General disclosures remain in consent/help/privacy, outside ordinary readings.
 
-Required schema heads are Oria `0012` and SecondContext `000004`. The owning
+Current Oria code requires schema `0013`. Linked context requires SecondContext
+`000004`; managed history additionally requires `000005` and `conversation-history-1`.
+Keep `SECOND_CONTEXT_HISTORY_ENABLED=false` until OCH4/OCH5 validation and rollout. The owning
 services run their own migrations; Oria never accesses SecondContext storage.
 Legacy natal/transit and response consumers remain compatible. New linked readings
 require matching application/MCP images; projections require the authenticated
@@ -52,7 +57,7 @@ project with this bot or prune unrelated host resources.
    owners, the private environment/encryption key and compatible Qdrant storage.
    A cold storage backup requires stopping only Oria's Qdrant after its API drains.
    Store sensitive backups privately outside the checkout; do not commit them.
-2. Privately select the three digests and `ORIA_POLICY_VERSION=2026-11-08.5`.
+2. Privately select the three digests and `ORIA_POLICY_VERSION=2026-11-10.1`.
    Keep linked memory off and callers stopped while starting the selected
    infrastructure, owning migration jobs, SecondContext and MCP. Run Oria's migration
    with `run --rm --no-deps migrate`; `up --wait secondcontext` waits for its migration
