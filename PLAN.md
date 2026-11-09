@@ -340,7 +340,11 @@ Oria-only rollout. Remaining private Telegram and broader MVP validation belong 
 
 ## 6.3 Planned conversation continuity and OpenAI compatibility
 
-Status: planned, not implemented. Stable SecondContext sessions currently identify
+Status: OCH1/CH1 contracts accepted; runtime OCH2–OCH5 pending.
+[ADR 0003](docs/adr/0003-accepted-conversation-history.md) and the
+[consumer contract](contracts/second-context/conversation-history-v1.md) freeze wire
+shapes, local eligibility, recovery and disclosure requirements. No runtime change
+is enabled by this slice. Stable SecondContext sessions currently identify
 stored exchanges but do not replay earlier dialogue into model requests. Memory
 recall alone does not establish multi-turn continuity. This work is part of the
 remaining MVP path; track execution in [the current checklist](TODO.md#current-priority--conversation-history).
@@ -354,9 +358,9 @@ SecondContext owns ordered conversation storage, prompt assembly, history select
 and OpenAI Decisions calls. Oria owns consent, input preparation, current calculated
 facts, canonical records, output validation and Telegram delivery. No shared tables,
 cross-repository implementation imports or new authority from classifier output.
-Before implementation, accept new ADRs where required and publish an additive,
-versioned `conversation-history-1` capability and consumer contract. The following
-names are proposed; they are not live API promises:
+OCH1/CH1 accepted new ADRs and published the additive, versioned
+`conversation-history-1` contract/schema. The following names are frozen targets;
+they are not live capabilities until CH2/CH3. The contract takes precedence here:
 
 - Standard clients use `/v1/chat/completions` with client-supplied `messages`, or
   the existing `/v1/responses` subset. No custom lifecycle call is required. The
@@ -367,7 +371,8 @@ names are proposed; they are not live API promises:
   remains compatible; conflicting selectors fail. Oria uses explicit acceptance.
 - `POST /v1/context/capabilities` advertises the contract, modes and limits.
   `POST /v1/context/turns/finalize` accepts the application-approved reply, or a
-  prepared local exchange without generation. Both require scoped authentication
+  prepared local exchange without generation, or payload-free pending abandonment.
+  Both require scoped authentication
   and an explicitly reviewed service-route allowlist extension in SecondContext.
 - Session and turn identity, immutable request binding, draft/accepted state,
   chronological sequence, exact acknowledgements and conflict handling belong in
@@ -385,8 +390,8 @@ Derive a stable turn ID from the persisted inbound event. Generate a pending dra
 validate it, then commit the accepted reply and encrypted finalization work together
 in Oria. A post-commit worker finalizes that exact reply remotely before delivery;
 Telegram delivery remains tracked independently. Resolve pending finalization and
-delivery before generating a later turn. Bound retries and define the terminal
-failure/recovery behavior without silently bypassing continuity or blocking privacy
+delivery before generating a later turn. Use the contracted five-attempt/24-hour
+recovery boundary and remote abandonment/expiry, without bypassing continuity or blocking privacy
 commands, withdrawal, deletion or pending erasure.
 
 SecondContext replays the accepted replacement rather than a rejected model draft.
@@ -398,7 +403,7 @@ their documented ambiguous-provider-call limitation.
 Relevant deterministic local exchanges may use the same scoped finalization lane.
 Only prepared, conversation-eligible user text and reply text are eligible. Raw
 birth input, onboarding, profile displays, credentials and temporary birth candidates
-stay local. Define the allowlist and source links before enabling local-turn capture;
+stay local. Implement the contracted allowlist and source links before local capture;
 do not forward every command or raw inbound envelope. Recheck consent at remote
 work/delivery boundaries. Withdrawal cancels new generation/finalization work while
 required erasure work survives. Reacceptance does not revive canceled payloads.
@@ -423,8 +428,10 @@ any later derivative history needs provenance and deletion propagation first.
 
 All new turn records, pending work and replay selections respect current ownership,
 linked revisions and deletion fences. Pending erasure suppresses stale history before
-classification as well as generation. Review the disclosure for the actual additional
-processing; version it and require fresh acceptance if disclosed data use changes.
+classification as well as generation. The OCH1 disclosure review requires a new
+policy version and fresh acceptance
+for replay/local capture, and disclosure of Decisions processing before observation.
+Publish that actual copy/configuration with the runtime slice, not this contract slice.
 
 ### Coordinated delivery
 

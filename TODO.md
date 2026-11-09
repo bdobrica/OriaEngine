@@ -32,18 +32,22 @@ Implement [PLAN section 6.3](PLAN.md#63-planned-conversation-continuity-and-open
 with SecondContext's companion
 [CH1–CH7 checklist](https://github.com/bdobrica/SecondContext/blob/main/TODO.md#current-priority--openai-compatible-conversation-history)
 (`../SecondContext/PLAN.md` contains its detailed local execution plan).
-All items below are pending. This is current MVP continuity work, not a claim that
+OCH1 is complete as a contract/schema slice; OCH2–OCH5 remain pending.
+See the accepted [consumer contract](contracts/second-context/conversation-history-v1.md)
+and [ADR 0003](docs/adr/0003-accepted-conversation-history.md).
+This is current MVP continuity work, not a claim that
 session reuse or existing memory tests prove dialogue continuity.
 
 ### OCH1 — Agree the additive consumer contract (depends on CH1)
 
-- [ ] Publish the consumer contract and any necessary new ADR; preserve existing
+- [x] Publish the consumer contract and any necessary new ADR; preserve existing
   consent, service subjects, linked-context and calculation contracts.
-- [ ] Specify capability discovery, managed-history headers, stable turn IDs,
+- [x] Specify capability discovery, managed-history headers, stable turn IDs,
   generated versus accepted replies, exact finalize acknowledgements and conflicts.
-- [ ] Specify local-turn eligibility, source references, replay visibility after
+- [x] Specify local-turn eligibility, source references, replay visibility after
   delivery failure, retention and cancellation/reacceptance semantics.
-- [ ] Review disclosure changes; version actual expanded processing before rollout.
+- [x] Review disclosure changes; require a new policy version and fresh acceptance
+  before rollout (actual copy/configuration belongs to OCH3/OCH5).
 
 ### OCH2 — Capability-gated adapter (depends on CH2/CH3 and OCH1)
 
@@ -62,6 +66,8 @@ session reuse or existing memory tests prove dialogue continuity.
   turns; resolve pending work before later generation and define bounded failure recovery.
 - [ ] Include allowlisted prepared local exchanges; exclude onboarding, profile
   displays, raw birth fields, secrets and private temporary clarification inputs.
+- [ ] Publish the new replay/local-exchange disclosure and fresh-consent requirement
+  before feature enablement; include Decisions processing before observation mode.
 - [ ] Recheck consent; cancel disallowed late writes and preserve required erasure
   after withdrawal, disablement and deletion. Never resurrect canceled work.
 - [ ] Preserve source-linked correction/erasure, current-fact recalculation and

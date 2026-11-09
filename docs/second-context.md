@@ -103,3 +103,10 @@ service authentication and disclosure 2026-11-08.5. The owning-service contract
 adds only explicit knowledge upsert/query/delete/capabilities routes and optional
 `knowledge_refs` on responses. Legacy response, fixed-memory and purge behavior
 remain compatible. Selective cleanup retries after withdrawal/disablement.
+
+## Accepted conversation-history work (not enabled)
+
+The [history consumer contract](../contracts/second-context/conversation-history-v1.md)
+records OCH1 requirements for replay, prepared local exchanges, accepted replies and
+delivery, including a new disclosure version and fresh acceptance before rollout.
+The current runtime and policy version are unchanged; OCH2/OCH3 implement this next.

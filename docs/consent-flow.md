@@ -98,3 +98,10 @@ reject unsupported ownership/chat contexts, check acknowledgement and keyboards,
 and verify privacy-safe logging and polling resource cleanup.
 
 Run `make verify`. See the [manual consent smoke test](telegram.md) for live validation.
+
+## Accepted conversation-history work (not enabled)
+
+The [history consumer contract](../contracts/second-context/conversation-history-v1.md)
+records OCH1 requirements for replay, prepared local exchanges, accepted replies and
+delivery, including a new disclosure version and fresh acceptance before rollout.
+The current runtime and policy version are unchanged; OCH2/OCH3 implement this next.
