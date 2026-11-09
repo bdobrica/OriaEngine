@@ -338,6 +338,113 @@ Oria-only rollout. Remaining private Telegram and broader MVP validation belong 
 
 ---
 
+## 6.3 Planned conversation continuity and OpenAI compatibility
+
+Status: planned, not implemented. Stable SecondContext sessions currently identify
+stored exchanges but do not replay earlier dialogue into model requests. Memory
+recall alone does not establish multi-turn continuity. This work is part of the
+remaining MVP path; track execution in [the current checklist](TODO.md#current-priority--conversation-history).
+The companion owner plan is SecondContext's `PLAN.md`; its tracked
+[CH1–CH7 checklist](https://github.com/bdobrica/SecondContext/blob/main/TODO.md#current-priority--openai-compatible-conversation-history)
+defines the provider-side dependencies. Sibling checkout: `../SecondContext/`.
+
+### Ownership and intended contract
+
+SecondContext owns ordered conversation storage, prompt assembly, history selection
+and OpenAI Decisions calls. Oria owns consent, input preparation, current calculated
+facts, canonical records, output validation and Telegram delivery. No shared tables,
+cross-repository implementation imports or new authority from classifier output.
+Before implementation, accept new ADRs where required and publish an additive,
+versioned `conversation-history-1` capability and consumer contract. The following
+names are proposed; they are not live API promises:
+
+- Standard clients use `/v1/chat/completions` with client-supplied `messages`, or
+  the existing `/v1/responses` subset. No custom lifecycle call is required. The
+  default does not replay stored dialogue or infer a session from user identity.
+- Managed clients opt in using `X-SecondContext-Session`,
+  `X-SecondContext-History: off|recent|adaptive`, `X-SecondContext-Turn` and
+  `X-SecondContext-Acceptance: generated|explicit`. Existing session metadata
+  remains compatible; conflicting selectors fail. Oria uses explicit acceptance.
+- `POST /v1/context/capabilities` advertises the contract, modes and limits.
+  `POST /v1/context/turns/finalize` accepts the application-approved reply, or a
+  prepared local exchange without generation. Both require scoped authentication
+  and an explicitly reviewed service-route allowlist extension in SecondContext.
+- Session and turn identity, immutable request binding, draft/accepted state,
+  chronological sequence, exact acknowledgements and conflict handling belong in
+  the contract. Identical retries converge; conflicting ID reuse fails. A stable
+  turn ID does not promise exactly-once upstream model execution.
+
+Oria keeps `/v1/responses` unless a demonstrated consumer need justifies switching;
+Chat Completions support serves ordinary clients without forcing an Oria migration.
+OpenAI-compatible clients supply their own transcript; do not mix it implicitly
+with server-managed history. Memory/knowledge controls remain independent of history.
+
+### Accepted replies and durable delivery
+
+Derive a stable turn ID from the persisted inbound event. Generate a pending draft,
+validate it, then commit the accepted reply and encrypted finalization work together
+in Oria. A post-commit worker finalizes that exact reply remotely before delivery;
+Telegram delivery remains tracked independently. Resolve pending finalization and
+delivery before generating a later turn. Bound retries and define the terminal
+failure/recovery behavior without silently bypassing continuity or blocking privacy
+commands, withdrawal, deletion or pending erasure.
+
+SecondContext replays the accepted replacement rather than a rejected model draft.
+Application acceptance is not confirmation that Telegram displayed a message.
+Known delivery failure and ambiguous delivery remain distinct; never claim
+exactly-once Telegram delivery. Existing pre-commit generation retries also retain
+their documented ambiguous-provider-call limitation.
+
+Relevant deterministic local exchanges may use the same scoped finalization lane.
+Only prepared, conversation-eligible user text and reply text are eligible. Raw
+birth input, onboarding, profile displays, credentials and temporary birth candidates
+stay local. Define the allowlist and source links before enabling local-turn capture;
+do not forward every command or raw inbound envelope. Recheck consent at remote
+work/delivery boundaries. Withdrawal cancels new generation/finalization work while
+required erasure work survives. Reacceptance does not revive canceled payloads.
+
+### History, selection and lifecycle
+
+Start with bounded recent accepted turns (initial evaluation candidate: eight
+complete exchanges, also constrained by a prompt budget). Preserve roles, ordering,
+current instructions/facts and output reservation. Historical readings cannot
+provide current calculations. Existing retained drafts are not automatically
+backfilled as accepted conversation. Ordinary conversational corrections append
+turns; explicit forgetting follows the source-linked erasure lifecycle.
+
+SecondContext adds OpenAI Decisions in observation mode first, while generation
+continues to use recent history. Evaluate dependence on recent dialogue separately
+from references to older discussion. Only enable adaptive selection after labeled
+synthetic evaluations show preserved continuity and useful cost/latency results.
+Uncertainty, refusal, invalid output or provider failure falls back to bounded
+recent history. Oria never needs a Decisions credential or provider-specific schema.
+Older-session recall, summarization and transcript-to-memory extraction are deferred;
+any later derivative history needs provenance and deletion propagation first.
+
+All new turn records, pending work and replay selections respect current ownership,
+linked revisions and deletion fences. Pending erasure suppresses stale history before
+classification as well as generation. Review the disclosure for the actual additional
+processing; version it and require fresh acceptance if disclosed data use changes.
+
+### Coordinated delivery
+
+Sequence: OCH1/CH1 contract agreement → CH2 OpenAI compatibility and CH3 history
+lifecycle → OCH2 adapter and OCH3 durable acceptance → OCH4 baseline replay checks.
+CH4 Decisions observation and CH5 cache measurement follow the working baseline;
+CH6 adaptive selection and optional same-session older recall remain gated by
+evaluation. OCH5/CH7 coordinate publication, capability checks and rollout.
+
+Run focused consumer tests first, then `make verify` and provider compatibility
+checks. Use synthetic transcripts to inspect exact outbound model context, including
+follow-ups, corrections, replaced drafts, restart/retry, failed delivery, concurrent
+turns, withdrawal, selective erasure and full deletion. Store validation evidence in
+`docs/evidence/`; model quality and paid provider checks remain separate from CI.
+Publish versioned digest-pinned images before rollout, restrict operations to
+`oria-live-test`, keep disclosure versions consistent in ingress/workers, and leave
+SecondContext's separate external `KNOWLEDGE_ENABLED` integration disabled.
+Roll out recent history first; adaptive selection has an independent rollback to
+recent mode, and disabling generation/history never disables erasure recovery.
+
 ## 7. Architecture
 
 ```mermaid
@@ -810,6 +917,9 @@ Interpretation belongs in the conversational layer and remains bounded by policy
 ## 17. SecondContext integration
 
 SecondContext provides the persistent context layer for conversations.
+
+Conversation transcript replay is planned in [section 6.3](#63-planned-conversation-continuity-and-openai-compatibility);
+the existing stable session mapping and semantic recall do not yet implement it.
 
 OriaEngine should implement a small `ContextProvider` abstraction so SecondContext is an adapter rather than a hard-coded dependency throughout the application.
 

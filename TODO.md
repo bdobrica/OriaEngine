@@ -26,6 +26,69 @@ live validation and backup/restore still belong to Stage 25.
 
 The stages are intentionally ordered so each stage leaves the repository in a testable state and provides the foundation required by the next stage. Avoid implementing post-MVP features until the MVP completion gate at the end of this document passes.
 
+## Current priority — conversation history
+
+Implement [PLAN section 6.3](PLAN.md#63-planned-conversation-continuity-and-openai-compatibility)
+with SecondContext's companion
+[CH1–CH7 checklist](https://github.com/bdobrica/SecondContext/blob/main/TODO.md#current-priority--openai-compatible-conversation-history)
+(`../SecondContext/PLAN.md` contains its detailed local execution plan).
+All items below are pending. This is current MVP continuity work, not a claim that
+session reuse or existing memory tests prove dialogue continuity.
+
+### OCH1 — Agree the additive consumer contract (depends on CH1)
+
+- [ ] Publish the consumer contract and any necessary new ADR; preserve existing
+  consent, service subjects, linked-context and calculation contracts.
+- [ ] Specify capability discovery, managed-history headers, stable turn IDs,
+  generated versus accepted replies, exact finalize acknowledgements and conflicts.
+- [ ] Specify local-turn eligibility, source references, replay visibility after
+  delivery failure, retention and cancellation/reacceptance semantics.
+- [ ] Review disclosure changes; version actual expanded processing before rollout.
+
+### OCH2 — Capability-gated adapter (depends on CH2/CH3 and OCH1)
+
+- [ ] Add typed capability/finalize DTOs and bounded HTTP calls; verify exact owner,
+  session, turn and response identities without forwarding arbitrary metadata.
+- [ ] Opt into recent history and explicit acceptance using the persisted ingress
+  event ID; preserve the existing `/v1/responses` consumer path and legacy default.
+- [ ] Reject unsupported capability/configuration explicitly; never infer support
+  from health or silently claim continuity against an older provider.
+
+### OCH3 — Durable accepted-turn and delivery workflow (depends on OCH2)
+
+- [ ] Commit validated reply/replacement plus encrypted finalization work atomically;
+  finalize post-commit, then deliver the saved reply with independent delivery state.
+- [ ] Recover after crashes and lost acknowledgements without duplicate accepted
+  turns; resolve pending work before later generation and define bounded failure recovery.
+- [ ] Include allowlisted prepared local exchanges; exclude onboarding, profile
+  displays, raw birth fields, secrets and private temporary clarification inputs.
+- [ ] Recheck consent; cancel disallowed late writes and preserve required erasure
+  after withdrawal, disablement and deletion. Never resurrect canceled work.
+- [ ] Preserve source-linked correction/erasure, current-fact recalculation and
+  account isolation across replay, accepted replacements and local exchanges.
+
+### OCH4 — Prove conversation continuity (depends on OCH3 and CH3)
+
+- [ ] Assert exact model inputs for short follow-ups, references to options,
+  corrections, local questions/answers, topic changes and unrelated conversations.
+- [ ] Cover draft replacement, duplicate requests, restart, ordering/concurrency,
+  finalization timeout, Telegram failure/ambiguity and interrupted recovery.
+- [ ] Cover withdrawal/reacceptance, stale source revisions, pending selective
+  erasure, full purge and delayed retries; old chart text never supplies current facts.
+- [ ] Run focused tests then `make verify`; record synthetic cross-repository
+  validation in `docs/evidence/`, distinct from optional live-provider review.
+
+### OCH5 — Coordinate releases and adaptive enablement (depends on OCH4 and CH7)
+
+- [ ] Verify published compatible images and capability before enabling recent
+  history; deploy consistent disclosure versions to ingress and workers.
+- [ ] Validate private Telegram continuity and deletion in `oria-live-test`;
+  preserve unrelated projects and keep external `KNOWLEDGE_ENABLED` disabled.
+- [ ] Enable adaptive mode only after CH4–CH6 evaluation; keep Decisions credentials,
+  routing, cache policy and metrics inside SecondContext.
+- [ ] Exercise rollback from adaptive to recent and from history to legacy behavior
+  without abandoning accepted-turn recovery, delivery state or erasure work.
+
 ## Current priority — compatibility conversations
 
 [PLAN section 6.1](PLAN.md#61-voluntary-sharing-and-compatibility) makes voluntary
@@ -1124,7 +1187,10 @@ review turns are available; the following runtime and live validation work remai
 
 - [x] Distinguish supported narrative/event time mentions from transit/date requests with typed roles, preserving explicit requests and clarification. See [natural dates](docs/current-time.md) for English grammar limits.
 - [ ] Review benign narrative mentions caught by lexical guards; test request-versus-mention handling without category-wide exemptions or loss of substantive boundaries.
-- [ ] Verify multi-turn corrections, reading continuity and natural pacing through the owning SecondContext contract; do not assume stable sessions imply transcript replay or current transit facts.
+
+Multi-turn corrections, reading continuity and natural pacing are tracked in the
+[current conversation-history work](#current-priority--conversation-history), rather
+than deferred to this post-MVP backlog.
 
 ## Product learning
 
