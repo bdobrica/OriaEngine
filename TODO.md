@@ -32,7 +32,9 @@ Implement [PLAN section 6.3](PLAN.md#63-planned-conversation-continuity-and-open
 with SecondContext's companion
 [CH1–CH7 checklist](https://github.com/bdobrica/SecondContext/blob/main/TODO.md#current-priority--openai-compatible-conversation-history)
 (`../SecondContext/PLAN.md` contains its detailed local execution plan).
-OCH1 is complete as a contract/schema slice; OCH2–OCH5 remain pending.
+OCH1 contracts and OCH2 adapter are complete; OCH3–OCH5 remain pending.
+The adapter is not connected to live conversation processing until OCH3's durable
+workflow and new disclosure are implemented. See [adapter evidence](docs/evidence/conversation-history-adapter.md).
 See the accepted [consumer contract](contracts/second-context/conversation-history-v1.md)
 and [ADR 0003](docs/adr/0003-accepted-conversation-history.md).
 This is current MVP continuity work, not a claim that
@@ -51,11 +53,11 @@ session reuse or existing memory tests prove dialogue continuity.
 
 ### OCH2 — Capability-gated adapter (depends on CH2/CH3 and OCH1)
 
-- [ ] Add typed capability/finalize DTOs and bounded HTTP calls; verify exact owner,
+- [x] Add typed capability/finalize DTOs and bounded HTTP calls; verify exact owner,
   session, turn and response identities without forwarding arbitrary metadata.
-- [ ] Opt into recent history and explicit acceptance using the persisted ingress
+- [x] Opt into recent history and explicit acceptance using the persisted ingress
   event ID; preserve the existing `/v1/responses` consumer path and legacy default.
-- [ ] Reject unsupported capability/configuration explicitly; never infer support
+- [x] Reject unsupported capability/configuration explicitly; never infer support
   from health or silently claim continuity against an older provider.
 
 ### OCH3 — Durable accepted-turn and delivery workflow (depends on OCH2)

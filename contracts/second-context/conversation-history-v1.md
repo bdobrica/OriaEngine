@@ -1,6 +1,7 @@
 # Oria / SecondContext conversation history — v1
 
-Status: accepted consumer contract, 2026-11-09; **runtime integration pending**.
+Status: accepted consumer contract, 2026-11-09; **OCH2 adapter implemented;
+OCH3 worker integration and rollout pending**.
 [ADR 0003](../../docs/adr/0003-accepted-conversation-history.md) records the decision.
 This extends [the existing adapter contract](v1.md), not astrology, canonical records,
 linked-context ownership or credential authority.
@@ -173,7 +174,8 @@ statements in consent/help/privacy, not recurring conversational disclaimers.
 ## Validation and remaining delivery
 
 Schema fixture tests and snapshot comparison establish the agreed wire shapes.
-OCH2 adds DTO/HTTP/receipt validation, OCH3 durable transactions/recovery and OCH4
+OCH2 implements [DTO/HTTP/receipt validation](../../docs/conversation-history-adapter.md),
+OCH3 adds durable transactions/recovery and OCH4
 real integration replay checks, including incorrect receipt identities, local input
 exclusions, replaced drafts, lost acknowledgements, terminal delivery failure,
 withdrawal/reacceptance, missing source links and selective/full deletion races.

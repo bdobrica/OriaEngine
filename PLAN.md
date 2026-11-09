@@ -340,12 +340,13 @@ Oria-only rollout. Remaining private Telegram and broader MVP validation belong 
 
 ## 6.3 Planned conversation continuity and OpenAI compatibility
 
-Status: OCH1/CH1 contracts accepted; runtime OCH2–OCH5 pending.
+Status: OCH1/CH1 contracts accepted, SecondContext CH2/CH3 implemented, and OCH2
+consumer adapter implemented. OCH3–OCH5 workflow, validation and rollout remain pending.
 [ADR 0003](docs/adr/0003-accepted-conversation-history.md) and the
 [consumer contract](contracts/second-context/conversation-history-v1.md) freeze wire
-shapes, local eligibility, recovery and disclosure requirements. No runtime change
-is enabled by this slice. Stable SecondContext sessions currently identify
-stored exchanges but do not replay earlier dialogue into model requests. Memory
+shapes, local eligibility, recovery and disclosure requirements. The adapter exposes
+the managed protocol without enabling it in the conversation worker. Oria's existing
+legacy path still identifies stored exchanges without opting into replay. Memory
 recall alone does not establish multi-turn continuity. This work is part of the
 remaining MVP path; track execution in [the current checklist](TODO.md#current-priority--conversation-history).
 The companion owner plan is SecondContext's `PLAN.md`; its tracked
@@ -359,8 +360,9 @@ and OpenAI Decisions calls. Oria owns consent, input preparation, current calcul
 facts, canonical records, output validation and Telegram delivery. No shared tables,
 cross-repository implementation imports or new authority from classifier output.
 OCH1/CH1 accepted new ADRs and published the additive, versioned
-`conversation-history-1` contract/schema. The following names are frozen targets;
-they are not live capabilities until CH2/CH3. The contract takes precedence here:
+`conversation-history-1` contract/schema. CH2/CH3 now implement these provider
+capabilities, disabled by default; deployed support must still be verified.
+The contract takes precedence here:
 
 - Standard clients use `/v1/chat/completions` with client-supplied `messages`, or
   the existing `/v1/responses` subset. No custom lifecycle call is required. The
@@ -383,6 +385,17 @@ Oria keeps `/v1/responses` unless a demonstrated consumer need justifies switchi
 Chat Completions support serves ordinary clients without forcing an Oria migration.
 OpenAI-compatible clients supply their own transcript; do not mix it implicitly
 with server-managed history. Memory/knowledge controls remain independent of history.
+
+OCH2 provides typed `PreparedHistoryTurn` and `HistoryDraft` values, exact scoped
+capability/receipt validation and bounded HTTP calls on the existing Responses path.
+The prepared DTO fixes recent/explicit mode and requires a caller-supplied persisted
+ingress UUID; it can be encrypted and restored without rebuilding time/facts.
+Capability caching is per subject/provider instance, limited to 128 entries and
+60 seconds, with explicit refresh/invalidation. Finalization remains callable for
+recovery without new-capture readiness. See [adapter reference](docs/conversation-history-adapter.md).
+OCH3 must connect these methods only after durable preparation, acceptance/delivery
+state, consent/source checks and the new disclosure exist. No enablement setting or
+worker behavior changes in OCH2.
 
 ### Accepted replies and durable delivery
 
@@ -431,12 +444,12 @@ linked revisions and deletion fences. Pending erasure suppresses stale history b
 classification as well as generation. The OCH1 disclosure review requires a new
 policy version and fresh acceptance
 for replay/local capture, and disclosure of Decisions processing before observation.
-Publish that actual copy/configuration with the runtime slice, not this contract slice.
+Publish that actual copy/configuration with OCH3 before enabling managed processing.
 
 ### Coordinated delivery
 
 Sequence: OCH1/CH1 contract agreement → CH2 OpenAI compatibility and CH3 history
-lifecycle → OCH2 adapter and OCH3 durable acceptance → OCH4 baseline replay checks.
+lifecycle → OCH2 adapter (complete) → OCH3 durable acceptance (next) → OCH4 baseline replay checks.
 CH4 Decisions observation and CH5 cache measurement follow the working baseline;
 CH6 adaptive selection and optional same-session older recall remain gated by
 evaluation. OCH5/CH7 coordinate publication, capability checks and rollout.
