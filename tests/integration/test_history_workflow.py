@@ -110,7 +110,7 @@ class HistoryService(ProjectionService):
 
 
 @pytest.fixture
-async def managed(conversation):
+async def managed(conversation, request):
     ingress, worker, astrology, _ = conversation
     remote = HistoryService()
     p = provider(remote)
@@ -122,10 +122,11 @@ async def managed(conversation):
 
     user_id = await owner(worker.database)
     # Seed acknowledged current canonical sources through the public HTTP projection lane.
-    async with worker.database.transaction() as session:
-        linked = LinkedContext(session, worker.encryption, worker.flow.policy_version, p)
-        await linked.stage(user_id)
-    await recover_projections(worker.database, worker.encryption, worker.flow.policy_version, p)
+    if getattr(request, "param", None) != "unprojected":
+        async with worker.database.transaction() as session:
+            linked = LinkedContext(session, worker.encryption, worker.flow.policy_version, p)
+            await linked.stage(user_id)
+        await recover_projections(worker.database, worker.encryption, worker.flow.policy_version, p)
     try:
         yield ingress, worker, remote, user_id
     finally:
@@ -135,6 +136,52 @@ async def managed(conversation):
 async def work_row(worker, event_id):
     async with worker.database.transaction() as session:
         return await session.get(ConversationHistoryWork, event_id)
+
+
+@pytest.mark.parametrize("managed", ["unprojected"], indirect=True)
+async def test_first_reading_projects_committed_profile_before_generation(managed):
+    ingress, worker, remote, user_id = managed
+    from oria_engine.db.models import ContextProjectionWork
+
+    original = worker.history_provider.project
+
+    async def project(request):
+        async with worker.database.transaction() as session:
+            rows = (await session.scalars(select(ContextProjectionWork))).all()
+            assert rows and all(row.pending for row in rows)
+        assert not remote.generated
+        return await original(request)
+
+    event_id = await ingress.accept(message(text="How is my day going today?"))
+    with patch.object(worker.history_provider, "project", side_effect=project):
+        await worker.process(event_id)
+    assert (await row(worker, event_id)).status == "sent"
+    assert len(remote.generated) == 1
+    assert remote.generated[0]["knowledge_refs"]
+    assert (await work_row(worker, event_id)).receipt
+    assert worker.client.send_text.call_args.args[1] == remote.text
+
+
+@pytest.mark.parametrize("managed", ["unprojected"], indirect=True)
+async def test_first_reading_keeps_local_fallback_when_projection_unavailable(managed):
+    ingress, worker, remote, _ = managed
+    remote.fail = True
+    event_id = await ingress.accept(message(text="today"))
+    await worker.process(event_id)
+    assert (await row(worker, event_id)).status == "sent"
+    assert not remote.generated
+    assert await work_row(worker, event_id) is None
+    assert "Transit snapshot:" in worker.client.send_text.call_args.args[1]
+    remote.fail = False
+    from oria_engine.db.models import ContextProjectionWork
+
+    async with worker.database.transaction() as session:
+        for projection in await session.scalars(select(ContextProjectionWork)):
+            projection.next_attempt_at = datetime.now(UTC) - timedelta(seconds=1)
+    event_id = await ingress.accept(message(text="today"))
+    await worker.process(event_id)
+    assert (await row(worker, event_id)).status == "sent"
+    assert len(remote.generated) == 1
 
 
 async def cleanup(worker):
@@ -351,6 +398,7 @@ async def test_pending_sources_leave_local_reading_uncaptured(managed):
             select(ContextProjectionWork).where(ContextProjectionWork.user_id == user_id)
         ):
             projection.pending = True
+            projection.next_attempt_at = datetime.now(UTC) + timedelta(minutes=5)
     event_id = await ingress.accept(message(text="Explain my natal chart"))
     await worker.process(event_id)
     assert (await row(worker, event_id)).status == "sent"

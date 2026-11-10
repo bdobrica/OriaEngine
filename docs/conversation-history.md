@@ -24,15 +24,22 @@ active replies receive canonical natal facts. History readiness is checked throu
 `conversation-history-1`; source-bearing work also requires `linked-context-1`.
 Health checks cannot substitute for either capability. Unsupported history never
 silently falls back to legacy generation. OCH4 verifies the actual gateway with
-synthetic model replies; deployment and live-provider review remain OCH5 work.
+synthetic model replies. CH7/OCH5 subsequently deployed recent history with live
+provider continuity/erasure and capture rollback checks; private Telegram review
+found continuity failures; a retest is required. See [release evidence](evidence/conversation-history-release.md).
 Changing examples/default disclosure does not update a running site.
 
-Source-dependent capture waits for acknowledged current projections. A first active
-turn may stage the own-birth projection and return a local, uncaptured calculated
-reading while post-commit projection recovery delivers it. Pending/stale sources
-or selective erasure suppress remote generation/replay immediately. A general
-follow-up without usable sources receives the existing temporary-unavailability
-reply; it does not claim to have been remembered.
+Source-dependent capture waits for acknowledged current projections. Before a new
+ordinary managed turn, the worker stages already committed canonical records and
+attempts bounded post-commit delivery. This makes a freshly confirmed or edited
+profile available to its first reading. Private clarification, controls, onboarding
+and frozen retries skip this preflight. Current-message learning remains in the
+original domain transaction; it is never projected before commit.
+
+Pending/stale sources or selective erasure still suppress remote generation/replay.
+If delivery is unavailable, calculated readings keep their local, uncaptured
+fallback; a general follow-up receives the existing temporary-unavailability reply.
+Neither claims to have been remembered.
 
 ## Transactions and retries
 

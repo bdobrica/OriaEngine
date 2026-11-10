@@ -1,7 +1,8 @@
 # Oria / SecondContext conversation history — v1
 
 Status: accepted consumer contract, 2026-11-09; **OCH2/OCH3 adapter and worker implemented;
-OCH4 cross-service validation implemented; rollout pending**.
+OCH4 cross-service validation implemented; recent history deployed under CH7/OCH5,
+private Telegram conversation retest required**.
 [ADR 0003](../../docs/adr/0003-accepted-conversation-history.md) records the decision.
 This extends [the existing adapter contract](v1.md), not astrology, canonical records,
 linked-context ownership or credential authority.

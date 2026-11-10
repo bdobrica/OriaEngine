@@ -342,8 +342,10 @@ Oria-only rollout. Remaining private Telegram and broader MVP validation belong 
 
 Status: OCH1/CH1 contracts accepted, SecondContext CH2/CH3 implemented, and OCH2
 consumer adapter, OCH3 durable workflow and OCH4 cross-service validation implemented.
-OCH5 release controls, smoke tooling and synthetic rollback checks are implemented;
-publication and live rollout remain pending under the
+CH7/OCH5 recent history is published and enabled in `oria-live-test`, with live
+provider continuity/erasure and capture rollback verified. Private Telegram review
+confirmed policy/deletion but failed reading continuity. The Oria 0.2.2 source-readiness
+and prompt-budget correction is verified locally; publish/deploy it and retest. See the
 [coordinated checklist](docs/conversation-history-release.md). The [continuity gate](docs/evidence/conversation-history-continuity.md)
 uses the actual provider with synthetic model replies; live review remains separate.
 [ADR 0003](docs/adr/0003-accepted-conversation-history.md) and the
@@ -459,10 +461,13 @@ lifecycle → OCH2 adapter (complete) → OCH3 durable acceptance (complete) →
 OCH4 baseline replay checks (complete).
 CH4 Decisions observation and CH5 cache measurement follow the working baseline;
 CH6 adaptive selection and optional same-session older recall remain gated by
-evaluation. OCH5/CH7 release preparation targets Oria/MCP 0.2.1 and SecondContext
-0.2.2, with independent provider/consumer switches and a recoverable synthetic
-release check. Publication, exact digest verification, live provider/Telegram
-validation and a live rollback drill remain operational gates; see
+evaluation. OCH5/CH7 published and deployed Oria/MCP 0.2.1 and SecondContext
+0.2.2, with independent provider/consumer switches, verified immutable digests,
+consistent fresh-consent disclosure, live model continuity/erasure and a provider
+capture rollback drill. Private Telegram review confirmed policy/deletion but exposed
+a first-reading history gap and terminal prompt-budget rejection. Deploy the verified
+Oria 0.2.2 correction and repeat the
+conversation review; adaptive work is separate. See
 [release evidence](docs/evidence/conversation-history-release.md).
 
 Run focused consumer tests first, then `make verify` and provider compatibility

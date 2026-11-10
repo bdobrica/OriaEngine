@@ -1,6 +1,6 @@
 # Coordinated recent-history release
 
-CH7/OCH5 releases the recent-history baseline. Candidate versions are SecondContext
+CH7/OCH5 releases the recent-history baseline. Released versions are SecondContext
 **0.2.2**, Oria application **0.2.1** and astrology MCP **0.2.1**. Version files are
 publication inputs, not proof that registry images exist. This checklist does not
 automatically deploy. Record publication, selected digests and live results in
@@ -38,7 +38,7 @@ checked before callers capture history:
 | `SECOND_CONTEXT_PROVIDER_HISTORY_ENABLED` | Bundled SecondContext `HISTORY_ENABLED` | `false` |
 | `SECOND_CONTEXT_HISTORY_ENABLED` | Oria gateway and worker | `false` |
 | `SECOND_CONTEXT_HISTORY_RECENT_EXCHANGES` | Bundled provider | `8` |
-| `SECOND_CONTEXT_HISTORY_PROMPT_INPUT_TOKENS` | Bundled provider | `32768` |
+| `SECOND_CONTEXT_HISTORY_PROMPT_INPUT_TOKENS` | Bundled provider | `65536` |
 | `SECOND_CONTEXT_HISTORY_RESERVED_OUTPUT_TOKENS` | Bundled provider | `4096` |
 
 Choose provider budgets within the configured model's supported context/output
@@ -138,3 +138,12 @@ storage, migration versions, the new disclosure and existing erasure workers.
 See [durable workflow](conversation-history.md) and the
 [release evidence](evidence/conversation-history-release.md) for executed checks and
 remaining operational gates. Synthetic rollback checks are not a live rollback drill.
+
+The bundled provider input budget is 65,536 conservative units (serialized UTF-8
+bytes plus envelope allowance), with 4,096 output tokens reserved. This accommodates
+full current natal/transit facts and recent dialogue; the former 32,768 default
+rejected a live transit request before generation. Verify the sum against the
+configured model before deployment. GPT-4.1 mini has a documented 1,047,576-token
+context window ([OpenAI model documentation](https://developers.openai.com/api/docs/models/gpt-4.1-mini)).
+The standalone provider default remains unchanged. Budget changes affect the
+provider configuration binding: resolve existing pending turns before switching.

@@ -91,6 +91,7 @@ def gateway_install(tmp_path_factory):
             AUTH_ENABLED="true",
             AUTH_SERVICE_TOKENS=f"oria:={secrets.token_hex(24)}",
             HISTORY_ENABLED="true",
+            HISTORY_PROMPT_INPUT_TOKENS="65536",
             KNOWLEDGE_ENABLED="false",
             HTTP_RATE_LIMIT_REQUESTS_PER_MINUTE="10000",
             LOG_LEVEL="error",
@@ -220,7 +221,7 @@ class Gateway:
 
 
 @pytest.fixture
-async def real_history(conversation, gateway_install):
+async def real_history(conversation, gateway_install, request):
     ingress, worker, astrology, _ = conversation
     binary, base_env = gateway_install
     model, wire = ModelRecorder(), WireRecorder()
@@ -253,14 +254,15 @@ async def real_history(conversation, gateway_install):
             ingress.history_enabled = True
             await confirm(worker.flow)
             user_id = await owner(worker.database)
-            async with worker.database.transaction() as session:
-                linked = LinkedContext(
-                    session, worker.encryption, worker.flow.policy_version, provider
+            if getattr(request, "param", None) != "unprojected":
+                async with worker.database.transaction() as session:
+                    linked = LinkedContext(
+                        session, worker.encryption, worker.flow.policy_version, provider
+                    )
+                    await linked.stage(user_id)
+                await recover_projections(
+                    worker.database, worker.encryption, worker.flow.policy_version, provider
                 )
-                await linked.stage(user_id)
-            await recover_projections(
-                worker.database, worker.encryption, worker.flow.policy_version, provider
-            )
             # Capability is necessary, but subsequent tests prove generation/finalization too.
             await provider.history_capabilities(user_id)
             yield ingress, worker, model, wire, gateway, user_id

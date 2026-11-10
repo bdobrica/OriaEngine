@@ -12,7 +12,7 @@ from sqlalchemy import select
 from oria_engine.context.contracts import ContextReply, ContextScope, ConversationRequest
 from oria_engine.context.history import AcceptGenerated, HistoryFailure, HistoryUnsupported
 from oria_engine.context.history_workflow import capture_local
-from oria_engine.context.projections import LinkedContext, recover_projections
+from oria_engine.context.projections import recover_projections
 from oria_engine.db.birth_profiles import BirthProfileRepository
 from oria_engine.db.models import ContextProjectionWork, DeletionJob, InboundEvent
 from oria_engine.domain.channel import DeliveryRejected
@@ -49,6 +49,27 @@ def assert_input(model, exchanges, current):
         )
     expected.append({"role": "user", "content": current})
     assert messages[1:] == expected
+
+
+@pytest.mark.parametrize("real_history", ["unprojected"], indirect=True)
+async def test_first_transit_reading_and_followup_fit_deployment_budget(real_history):
+    _, worker, model, wire, _, _ = real_history
+    await send(real_history, "/timezone Europe/Bucharest", command="timezone")
+    model.reply = "Today's closest contacts suggest making time for a calm conversation."
+    first, reply = await send(real_history, "How is my day going today?")
+    assert model.calls and model.reply in reply and reply.startswith("Snapshot:")
+    assert (await work_row(worker, first)).receipt
+    current = wire.bodies(GENERATE)[-1]["input"]
+    assert_input(model, [], current)
+    model.reply = "By that I mean giving each person time to finish their thoughts."
+    await send(real_history, "What does it mean?")
+    assert_input(model, [(current, reply)], "What does it mean?")
+    await send(real_history, "I'd like to know what today's horoscope brings me.")
+    await send(real_history, "transits on 2026-11-12")
+    assert len(model.calls) == 4
+    assert model.reply in worker.client.send_text.call_args.args[1]
+    largest = max(len(json.dumps(call, ensure_ascii=False).encode()) + 128 for call in model.calls)
+    assert 32768 < largest <= 65536
 
 
 async def test_exact_followups_options_corrections_topic_changes_and_recent_bound(real_history):
@@ -284,20 +305,11 @@ async def test_canonical_correction_fences_retries_and_recalculates_current_fact
     await send(real_history, "Explain my natal chart")
     assert len(model.calls) == 1
     await worker.flow.handle(message(text="/retry_profile"), command="retry_profile")
-    async with worker.database.transaction() as session:
-        linked = LinkedContext(
-            session, worker.encryption, worker.flow.policy_version, worker.history_provider
-        )
-        await linked.stage(user_id)
-        for projection in await linked.repo.rows(user_id):
-            projection.next_attempt_at = datetime.now(UTC) - timedelta(seconds=1)
-    await recover_projections(
-        worker.database, worker.encryption, worker.flow.policy_version, worker.history_provider
-    )
+    # The next ordinary turn must deliver the committed profile revision itself.
+    latest, _ = await send(real_history, "Explain my natal chart")
     with pytest.raises(HistoryFailure) as error:
         await worker.history_provider.finalize_history(old_scope, old_accept)
     assert error.value.code == "session_deleted"
-    latest, _ = await send(real_history, "Explain my natal chart")
     assert (await work_row(worker, latest)).session_id != old_work.session_id
     assert_input(model, [], "Explain my natal chart")
     current = wire.bodies(GENERATE)[-1]

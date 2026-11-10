@@ -18,7 +18,9 @@ from oria_engine.astrology.client import AstrologyUnavailable
 from oria_engine.context.contracts import ContextUnavailable
 from oria_engine.context.history import HistoryFailure, validate_history_receipt
 from oria_engine.context.history_workflow import FreezeHistory, HistoryAttempt
+from oria_engine.context.projections import LinkedContext
 from oria_engine.context.second_context import SecondContextProvider
+from oria_engine.db.astrology_profiles import AstrologyProfileRepository
 from oria_engine.db.conversation_sessions import ConversationSessionRepository
 from oria_engine.db.history import REMOTE_PENDING_LIFETIME, HistoryRepository, stop_history
 from oria_engine.db.knowledge import MemoryProgress
@@ -27,6 +29,7 @@ from oria_engine.db.models import (
     ConversationSession,
     InboundEvent,
     KnowledgeDialogue,
+    OnboardingProgress,
     SocialIdentity,
     TemporalClarification,
     User,
@@ -35,10 +38,11 @@ from oria_engine.db.repositories import ConsentRepository, SocialIdentityReposit
 from oria_engine.db.session import Database
 from oria_engine.domain.channel import ChannelButton, ChannelClient, ChannelMessage
 from oria_engine.domain.consent import ConsentFlow
-from oria_engine.domain.memory import privacy_control
+from oria_engine.domain.memory import NO_REMEMBER, privacy_control
 from oria_engine.observability import correlation_scope, count, measurement, observed
 from oria_engine.privacy.deletion import admission_lock
 from oria_engine.privacy.encryption import ProfileEncryption
+from oria_engine.privacy.messages import private_active_input
 from oria_engine.queue.limits import (
     LIMIT_REPLY,
     SIZE_REPLY,
@@ -429,10 +433,67 @@ class EventWorker:
         )
 
     async def calculate(self, event_id: UUID, user_id: UUID) -> None:
+        await self.prepare_sources(event_id, user_id)
         # A preparation pass rolls back domain changes, commits only the frozen request,
         # then reruns domain work under a fresh lock in the same bounded queue attempt.
         if await self._calculate(event_id, user_id):
             await self._calculate(event_id, user_id)
+
+    async def prepare_sources(self, event_id: UUID, user_id: UUID) -> None:
+        """Deliver already committed profile sources before the first managed reading."""
+        provider = self.history_provider
+        onboarding = self.flow.onboarding
+        if (
+            not self.history_enabled
+            or provider is None
+            or not provider.knowledge_enabled
+            or onboarding is None
+            or onboarding.context is None
+            or not onboarding.context.enabled
+        ):
+            return
+        async with self.database.transaction() as session:
+            event = await self.locked(session, event_id, user_id)
+            if (
+                event is None
+                or event.status in TERMINAL
+                or event.is_control
+                or event.encrypted_reply is not None
+                or event.encrypted_input is None
+                or await session.get(ConversationHistoryWork, event_id) is not None
+                or await session.get(OnboardingProgress, user_id) is not None
+                or await session.get(TemporalClarification, user_id) is not None
+                or await session.get(KnowledgeDialogue, user_id) is not None
+            ):
+                return
+            current = await ConsentRepository(session).current(user_id, self.flow.policy_version)
+            if current is None or current.id != event.admitted_consent_id:
+                return
+            payload = InputPayload.model_validate_json(
+                self.decrypt(event, event.encrypted_input, "input")
+            )
+            if (
+                payload.command is not None
+                or payload.message.callback_data is not None
+                or not payload.message.text.strip()
+                or payload.message.text.startswith("/")
+                or private_active_input(payload.message.text)
+                or NO_REMEMBER.search(payload.message.text)
+                or await AstrologyProfileRepository(
+                    session, policy_version=self.flow.policy_version
+                ).get(user_id)
+                is None
+            ):
+                return
+            await LinkedContext(session, self.encryption, self.flow.policy_version, provider).stage(
+                user_id
+            )
+        # Outbox commits before any remote mutation. Flush rechecks consent and
+        # prioritizes erasure; preparation still requires exact acknowledged sources.
+        async with self.database.transaction() as session:
+            await LinkedContext(session, self.encryption, self.flow.policy_version, provider).flush(
+                user_id
+            )
 
     async def _calculate(self, event_id: UUID, user_id: UUID) -> bool:
         async with self.database.transaction() as session:
