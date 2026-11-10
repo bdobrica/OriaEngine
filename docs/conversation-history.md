@@ -128,3 +128,6 @@ See [workflow evidence](evidence/conversation-history-workflow.md) and the
 [cross-service continuity gate](evidence/conversation-history-continuity.md).
 The latter records actual model inputs and provider lifecycle behavior through
 HTTP. Synthetic replies do not establish live model quality or a deployed release.
+
+See the [CH7/OCH5 recent-history release checklist](conversation-history-release.md) for
+independent capture switches, published-image gates, live continuity checks and rollback.

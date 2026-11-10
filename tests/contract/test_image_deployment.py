@@ -45,6 +45,10 @@ def deployment_env():
         "ORIA_POLICY_VERSION": "2026-11-10.1",
         "SECOND_CONTEXT_KNOWLEDGE_ENABLED": "false",
         "SECOND_CONTEXT_HISTORY_ENABLED": "false",
+        "SECOND_CONTEXT_PROVIDER_HISTORY_ENABLED": "false",
+        "SECOND_CONTEXT_HISTORY_RECENT_EXCHANGES": "8",
+        "SECOND_CONTEXT_HISTORY_PROMPT_INPUT_TOKENS": "32768",
+        "SECOND_CONTEXT_HISTORY_RESERVED_OUTPUT_TOKENS": "4096",
         "SECOND_CONTEXT_BASE_URL": "http://context.example.invalid:8080",
         "SECOND_CONTEXT_BEARER_TOKEN": secrets.token_hex(24),
         "SECOND_CONTEXT_IMAGE": "quay.io/bdobrica/secondcontext-gateway:0.1.1",
@@ -191,6 +195,7 @@ def test_bundled_secondcontext_ownership_and_credentials(deployment_env):
         "oria:=" + deployment_env["SECOND_CONTEXT_BEARER_TOKEN"]
     )
     assert context["environment"]["KNOWLEDGE_ENABLED"] == "false"
+    assert context["environment"]["HISTORY_ENABLED"] == "false"
     assert context["depends_on"]["secondcontext-migrate"]["condition"] == (
         "service_completed_successfully"
     )
@@ -341,3 +346,32 @@ def test_shared_postgres_database_isolation_and_restart(deployment_env):
             assert query(role, role, "SELECT id FROM bootstrap_probe") == "1"
     finally:
         compose("down", "--volumes", "--remove-orphans")
+
+
+@pytest.mark.parametrize("consumer,provider", [("false", "true"), ("true", "false")])
+def test_history_rollout_switches_and_provider_budgets_are_independent(
+    deployment_env, consumer, provider
+):
+    deployment_env.update(
+        SECOND_CONTEXT_HISTORY_ENABLED=consumer,
+        SECOND_CONTEXT_PROVIDER_HISTORY_ENABLED=provider,
+        SECOND_CONTEXT_HISTORY_RECENT_EXCHANGES="6",
+        SECOND_CONTEXT_HISTORY_PROMPT_INPUT_TOKENS="16000",
+        SECOND_CONTEXT_HISTORY_RESERVED_OUTPUT_TOKENS="2048",
+    )
+    result = render(deployment_env, bundled=True)
+    assert result.returncode == 0
+    services = json.loads(result.stdout)["services"]
+    environment = services["secondcontext"]["environment"]
+    assert environment["HISTORY_ENABLED"] == provider
+    assert environment["HISTORY_RECENT_EXCHANGES"] == "6"
+    assert environment["HISTORY_PROMPT_INPUT_TOKENS"] == "16000"
+    assert environment["HISTORY_RESERVED_OUTPUT_TOKENS"] == "2048"
+    assert environment["KNOWLEDGE_ENABLED"] == "false"
+    for name in ("gateway", "worker"):
+        env = services[name]["environment"]
+        assert env["SECOND_CONTEXT_HISTORY_ENABLED"] == consumer
+        assert env["ORIA_POLICY_VERSION"] == "2026-11-10.1"
+    for name, service in services.items():
+        if name != "secondcontext":
+            assert not any(key.startswith("HISTORY_") for key in service.get("environment", {}))

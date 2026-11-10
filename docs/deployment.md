@@ -268,3 +268,6 @@ gate requires no sibling checkout. The gate also starts the full file's PostgreS
 service with synthetic credentials, checks restricted roles and rejected cross-database access, and recreates the container
 to verify retained storage. [Full-stack evidence](evidence/shared-postgres-deployment.md)
 records owning-image migrations, authentication, purge and failure ordering.
+
+See the [CH7/OCH5 recent-history release checklist](conversation-history-release.md) for
+independent capture switches, published-image gates, live continuity checks and rollback.

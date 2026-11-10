@@ -32,7 +32,8 @@ Implement [PLAN section 6.3](PLAN.md#63-planned-conversation-continuity-and-open
 with SecondContext's companion
 [CH1–CH7 checklist](https://github.com/bdobrica/SecondContext/blob/main/TODO.md#current-priority--openai-compatible-conversation-history)
 (`../SecondContext/PLAN.md` contains its detailed local execution plan).
-OCH1–OCH4 are complete; OCH5 remains pending. The optional worker workflow
+OCH1–OCH4 are complete. OCH5 release preparation and synthetic rollback verification
+are implemented; publication and live rollout remain pending. The optional worker workflow
 defaults off and is not deployed. See [workflow evidence](docs/evidence/conversation-history-workflow.md).
 The [OCH4 evidence](docs/evidence/conversation-history-continuity.md) records actual
 cross-service context/lifecycle checks with synthetic model replies.
@@ -89,14 +90,26 @@ session reuse or existing memory tests prove dialogue continuity.
 
 ### OCH5 — Coordinate releases and adaptive enablement (depends on OCH4 and CH7)
 
+[Release checklist](docs/conversation-history-release.md) and
+[execution evidence](docs/evidence/conversation-history-release.md) distinguish
+prepared code from publication/live validation. Candidates: Oria/MCP 0.2.1 and
+SecondContext 0.2.2. No live setting changes are implied.
+
+- [x] Wire independent provider/consumer capture controls and model budgets;
+  keep external knowledge disabled and preserve secret isolation.
+- [x] Provide a synthetic HTTP release check for actual provider continuity,
+  accepted replacement/local replay and erasure, with recoverable private cleanup.
+- [x] Verify capture rollback/re-enable against the real gateway, including
+  committed finalization, canceled drafts, delivery recovery and erasure.
+
 - [ ] Verify published compatible images and capability before enabling recent
   history; deploy consistent disclosure versions to ingress and workers.
 - [ ] Validate private Telegram continuity and deletion in `oria-live-test`;
   preserve unrelated projects and keep external `KNOWLEDGE_ENABLED` disabled.
-- [ ] Enable adaptive mode only after CH4–CH6 evaluation; keep Decisions credentials,
+- [ ] Deferred until CH4–CH6: enable adaptive mode only after evaluation; keep Decisions credentials,
   routing, cache policy and metrics inside SecondContext.
-- [ ] Exercise rollback from adaptive to recent and from history to legacy behavior
-  without abandoning accepted-turn recovery, delivery state or erasure work.
+- [ ] Record a live history-to-legacy rollback drill without abandoning accepted-turn
+  recovery, delivery state or erasure work; adaptive-to-recent remains a CH6 gate.
 
 ## Current priority — compatibility conversations
 

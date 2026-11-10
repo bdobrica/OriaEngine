@@ -342,7 +342,9 @@ Oria-only rollout. Remaining private Telegram and broader MVP validation belong 
 
 Status: OCH1/CH1 contracts accepted, SecondContext CH2/CH3 implemented, and OCH2
 consumer adapter, OCH3 durable workflow and OCH4 cross-service validation implemented.
-OCH5 rollout remains pending. The [continuity gate](docs/evidence/conversation-history-continuity.md)
+OCH5 release controls, smoke tooling and synthetic rollback checks are implemented;
+publication and live rollout remain pending under the
+[coordinated checklist](docs/conversation-history-release.md). The [continuity gate](docs/evidence/conversation-history-continuity.md)
 uses the actual provider with synthetic model replies; live review remains separate.
 [ADR 0003](docs/adr/0003-accepted-conversation-history.md) and the
 [consumer contract](contracts/second-context/conversation-history-v1.md) freeze wire
@@ -457,7 +459,11 @@ lifecycle → OCH2 adapter (complete) → OCH3 durable acceptance (complete) →
 OCH4 baseline replay checks (complete).
 CH4 Decisions observation and CH5 cache measurement follow the working baseline;
 CH6 adaptive selection and optional same-session older recall remain gated by
-evaluation. OCH5/CH7 coordinate publication, capability checks and rollout.
+evaluation. OCH5/CH7 release preparation targets Oria/MCP 0.2.1 and SecondContext
+0.2.2, with independent provider/consumer switches and a recoverable synthetic
+release check. Publication, exact digest verification, live provider/Telegram
+validation and a live rollback drill remain operational gates; see
+[release evidence](docs/evidence/conversation-history-release.md).
 
 Run focused consumer tests first, then `make verify` and provider compatibility
 checks (`SECOND_CONTEXT_SOURCE=/path/to/SecondContext make test-history`). Use synthetic

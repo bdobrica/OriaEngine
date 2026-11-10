@@ -108,6 +108,7 @@ class ModelRecorder:
     def __init__(self):
         self.calls = []
         self.reply = "First, take a walk. Second, write a short reflection."
+        self.recall_code = False
         self.entered = asyncio.Event()
         self.release = asyncio.Event()
         self.release.set()
@@ -119,6 +120,14 @@ class ModelRecorder:
         self.calls.append(await request.json())
         self.entered.set()
         await self.release.wait()
+        reply = self.reply
+        if self.recall_code:
+            codes = [
+                m["content"].removeprefix("Synthetic code: ")
+                for m in self.calls[-1]["messages"]
+                if m["role"] == "assistant" and m["content"].startswith("Synthetic code: ")
+            ]
+            reply = codes[-1] if codes else "No code in the actual model input"
         return web.json_response(
             {
                 "id": "synthetic-upstream-id",
@@ -129,7 +138,7 @@ class ModelRecorder:
                     {
                         "index": 0,
                         "finish_reason": "stop",
-                        "message": {"role": "assistant", "content": self.reply},
+                        "message": {"role": "assistant", "content": reply},
                     }
                 ],
                 "usage": {"prompt_tokens": 12, "completion_tokens": 4, "total_tokens": 16},

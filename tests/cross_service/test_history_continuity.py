@@ -3,14 +3,14 @@
 import asyncio
 import json
 from datetime import UTC, datetime, time, timedelta
-from unittest.mock import patch
-from uuid import uuid4
+from unittest.mock import AsyncMock, patch
+from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy import select
 
 from oria_engine.context.contracts import ContextReply, ContextScope, ConversationRequest
-from oria_engine.context.history import AcceptGenerated, HistoryFailure
+from oria_engine.context.history import AcceptGenerated, HistoryFailure, HistoryUnsupported
 from oria_engine.context.history_workflow import capture_local
 from oria_engine.context.projections import LinkedContext, recover_projections
 from oria_engine.db.birth_profiles import BirthProfileRepository
@@ -310,7 +310,10 @@ async def test_canonical_correction_fences_retries_and_recalculates_current_fact
     assert old_facts != new_facts  # Recalculated chart, not just a new ingress timestamp.
 
 
-async def test_pending_selective_erasure_suppresses_replay_and_fences_delayed_retries(real_history):
+@pytest.mark.parametrize("rollback", [False, True])
+async def test_pending_selective_erasure_suppresses_replay_and_fences_delayed_retries(
+    real_history, rollback
+):
     _, worker, model, wire, gateway, user_id = real_history
     await send(real_history, "We married May 1st, 2020")
     await recover_projections(
@@ -321,6 +324,8 @@ async def test_pending_selective_erasure_suppresses_replay_and_fences_delayed_re
     assert work is not None
     request = AcceptGenerated.model_validate(wire.bodies(FINALIZE)[-1])
     scope = ContextScope(user_id=user_id, session_id=work.session_id)
+    if rollback:
+        await disable_history(real_history)
     wire.block.add("/v1/knowledge/delete")
     _, receipt = await send(real_history, "forget our wedding")
     assert "queued" in receipt
@@ -337,7 +342,15 @@ async def test_pending_selective_erasure_suppresses_replay_and_fences_delayed_re
         assert pending
     before = len(model.calls)
     await send(real_history, "Tell me more")
-    assert len(model.calls) == before
+    if rollback:
+        # Legacy generation may answer without recalled context; pending deletion
+        # must still suppress the stale linked source and all stored dialogue.
+        assert len(model.calls) == before + 1
+        assert model.calls[-1]["messages"][1:] == [{"role": "user", "content": "Tell me more"}]
+        assert "2020-05-01" not in json.dumps(model.calls[-1])
+        assert "Reflect on our wedding" not in json.dumps(model.calls[-1])
+    else:
+        assert len(model.calls) == before
     await recover_projections(
         worker.database, worker.encryption, worker.flow.policy_version, worker.history_provider
     )
@@ -354,17 +367,25 @@ async def test_pending_selective_erasure_suppresses_replay_and_fences_delayed_re
     with pytest.raises(HistoryFailure) as error:
         await worker.history_provider.finalize_history(scope, request)
     assert error.value.code == "session_deleted"
+    if rollback:
+        gateway.env["HISTORY_ENABLED"] = "true"
+        await gateway.restart()
+        worker.history_enabled = real_history[0].history_enabled = True
+        worker.history_provider.clear_history_capabilities()
     fresh, _ = await send(real_history, "A new reflection")
     assert (await work_row(worker, fresh)).session_id != work.session_id
     assert_input(model, [], "A new reflection")
 
 
-async def test_full_deletion_purges_history_and_fences_delayed_acceptance(real_history):
+@pytest.mark.parametrize("rollback", [False, True])
+async def test_full_deletion_purges_history_and_fences_delayed_acceptance(real_history, rollback):
     ingress, worker, model, wire, _, user_id = real_history
     event_id, _ = await send(real_history, "A synthetic reflection")
     work = await work_row(worker, event_id)
     request = AcceptGenerated.model_validate(wire.bodies(FINALIZE)[-1])
     scope = ContextScope(user_id=user_id, session_id=work.session_id)
+    if rollback:
+        await disable_history(real_history)
     await send(real_history, "/delete_me", command="delete_me")
     buttons = worker.client.send_text.call_args.kwargs["buttons"]
     button = next(b for b in buttons if b.data.startswith("delete:confirm:"))
@@ -384,4 +405,119 @@ async def test_full_deletion_purges_history_and_fences_delayed_acceptance(real_h
     with pytest.raises(HistoryFailure) as error:
         await worker.history_provider.finalize_history(scope, request)
     assert error.value.code == "subject_deleted"
+    assert len(model.calls) == 1
+
+
+async def disable_history(harness):
+    ingress, worker, _, _, gateway, user_id = harness
+    ingress.history_enabled = worker.history_enabled = False
+    gateway.env["HISTORY_ENABLED"] = "false"
+    await gateway.restart()
+    with pytest.raises(HistoryUnsupported):
+        await worker.history_provider.history_capabilities(user_id, refresh=True)
+
+
+@pytest.mark.parametrize("lost_ack", [False, True])
+async def test_rollback_recovers_committed_generated_acceptance_and_delivery(
+    real_history, lost_ack
+):
+    ingress, worker, model, wire, gateway, _ = real_history
+    # Test both an undispatched acceptance and a remotely committed but lost receipt.
+    (wire.lose if lost_ack else wire.block).add(FINALIZE)
+    event_id = await ingress.accept(message(text="Suggest two reflections"))
+    await worker.process(event_id)
+    assert (await work_row(worker, event_id)).phase == "finalize"
+    assert not worker.client.send_text.call_count
+    await disable_history(real_history)
+    wire.lose.clear()
+    wire.block.clear()
+    await due(worker, event_id)
+    await worker.process(event_id)
+    assert (await row(worker, event_id)).status == "sent"
+    assert wire.bodies(FINALIZE)[0] == wire.bodies(FINALIZE)[-1]
+    assert len(model.calls) == 1
+    await send(real_history, "A separate question about rainbows")
+    assert len(model.calls) == 2
+    assert len(model.calls[-1]["messages"]) == 2  # Legacy: no prior dialogue replay.
+    # Re-enable on the same code/schema. Accepted history survived; legacy is not backfilled.
+    gateway.env["HISTORY_ENABLED"] = "true"
+    await gateway.restart()
+    ingress.history_enabled = worker.history_enabled = True
+    worker.history_provider.clear_history_capabilities()
+    await send(real_history, "Tell me more")
+    assert_input(model, [("Suggest two reflections", model.reply)], "Tell me more")
+
+
+async def test_rollback_cancels_uncommitted_generation_and_abandons_remote_draft(real_history):
+    ingress, worker, model, wire, _, _ = real_history
+    wire.lose.add(GENERATE)
+    event_id = await ingress.accept(message(text="A pending reflection"))
+    await worker.process(event_id)
+    assert (await work_row(worker, event_id)).phase == "prepared"
+    await disable_history(real_history)
+    wire.lose.clear()
+    await cleanup(worker)
+    assert (await row(worker, event_id)).status == "dead"
+    assert (await work_row(worker, event_id)).phase == "terminal"
+    assert wire.bodies(FINALIZE)[-1]["action"] == "abandon"
+    await due(worker, event_id)
+    await worker.process(event_id)
+    assert len(model.calls) == 1
+    await send(real_history, "An independent reflection")
+    assert len(model.calls[-1]["messages"]) == 2
+
+
+async def test_rollback_keeps_delivery_of_accepted_reply_without_regeneration(real_history):
+    ingress, worker, model, wire, _, _ = real_history
+    worker.client.send_text.side_effect = DeliveryRejected("Synthetic channel failure")
+    event_id = await ingress.accept(message(text="Give me a short reflection"))
+    await worker.process(event_id)
+    assert (await work_row(worker, event_id)).phase == "accepted"
+    await disable_history(real_history)
+    worker.client.send_text.side_effect = None
+    await due(worker, event_id)
+    await worker.process(event_id)
+    assert (await row(worker, event_id)).status == "sent"
+    assert len(model.calls) == len(wire.bodies(FINALIZE)) == 1
+
+
+@pytest.mark.parametrize("generate", [False, True])
+async def test_release_smoke_check_uses_actual_gateway_and_cleans_up(
+    real_history, generate, capsys
+):
+    from scripts.check_history_release import check
+
+    _, worker, model, wire, _, _ = real_history
+    model.recall_code = True
+    await check(worker.history_provider, generate=generate)
+    assert len(model.calls) == (2 if generate else 0)
+    assert wire.statuses[-1][0:2] == ("/v1/subjects/purge", 200)
+    output = capsys.readouterr().out
+    assert "PASS: recent capability" in output
+    assert all(body.get("user", "not present") not in output for _, body in wire.calls)
+
+
+async def test_release_check_failure_retains_cleanup_journal_and_retry_erases_it(
+    real_history, tmp_path, monkeypatch
+):
+    from scripts import check_history_release as release
+
+    _, worker, model, wire, _, _ = real_history
+    monkeypatch.setattr(release, "Settings", lambda: None)
+    monkeypatch.setattr(release, "SecondContextProvider", lambda _: worker.history_provider)
+    # Keep the fixture's HTTP client open across the two CLI invocations.
+    monkeypatch.setattr(worker.history_provider, "aclose", AsyncMock())
+    journal = tmp_path / "private-cleanup"
+    # The synthetic model deliberately fails the code recall check.
+    with pytest.raises(RuntimeError, match="configured provider continuity"):
+        await release.main(True, journal)
+    assert journal.stat().st_mode & 0o777 == 0o600
+    subject = worker.history_provider.subject(UUID(journal.read_text()))
+    assert any(body.get("user") == subject for body in wire.bodies("/v1/subjects/purge"))
+    calls = len(wire.calls)
+    with pytest.raises(FileExistsError):
+        await release.main(False, journal)  # Never overwrite unfinished cleanup identity.
+    assert len(wire.calls) == calls
+    await release.main(False, journal, cleanup_only=True)
+    assert not journal.exists()
     assert len(model.calls) == 1

@@ -94,3 +94,6 @@ project with this bot or prune unrelated host resources.
 If a verification fails, keep ingestion disabled or stop the affected Oria callers
 until compatible services are restored. Retrying selective erasure remains enabled
 even after learning is disabled. Do not reset volumes or discard pending work.
+
+See the [CH7/OCH5 recent-history release checklist](conversation-history-release.md) for
+independent capture switches, published-image gates, live continuity checks and rollback.

@@ -76,6 +76,12 @@ services:
       OPENAI_API_KEY: ${SECOND_CONTEXT_OPENAI_API_KEY:?Set the SecondContext provider key}
       OPENAI_CHAT_MODEL: ${SECOND_CONTEXT_CHAT_MODEL:-gpt-4.1-mini}
       OPENAI_EMBEDDING_MODEL: ${SECOND_CONTEXT_EMBEDDING_MODEL:-text-embedding-3-small}
+      # Independent of Oria capture: verify readiness before enabling callers,
+      # and preserve recovery while rolling either side back.
+      HISTORY_ENABLED: ${SECOND_CONTEXT_PROVIDER_HISTORY_ENABLED:-false}
+      HISTORY_RECENT_EXCHANGES: ${SECOND_CONTEXT_HISTORY_RECENT_EXCHANGES:-8}
+      HISTORY_PROMPT_INPUT_TOKENS: ${SECOND_CONTEXT_HISTORY_PROMPT_INPUT_TOKENS:-32768}
+      HISTORY_RESERVED_OUTPUT_TOKENS: ${SECOND_CONTEXT_HISTORY_RESERVED_OUTPUT_TOKENS:-4096}
       KNOWLEDGE_ENABLED: "false"
     depends_on:
       secondcontext-migrate:

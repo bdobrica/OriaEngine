@@ -28,11 +28,11 @@ jobs:
     steps:
       - name: Check out Oria
         uses: actions/checkout@v4
-      - name: Check out the verified CH3 provider
+      - name: Check out the coordinated release provider
         uses: actions/checkout@v4
         with:
           repository: bdobrica/SecondContext
-          ref: f0dd2682e215fb72520224509eee04cbf14ba805
+          ref: 9b0d5b45f5f6a17c6b5fbd3b381116ea96448ce3
           path: provider
           persist-credentials: false
       - name: Install Go
