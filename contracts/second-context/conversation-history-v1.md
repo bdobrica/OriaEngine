@@ -1,7 +1,7 @@
 # Oria / SecondContext conversation history — v1
 
 Status: accepted consumer contract, 2026-11-09; **OCH2/OCH3 adapter and worker implemented;
-cross-service validation and rollout pending**.
+OCH4 cross-service validation implemented; rollout pending**.
 [ADR 0003](../../docs/adr/0003-accepted-conversation-history.md) records the decision.
 This extends [the existing adapter contract](v1.md), not astrology, canonical records,
 linked-context ownership or credential authority.
@@ -57,6 +57,14 @@ response_id and assistant_text after all local validation/replacement. Verify th
 closed receipt, every identity, action, status accepted, positive sequence, response
 ID and linked-session coverage. A replacement may omit source content but cannot
 introduce new canonical dependencies beyond those linked before generation.
+
+Managed Responses echoes the exact subject in `metadata.user_external_id`.
+Oria also accepts the legacy `metadata.context_packet.user_external_id` echo on
+this opt-in path. At least one is required; when both containers are supplied,
+both subject echoes must match. Missing, malformed or conflicting echoes fail
+closed, as do mismatched session/turn headers. The unextended Responses adapter
+continues to require its existing nested context-packet echo. This additive
+managed-response compatibility does not expose or require a retrieval packet.
 
 ## Acceptance, delivery and recovery
 
@@ -177,7 +185,8 @@ statements in consent/help/privacy, not recurring conversational disclaimers.
 Schema fixture tests and snapshot comparison establish the agreed wire shapes.
 OCH2 implements [DTO/HTTP/receipt validation](../../docs/conversation-history-adapter.md),
 OCH3 implements [durable transactions/recovery](../../docs/conversation-history.md); OCH4 adds
-real integration replay checks, including incorrect receipt identities, local input
+[real integration replay checks](../../docs/evidence/conversation-history-continuity.md),
+complementing consumer checks for incorrect receipt identities, local input
 exclusions, replaced drafts, lost acknowledgements, terminal delivery failure,
 withdrawal/reacceptance, missing source links and selective/full deletion races.
 CH2/CH3 must prove service implementation before OCH5 enablement. Decisions and

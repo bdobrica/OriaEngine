@@ -16,7 +16,7 @@ DEPLOY_COMPOSE = docker compose --env-file "$(DEPLOY_ENV)" -p "$(DEPLOY_PROJECT)
 .PHONY: dev down test-releases
 .PHONY: deploy-env deploy-check deploy deploy-down deploy-logs deploy-webhook-set deploy-webhook-delete
 
-.PHONY: worker help bootstrap env api run format lint typecheck test-unit test-integration test-e2e test verify clean infra-up infra-down infra-reset migrate migrate-down mcp mcp-local mcp-test test-contract webhook-set webhook-delete webhook-reset logs metrics
+.PHONY: worker help bootstrap env api run format lint typecheck test-unit test-integration test-e2e test-history test verify clean infra-up infra-down infra-reset migrate migrate-down mcp mcp-local mcp-test test-contract webhook-set webhook-delete webhook-reset logs metrics
 
 help: ## Show available development commands
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -131,6 +131,9 @@ test-integration: ## Test migrations and transactions using isolated Docker serv
 
 test-e2e: ## Replay Telegram conversations using isolated services and local HTTP fakes
 	$(UV) run pytest tests/e2e
+
+test-history: ## Verify real SecondContext replay (requires SECOND_CONTEXT_SOURCE, Go and Docker)
+	$(UV) run pytest tests/cross_service
 
 test-releases: ## Test image release selection using disposable Git histories
 	python3 -m unittest discover -s scripts -p 'test_docker_release_matrix.py'

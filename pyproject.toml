@@ -40,7 +40,8 @@ packages = ["src/oria_engine", "services/astrology_mcp"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers"
-testpaths = ["tests"]
+# Cross-service validation is an explicit companion gate requiring a provider checkout.
+testpaths = ["tests/unit", "tests/integration", "tests/contract", "tests/e2e"]
 asyncio_mode = "auto"
 
 [tool.ruff]

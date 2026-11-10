@@ -45,6 +45,10 @@ Your own birth remains the strict natal profile: its event is a virtual referenc
 to that profile UUID/revision, with no duplicate birth fields. `/edit_profile`
 continues to require explicit confirmation for corrections.
 
+An informal dialogue correction such as “Actually, I meant the first option”
+continues through conversation when it has no selected/named record, date or
+field-edit cue. Mere recent focus does not turn that message into a canonical edit.
+
 “Forget my ex-girlfriend's birthday” removes the selected event. “Forget that
 business” selects the entity and asks before removing linked events when the
 cascade needs clarification. “Forget my birthday” removes the canonical birth

@@ -30,6 +30,11 @@ and the existing relative grammar are supported. Ambiguous numeric formats such 
 ask for clarification when used as a date request. This is not unrestricted natural
 language understanding or support for every locale/calendar.
 
+Ordinary option references such as “the second one”, “second option” and “second
+choice” remain conversational follow-ups. They do not become date clarifications
+merely because “second” can also name a time unit; elapsed requests such as “in one
+second” retain their calculation semantics.
+
 Explicit event IANA timezone names or `UTC` override the current preference for
 that clause. Abbreviations such as `EST` do not silently choose an offset. Unknown
 zones, competing zones and skipped/repeated DST clocks require clarification.

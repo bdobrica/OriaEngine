@@ -23,8 +23,9 @@ still provider-owned future work; this implementation sends only `recent/explici
 active replies receive canonical natal facts. History readiness is checked through
 `conversation-history-1`; source-bearing work also requires `linked-context-1`.
 Health checks cannot substitute for either capability. Unsupported history never
-silently falls back to legacy generation. Deployment and real-provider verification
-remain OCH4/OCH5; changing examples/default disclosure does not update a running site.
+silently falls back to legacy generation. OCH4 verifies the actual gateway with
+synthetic model replies; deployment and live-provider review remain OCH5 work.
+Changing examples/default disclosure does not update a running site.
 
 Source-dependent capture waits for acknowledged current projections. A first active
 turn may stage the own-birth projection and return a local, uncaptured calculated
@@ -123,6 +124,7 @@ Withdrawal and deletion always take precedence. Disabling is not remote forgetti
 
 Migration downgrade refuses while nonterminal history work exists. Resolve it using
 compatible code first; rollback by disabling capture preserves recovery and fences.
-See [verification evidence](evidence/conversation-history-workflow.md). Synthetic
-consumer checks establish transactions and wire handling, not live provider replay
-quality or a deployed release.
+See [workflow evidence](evidence/conversation-history-workflow.md) and the
+[cross-service continuity gate](evidence/conversation-history-continuity.md).
+The latter records actual model inputs and provider lifecycle behavior through
+HTTP. Synthetic replies do not establish live model quality or a deployed release.

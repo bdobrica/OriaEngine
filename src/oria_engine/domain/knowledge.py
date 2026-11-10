@@ -683,6 +683,18 @@ class KnowledgeConversation:
                     )
                 )
             )
+            if (
+                not chosen
+                and turn.selected is None
+                and normalize(message.text).startswith(("actually", "it was", "that was"))
+                and not dialogue.analysis.mentions
+                and not re.search(
+                    r"\b(?:name|relationship|place|location|birth|birthday)\b", request.query
+                )
+            ):
+                # An ordinary dialogue correction is not a request to edit the
+                # last focused record. Dates, named records and field edits stay local.
+                return None
             if request.query.startswith(("it ", "that ")) or normalize(message.text).startswith(
                 ("it was", "that was", "actually")
             ):

@@ -53,6 +53,22 @@ async def active(store, encryption, birth_payload):
     return flow, client, provider_for(flow), await owner(store)
 
 
+async def test_dialogue_correction_does_not_edit_focused_record(store, encryption, birth_payload):
+    flow, _, provider, user_id = await active(store, encryption, birth_payload)
+    await flow.handle(message("We married May 1st, 2020"))
+    before = await saved(store, encryption, user_id)
+    await flow.handle(message("Actually, I meant the first option"))
+    provider.respond.assert_awaited_once()
+    assert (
+        provider.respond.call_args.args[1].filtered_message == "Actually, I meant the first option"
+    )
+    assert [r.record for r in await saved(store, encryption, user_id)] == [r.record for r in before]
+    # An actual date correction still uses the canonical flow and retained focus.
+    reply = await flow.handle(message("Actually, it was May 2nd, 2020"))
+    assert "2020-05-02" in reply.text
+    assert (await saved(store, encryption, user_id))[0].record.revision == 2
+
+
 async def test_learn_restart_inspect_correct_delete_and_no_remote_ingestion(
     store, encryption, birth_payload
 ):

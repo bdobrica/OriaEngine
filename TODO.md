@@ -32,8 +32,10 @@ Implement [PLAN section 6.3](PLAN.md#63-planned-conversation-continuity-and-open
 with SecondContext's companion
 [CH1–CH7 checklist](https://github.com/bdobrica/SecondContext/blob/main/TODO.md#current-priority--openai-compatible-conversation-history)
 (`../SecondContext/PLAN.md` contains its detailed local execution plan).
-OCH1–OCH3 are complete; OCH4/OCH5 remain pending. The optional worker workflow
+OCH1–OCH4 are complete; OCH5 remains pending. The optional worker workflow
 defaults off and is not deployed. See [workflow evidence](docs/evidence/conversation-history-workflow.md).
+The [OCH4 evidence](docs/evidence/conversation-history-continuity.md) records actual
+cross-service context/lifecycle checks with synthetic model replies.
 See the accepted [consumer contract](contracts/second-context/conversation-history-v1.md)
 and [ADR 0003](docs/adr/0003-accepted-conversation-history.md).
 This is current MVP continuity work, not a claim that
@@ -76,13 +78,13 @@ session reuse or existing memory tests prove dialogue continuity.
 
 ### OCH4 — Prove conversation continuity (depends on OCH3 and CH3)
 
-- [ ] Assert exact model inputs for short follow-ups, references to options,
+- [x] Assert exact model inputs for short follow-ups, references to options,
   corrections, local questions/answers, topic changes and unrelated conversations.
-- [ ] Cover draft replacement, duplicate requests, restart, ordering/concurrency,
+- [x] Cover draft replacement, duplicate requests, restart, ordering/concurrency,
   finalization timeout, Telegram failure/ambiguity and interrupted recovery.
-- [ ] Cover withdrawal/reacceptance, stale source revisions, pending selective
+- [x] Cover withdrawal/reacceptance, stale source revisions, pending selective
   erasure, full purge and delayed retries; old chart text never supplies current facts.
-- [ ] Run focused tests then `make verify`; record synthetic cross-repository
+- [x] Run focused tests then `make verify`; record synthetic cross-repository
   validation in `docs/evidence/`, distinct from optional live-provider review.
 
 ### OCH5 — Coordinate releases and adaptive enablement (depends on OCH4 and CH7)

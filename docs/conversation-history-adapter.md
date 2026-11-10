@@ -27,6 +27,9 @@ still uses the legacy Responses path. No provider database or internal types are
   validates the existing response body and exact Contract/Session/Turn/Snapshot
   echoes, then returns a scoped `HistoryDraft`. A draft is never an acceptance
   receipt. The result remains subject to Oria's output validation/replacement.
+  Managed subject echoes may be direct `metadata.user_external_id` or the legacy
+  nested context-packet field; at least one is required and all supplied echoes
+  must match. Legacy `respond()` retains its nested-echo requirement.
 - `finalize_history(scope, request)`: sends a closed `AcceptGenerated`, `AcceptLocal`
   or `Abandon` DTO. Requires exact owner/session/turn/action, response ID where
   applicable, status, safe positive sequence and linked coverage in the receipt.
@@ -73,6 +76,7 @@ including receipt comparison across retries and terminal/uncertain outcomes.
 OCH3 implements encrypted preparation, atomic reply/finalization work, independent
 delivery, source/consent checks, bounded recovery and the new disclosure. See the
 [workflow](conversation-history.md) and its [evidence](evidence/conversation-history-workflow.md).
-OCH4 proves cross-service replay; OCH5 coordinates rollout. The feature defaults off.
+OCH4 [verifies actual cross-service replay](evidence/conversation-history-continuity.md)
+with synthetic model replies; OCH5 coordinates rollout. The feature defaults off.
 
 See [adapter verification evidence](evidence/conversation-history-adapter.md).

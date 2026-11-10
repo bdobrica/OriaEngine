@@ -38,7 +38,8 @@ PART = re.compile(
 )
 HINT = re.compile(
     r"\b(tomorrow|yesterday|tonight|next|last|ago|morning|afternoon|evening|noon|midnight|"
-    r"seconds?|minutes?|hours?|days?|weeks?|months?|years?|later|soon|night)\b|\bat\s+\d",
+    r"seconds?(?!\s+(?:one|option|choice)\b)|minutes?|hours?|days?|weeks?|months?|years?|"
+    r"later|soon|night)\b|\bat\s+\d",
     re.I,
 )
 

@@ -22,3 +22,32 @@ jobs:
         run: make bootstrap
       - name: Verify formatting, types and all four test lanes
         run: make verify
+
+  conversation-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Oria
+        uses: actions/checkout@v4
+      - name: Check out the verified CH3 provider
+        uses: actions/checkout@v4
+        with:
+          repository: bdobrica/SecondContext
+          ref: f0dd2682e215fb72520224509eee04cbf14ba805
+          path: provider
+          persist-credentials: false
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: provider/go.mod
+          cache-dependency-path: provider/go.sum
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          python-version: "3.12"
+      - name: Bootstrap dependencies
+        run: make bootstrap
+      - name: Verify actual cross-service replay and lifecycle
+        run: make test-history
+        env:
+          SECOND_CONTEXT_SOURCE: ${{ github.workspace }}/provider

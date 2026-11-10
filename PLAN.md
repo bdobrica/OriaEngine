@@ -341,8 +341,9 @@ Oria-only rollout. Remaining private Telegram and broader MVP validation belong 
 ## 6.3 Planned conversation continuity and OpenAI compatibility
 
 Status: OCH1/CH1 contracts accepted, SecondContext CH2/CH3 implemented, and OCH2
-consumer adapter and OCH3 durable workflow implemented. OCH4/OCH5 cross-service
-validation and rollout remain pending.
+consumer adapter, OCH3 durable workflow and OCH4 cross-service validation implemented.
+OCH5 rollout remains pending. The [continuity gate](docs/evidence/conversation-history-continuity.md)
+uses the actual provider with synthetic model replies; live review remains separate.
 [ADR 0003](docs/adr/0003-accepted-conversation-history.md) and the
 [consumer contract](contracts/second-context/conversation-history-v1.md) freeze wire
 shapes, local eligibility, recovery and disclosure requirements. The adapter is
@@ -453,13 +454,14 @@ OCH3 publishes that copy/configuration; deployment and fresh consent remain roll
 
 Sequence: OCH1/CH1 contract agreement → CH2 OpenAI compatibility and CH3 history
 lifecycle → OCH2 adapter (complete) → OCH3 durable acceptance (complete) →
-OCH4 baseline replay checks (next).
+OCH4 baseline replay checks (complete).
 CH4 Decisions observation and CH5 cache measurement follow the working baseline;
 CH6 adaptive selection and optional same-session older recall remain gated by
 evaluation. OCH5/CH7 coordinate publication, capability checks and rollout.
 
 Run focused consumer tests first, then `make verify` and provider compatibility
-checks. Use synthetic transcripts to inspect exact outbound model context, including
+checks (`SECOND_CONTEXT_SOURCE=/path/to/SecondContext make test-history`). Use synthetic
+transcripts to inspect exact outbound model context, including
 follow-ups, corrections, replaced drafts, restart/retry, failed delivery, concurrent
 turns, withdrawal, selective erasure and full deletion. Store validation evidence in
 `docs/evidence/`; model quality and paid provider checks remain separate from CI.

@@ -64,6 +64,14 @@ class _Response(BaseModel):
     metadata: _ResponseMetadata
 
 
+class _HistoryResponseMetadata(_ResponseMetadata):
+    user_external_id: str | None = None
+
+
+class _HistoryResponse(_Response):
+    metadata: _HistoryResponseMetadata
+
+
 class _Memory(BaseModel):
     model_config = ConfigDict(hide_input_in_errors=True)
     id: UUID
@@ -263,10 +271,18 @@ class SecondContextProvider:
             if snapshot > MAX_SEQUENCE:
                 raise ValueError()
             body = parse_history_json(data)
-            result = _Response.model_validate(body)
+            result = _HistoryResponse.model_validate(body)
             if body["metadata"]["session_id"] != request.session_id:
                 raise ValueError()
-            if result.metadata.context_packet.get("user_external_id") != request.user:
+            # Managed Responses returns the subject directly; older compatible
+            # responses echo it in the context packet. Never accept conflicting echoes.
+            metadata = body["metadata"]
+            subjects = []
+            if "user_external_id" in metadata:
+                subjects.append(result.metadata.user_external_id)
+            if "context_packet" in metadata:
+                subjects.append(result.metadata.context_packet.get("user_external_id"))
+            if not subjects or any(subject != request.user for subject in subjects):
                 raise ValueError()
             return HistoryDraft(
                 contract_version=1,

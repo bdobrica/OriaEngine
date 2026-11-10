@@ -315,6 +315,55 @@ async def test_managed_response_body_is_scoped_and_complete(field):
         await client.aclose()
 
 
+@pytest.mark.parametrize("shape", ["direct", "nested", "both"])
+async def test_managed_subject_echo_compatibility(shape):
+    http = HistoryHTTP()
+    metadata = http.generation["metadata"]
+    if shape != "nested":
+        metadata["user_external_id"] = http.capabilities["user"]
+    if shape == "direct":
+        del metadata["context_packet"]
+    client = provider(http)
+    try:
+        draft = await client.respond_history(
+            SCOPE, client.prepare_history_turn(SCOPE, REQUEST, turn_id=TURN)
+        )
+        assert draft.user == http.capabilities["user"]
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        {},
+        {"user_external_id": None},
+        {"user_external_id": "foreign"},
+        {"user_external_id": 42},
+        {"user_external_id": "oria:11111111-1111-4111-8111-111111111111", "context_packet": {}},
+        {
+            "user_external_id": "oria:11111111-1111-4111-8111-111111111111",
+            "context_packet": {"user_external_id": "foreign"},
+        },
+        {
+            "user_external_id": "foreign",
+            "context_packet": {"user_external_id": "oria:11111111-1111-4111-8111-111111111111"},
+        },
+    ],
+)
+async def test_missing_invalid_or_conflicting_managed_subject_echoes_fail_closed(metadata):
+    http = HistoryHTTP()
+    http.generation["metadata"] = {"session_id": str(SCOPE.session_id), **metadata}
+    client = provider(http)
+    try:
+        with pytest.raises(ContextUnavailable):
+            await client.respond_history(
+                SCOPE, client.prepare_history_turn(SCOPE, REQUEST, turn_id=TURN)
+            )
+    finally:
+        await client.aclose()
+
+
 async def test_additive_generation_body_and_case_insensitive_headers_with_current_sources():
     from oria_engine.knowledge.contracts import RecordRef
 
