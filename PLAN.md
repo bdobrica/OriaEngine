@@ -345,7 +345,8 @@ consumer adapter, OCH3 durable workflow and OCH4 cross-service validation implem
 CH7/OCH5 recent history is published and enabled in `oria-live-test`, with live
 provider continuity/erasure and capture rollback verified. Private Telegram review
 confirmed policy/deletion but failed reading continuity. The Oria 0.2.2 source-readiness
-and prompt-budget correction is verified locally; publish/deploy it and retest. See the
+and prompt-budget correction is deployed and live synthetic checks passed; private
+Telegram retest remains. See the
 [coordinated checklist](docs/conversation-history-release.md). The [continuity gate](docs/evidence/conversation-history-continuity.md)
 uses the actual provider with synthetic model replies; live review remains separate.
 [ADR 0003](docs/adr/0003-accepted-conversation-history.md) and the
@@ -465,9 +466,9 @@ evaluation. OCH5/CH7 published and deployed Oria/MCP 0.2.1 and SecondContext
 0.2.2, with independent provider/consumer switches, verified immutable digests,
 consistent fresh-consent disclosure, live model continuity/erasure and a provider
 capture rollback drill. Private Telegram review confirmed policy/deletion but exposed
-a first-reading history gap and terminal prompt-budget rejection. Deploy the verified
-Oria 0.2.2 correction and repeat the
-conversation review; adaptive work is separate. See
+a first-reading history gap and terminal prompt-budget rejection. Oria 0.2.2 is now
+deployed with successful live calculated-reading/follow-up/date probes. Repeat the
+private conversation review; adaptive work is separate. See
 [release evidence](docs/evidence/conversation-history-release.md).
 
 Run focused consumer tests first, then `make verify` and provider compatibility

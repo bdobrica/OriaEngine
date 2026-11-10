@@ -1,7 +1,7 @@
 # Coordinated recent-history release
 
 CH7/OCH5 releases the recent-history baseline. Released versions are SecondContext
-**0.2.2**, Oria application **0.2.1** and astrology MCP **0.2.1**. Version files are
+**0.2.2**, Oria application **0.2.2** and astrology MCP **0.2.1**. Version files are
 publication inputs, not proof that registry images exist. This checklist does not
 automatically deploy. Record publication, selected digests and live results in
 [release evidence](evidence/conversation-history-release.md).

@@ -93,8 +93,9 @@ session reuse or existing memory tests prove dialogue continuity.
 
 [Release checklist](docs/conversation-history-release.md) and
 [execution evidence](docs/evidence/conversation-history-release.md) distinguish
-synthetic checks from live validation. Oria/MCP 0.2.1 and SecondContext 0.2.2
-are published and deployed with recent history and disclosure 2026-11-10.1.
+synthetic checks from live validation. Oria 0.2.2, MCP 0.2.1 and SecondContext 0.2.2
+are deployed with recent history and disclosure 2026-11-10.1. The conversation
+correction passed live calculated-reading/follow-up/date probes.
 
 - [x] Wire independent provider/consumer capture controls and model budgets;
   keep external knowledge disabled and preserve secret isolation.
@@ -106,8 +107,7 @@ are published and deployed with recent history and disclosure 2026-11-10.1.
 - [x] Verify published compatible images and capability before enabling recent
   history; deploy consistent disclosure versions to ingress and workers.
 - [x] Confirm policy acceptance and deletion with the participating Telegram user.
-- [ ] Publish/deploy the verified Oria 0.2.2 source-readiness and budget correction; rerun private
-  Telegram continuity in `oria-live-test`;
+- [ ] Retest private Telegram continuity after the deployed Oria 0.2.2 correction;
   preserve unrelated projects and keep external `KNOWLEDGE_ENABLED` disabled.
 - [ ] Deferred until CH4–CH6: enable adaptive mode only after evaluation; keep Decisions credentials,
   routing, cache policy and metrics inside SecondContext.

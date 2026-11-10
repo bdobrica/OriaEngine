@@ -127,7 +127,7 @@ selection are unsupported. This release establishes recent-history continuity an
 provider capture rollback, not adaptive-to-recent rollback or broad model-quality
 review. The wider Stage 25 MVP gate remains separate.
 
-## Conversation correction prepared
+## Conversation correction — Oria 0.2.2
 
 The first-reading regression was reproduced with a freshly confirmed synthetic
 profile and no fixture-side projection flush: the reading was sent locally, with
@@ -148,5 +148,34 @@ cross-service gate passed 24 tests using the real provider and synthetic model.
 The strengthened profile-edit case also passed separately, proving automatic source
 delivery, old-session fencing and fresh calculations without a fixture-side flush.
 The app patch is version 0.2.2; MCP stays 0.2.1 and SecondContext stays 0.2.2.
-No schema, disclosure, credential or provider runtime change is required. Publication
-and deployment of this correction are not yet recorded as complete.
+No schema, disclosure, credential or provider runtime change was required.
+
+Patch source `cedda0082470ba0e24a9a549e8deeaa7f93ee5bc` passed
+[aggregate and cross-service CI](https://github.com/bdobrica/OriaEngine/actions/runs/42895995197)
+and [app publication](https://github.com/bdobrica/OriaEngine/actions/runs/42895995379).
+The deployed app digest is
+`quay.io/bdobrica/oria-engine@sha256:7fb61db9b75472612c193bb46a932c5e1818c459d0fe3d81c644d3fa9e8b7a7a`.
+Both platform manifests and the pulled source/version labels were verified.
+
+The patch was deployed only to `oria-live-test`. Callers were drained, and owning
+Oria metadata confirmed zero unresolved history/ingress work before changing the
+provider budget. Fresh owning-role database dumps, a cold Qdrant archive and private
+configuration backup were structurally checked; restore was not exercised. No
+migration was applied: Oria remains 0013 and SecondContext 5 clean. The only private
+configuration changes were the app image and input budget; other settings were
+compared against the protected backup. Gateway and worker run the same app image.
+
+The released adapter passed live-model random-code recall, accepted replacement,
+selective erasure and full purge. A second fresh synthetic subject used actual MCP
+natal/transit facts for four managed turns: daily reading, follow-up with a marker
+available only in accepted history, another daily reading and an explicit date.
+All generated substantive text and received ordered acceptance receipts. Both
+synthetic subjects were purged and their private cleanup journals cleared. These
+checks sent no Telegram messages and read no real account payloads.
+
+All application services were healthy afterward; gateway readiness and unchanged
+Telegram webhook registration passed, with zero pending updates at inspection.
+The participating user has been asked to repeat the private conversation sequence.
+That retest remains pending, including the previously unreproduced snapshot-only
+symptom. The application still terminalizes nonretryable provider errors; the failed
+old input was not resurrected or assigned a new turn ID.
