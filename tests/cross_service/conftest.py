@@ -109,6 +109,7 @@ class ModelRecorder:
     def __init__(self):
         self.calls = []
         self.decisions = []
+        self.decision_recent = 0.01
         self.reply = "First, take a walk. Second, write a short reflection."
         self.recall_code = False
         self.entered = asyncio.Event()
@@ -150,12 +151,18 @@ class ModelRecorder:
 
     async def decide(self, request):
         self.decisions.append(await request.json())
-        # Even confident standalone observations must retain recent generation.
+        # Tests control dependence; recent observation must never affect generation.
         return web.json_response(
             {
                 "model": "gpt-6-luna",
                 "answers": [
-                    {"type": "predicate", "name": name, "probability": 0.01}
+                    {
+                        "type": "predicate",
+                        "name": name,
+                        "probability": self.decision_recent
+                        if name == "recent_dependence"
+                        else 0.01,
+                    }
                     for name in ("recent_dependence", "older_reference")
                 ],
             }

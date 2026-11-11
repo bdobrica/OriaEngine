@@ -115,12 +115,16 @@ correction passed live calculated-reading/follow-up/date probes.
   preserve Oria input preparation, consent, history mode and credential isolation.
   Observation stays disabled pending provider publication and coordinated enablement.
   See [consumer verification](docs/evidence/decisions-observation.md).
-- [ ] CH6: enable adaptive mode only after evaluation; keep Decisions credentials,
-  routing, cache policy and metrics inside SecondContext.
+- [x] Wire the provider-only CH6 opt-in flag and test adaptive selection/follow-up/
+  recent rollback through the versioned HTTP contract. Oria still requests recent;
+  see [CH6 evidence](docs/evidence/adaptive-history.md).
+- [ ] Before consumer adaptive enablement, establish useful workload economics,
+  publish the provider, and add an explicit consumer mode frozen in durable prepared
+  work. Keep Decisions credentials, routing, cache policy and metrics inside SecondContext.
 - [x] Exercise live provider capture rollback/re-enable with pending generated
   acceptance, local receipt retries, legacy generation and erasure. Consumer delivery
   recovery is verified by synthetic real-gateway tests; private Telegram review
-  remains above. Adaptive-to-recent remains a CH6 gate.
+  remains above. Adaptive-to-recent is tested in the CH6 synthetic HTTP suite; live rollout remains separate.
 
 ## Current priority — compatibility conversations
 

@@ -6,6 +6,7 @@ from datetime import UTC, datetime, time, timedelta
 from unittest.mock import AsyncMock, patch
 from uuid import UUID, uuid4
 
+import httpx
 import pytest
 from sqlalchemy import select
 
@@ -585,3 +586,66 @@ async def test_release_check_failure_retains_cleanup_journal_and_retry_erases_it
     await release.main(False, journal, cleanup_only=True)
     assert not journal.exists()
     assert len(model.calls) == 1
+
+
+async def test_adaptive_http_selection_and_recent_rollback(real_history):
+    """Exercise the versioned HTTP opt-in; Oria's normal adapter remains recent."""
+    _, worker, model, _, gateway, user_id = real_history
+    gateway.env.update(
+        HISTORY_ADAPTIVE_ENABLED="true",
+        DECISIONS_OBSERVE_ENABLED="false",
+        DECISIONS_BASE_URL=gateway.env["OPENAI_BASE_URL"],
+        DECISIONS_API_KEY=gateway.env["OPENAI_API_KEY"],
+        DECISIONS_CACHE_SECRET=uuid4().hex + uuid4().hex,
+    )
+    await gateway.restart()
+    subject = worker.history_provider.subject(user_id)
+    session = str(uuid4())
+    headers = {
+        "Authorization": "Bearer " + gateway.env["AUTH_SERVICE_TOKENS"].split("=", 1)[1],
+        "X-SecondContext-Subject": subject,
+    }
+    async with httpx.AsyncClient(base_url=gateway.url, headers=headers, trust_env=False) as client:
+
+        async def generate(text, mode):
+            response = await client.post(
+                GENERATE,
+                headers={
+                    "X-SecondContext-History": mode,
+                    "X-SecondContext-Session": session,
+                    "X-SecondContext-Turn": str(uuid4()),
+                },
+                json={
+                    "user": subject,
+                    "input": text,
+                    "disable_memory": True,
+                    "disable_knowledge": True,
+                },
+            )
+            assert response.status_code == 200, response.status_code
+            return response
+
+        cap = await client.post("/v1/context/capabilities", json={"user": subject})
+        assert "adaptive" in cap.json()["history_modes"]
+        model.reply = "Tomorrow favors a slower pace."
+        await generate("Describe tomorrow.", "recent")
+        model.reply = "The current compatibility contact can symbolize shared enjoyment."
+        prepared = "Regarding compatibility: explain the current Venus sextile Jupiter contact."
+        await generate(prepared, "adaptive")
+        assert_input(model, [], prepared)
+        assert len(model.decisions) == 1
+        model.decision_recent = 0.99
+        previous = model.reply
+        await generate("What does it mean in plain English?", "adaptive")
+        assert model.calls[-1]["messages"][-2]["content"] == previous
+        assert prepared in json.dumps(model.calls[-1])
+        assert len(model.decisions) == 2
+        gateway.env["HISTORY_ADAPTIVE_ENABLED"] = "false"
+        await gateway.restart()
+        cap = await client.post("/v1/context/capabilities", json={"user": subject})
+        assert "adaptive" not in cap.json()["history_modes"]
+        await generate("Continue the compatibility explanation.", "recent")
+        assert prepared in json.dumps(model.calls[-1])
+        assert len(model.decisions) == 2
+        response = await client.post("/v1/subjects/purge", json={"user": subject})
+        assert response.status_code == 200

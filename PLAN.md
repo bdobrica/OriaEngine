@@ -470,8 +470,12 @@ with provider-only combined Compose settings, disabled by default.
 isolation and the reading handoff with observation enabled. Synthetic live
 evaluation and cache measurements inform the next gate; publication/enablement is
 separate. See the [provider evidence](https://github.com/bdobrica/SecondContext/blob/main/docs/evidence/conversation-history-ch45.md).
-CH6 adaptive selection and optional same-session older recall remain gated by
-evaluation. OCH5/CH7 published and deployed Oria/MCP 0.2.1 and SecondContext
+CH6 implements conservative adaptive selection behind a separate provider flag,
+with durable retry selections and paired synthetic evaluation. The full case mix
+cost more and had higher median latency; keep Oria on recent. Provider publication,
+workload economics and a consumer opt-in that freezes the mode in durable work
+remain rollout gates. Optional same-session older retrieval remains deferred.
+See [CH6 consumer evidence](docs/evidence/adaptive-history.md). OCH5/CH7 published and deployed Oria/MCP 0.2.1 and SecondContext
 0.2.2, with independent provider/consumer switches, verified immutable digests,
 consistent fresh-consent disclosure, live model continuity/erasure and a provider
 capture rollback drill. Private Telegram review confirmed policy/deletion but exposed

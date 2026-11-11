@@ -82,7 +82,9 @@ services:
       HISTORY_RECENT_EXCHANGES: ${SECOND_CONTEXT_HISTORY_RECENT_EXCHANGES:-8}
       HISTORY_PROMPT_INPUT_TOKENS: ${SECOND_CONTEXT_HISTORY_PROMPT_INPUT_TOKENS:-65536}
       HISTORY_RESERVED_OUTPUT_TOKENS: ${SECOND_CONTEXT_HISTORY_RESERVED_OUTPUT_TOKENS:-4096}
-      # CH4/CH5 observation only; these settings/secrets belong to the provider.
+      # CH6 adaptive support is provider-only; Oria continues to request recent.
+      HISTORY_ADAPTIVE_ENABLED: ${SECOND_CONTEXT_HISTORY_ADAPTIVE_ENABLED:-false}
+      # These Decisions settings/secrets belong to the provider.
       DECISIONS_OBSERVE_ENABLED: ${SECOND_CONTEXT_DECISIONS_OBSERVE_ENABLED:-false}
       DECISIONS_BASE_URL: ${SECOND_CONTEXT_DECISIONS_BASE_URL:-https://api.openai.com/v1}
       DECISIONS_API_KEY: ${SECOND_CONTEXT_DECISIONS_API_KEY:-}

@@ -159,3 +159,19 @@ configured model before deployment. GPT-4.1 mini has a documented 1,047,576-toke
 context window ([OpenAI model documentation](https://developers.openai.com/api/docs/models/gpt-4.1-mini)).
 The standalone provider default remains unchanged. Budget changes affect the
 provider configuration binding: resolve existing pending turns before switching.
+
+
+## Adaptive selection after CH6
+
+`SECOND_CONTEXT_HISTORY_ADAPTIVE_ENABLED=false` is a provider-only capability flag.
+It is independent of provider capture and recent observation. Setting it true does
+not switch Oria's adapter: Oria continues sending `recent`. Keep that default;
+the provider's paired synthetic evaluation preserved context but increased aggregate
+cost and latency. See [CH6 evidence](evidence/adaptive-history.md).
+
+Land/publish the provider before these consumer regressions. Future consumer opt-in
+must freeze the requested mode with each durable prepared turn, check capability,
+and drain or abandon pending adaptive work before provider disablement. Never change
+a retry's header to recent. Existing generated finalization/receipts and erasure
+remain available with adaptive disabled. No image, secret, policy or live setting
+changes accompany this implementation, and private Telegram review remains open.

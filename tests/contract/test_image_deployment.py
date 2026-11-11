@@ -56,6 +56,7 @@ def deployment_env():
         "SECOND_CONTEXT_OPENAI_API_KEY": secrets.token_hex(24),
         "SECOND_CONTEXT_OPENAI_BASE_URL": "https://api.openai.com/v1",
         "SECOND_CONTEXT_CHAT_MODEL": "gpt-4.1-mini",
+        "SECOND_CONTEXT_HISTORY_ADAPTIVE_ENABLED": "false",
         "SECOND_CONTEXT_DECISIONS_OBSERVE_ENABLED": "false",
         "SECOND_CONTEXT_DECISIONS_BASE_URL": "https://api.openai.com/v1",
         "SECOND_CONTEXT_DECISIONS_API_KEY": "",
@@ -404,6 +405,7 @@ def test_decisions_observation_secrets_and_rates_stay_in_provider(deployment_env
     key = secrets.token_hex(24)
     cache_secret = secrets.token_hex(32)
     deployment_env.update(
+        SECOND_CONTEXT_HISTORY_ADAPTIVE_ENABLED="true",
         SECOND_CONTEXT_DECISIONS_OBSERVE_ENABLED="true",
         SECOND_CONTEXT_DECISIONS_API_KEY=key,
         SECOND_CONTEXT_DECISIONS_CACHE_SECRET=cache_secret,
@@ -419,6 +421,7 @@ def test_decisions_observation_secrets_and_rates_stay_in_provider(deployment_env
     assert result.returncode == 0
     services = json.loads(result.stdout)["services"]
     provider = services["secondcontext"]["environment"]
+    assert provider["HISTORY_ADAPTIVE_ENABLED"] == "true"
     assert provider["DECISIONS_OBSERVE_ENABLED"] == "true"
     assert provider["DECISIONS_API_KEY"] == key
     assert provider["DECISIONS_CACHE_SECRET"] == cache_secret
@@ -428,6 +431,7 @@ def test_decisions_observation_secrets_and_rates_stay_in_provider(deployment_env
     for name, service in services.items():
         if name != "secondcontext":
             env = service.get("environment", {})
+            assert "HISTORY_ADAPTIVE_ENABLED" not in env
             assert not any("DECISIONS_" in k or "HISTORY_GENERATION_" in k for k in env)
             assert key not in json.dumps(service)
             assert cache_secret not in json.dumps(service)
