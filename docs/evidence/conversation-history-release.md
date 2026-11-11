@@ -179,3 +179,11 @@ The participating user has been asked to repeat the private conversation sequenc
 That retest remains pending, including the previously unreproduced snapshot-only
 symptom. The application still terminalizes nonretryable provider errors; the failed
 old input was not resurrected or assigned a new turn ID.
+
+## Further private review
+
+The participating user reported improved basic continuity after 0.2.2, but a local
+compatibility reading following a private date clarification did not become the
+subject of the next plain-English question. The [0.2.3 handoff correction](reading-focus-handoff.md)
+tracks reproduction, fresh-source recalculation and the next release/retest gate.
+CH7/OCH5 conversation quality is not marked complete by the earlier synthetic probes.

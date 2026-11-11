@@ -345,8 +345,12 @@ consumer adapter, OCH3 durable workflow and OCH4 cross-service validation implem
 CH7/OCH5 recent history is published and enabled in `oria-live-test`, with live
 provider continuity/erasure and capture rollback verified. Private Telegram review
 confirmed policy/deletion but failed reading continuity. The Oria 0.2.2 source-readiness
-and prompt-budget correction is deployed and live synthetic checks passed; private
-Telegram retest remains. See the
+and prompt-budget correction is deployed and live synthetic checks passed. Private
+Telegram retest confirmed basic continuity but exposed the compatibility handoff:
+a local private-date reading was absent from history. Oria 0.2.3 adds a bounded,
+encrypted reading selector and recalculates current facts for ordinary follow-ups.
+Verification passed; complete publication, rollout and the private topic-switch
+retest. See [handoff evidence](docs/evidence/reading-focus-handoff.md) and the
 [coordinated checklist](docs/conversation-history-release.md). The [continuity gate](docs/evidence/conversation-history-continuity.md)
 uses the actual provider with synthetic model replies; live review remains separate.
 [ADR 0003](docs/adr/0003-accepted-conversation-history.md) and the

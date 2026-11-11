@@ -72,6 +72,34 @@ async def test_first_transit_reading_and_followup_fit_deployment_budget(real_his
     assert 32768 < largest <= 65536
 
 
+async def test_private_compatibility_reading_hands_off_to_plain_english_followup(real_history):
+    _, worker, model, wire, _, user_id = real_history
+    await send(real_history, "/timezone Europe/Bucharest", command="timezone")
+    model.reply = "Tomorrow's reading suggests taking time to reflect."
+    await send(real_history, "How is tomorrow looking?")
+    await send(real_history, "What does it mean?")
+    _, question = await send(real_history, "What's my compatibility with my girlfriend?")
+    assert "partner's birth date" in question
+    _, local = await send(real_history, "1992-06-02")
+    assert "Saved" in local and "alongside" in local
+    assert len(model.calls) == 2  # Private clarification and receipt stay local.
+    model.reply = "In this relationship, you may bring different strengths to shared plans."
+    event_id, reply = await send(real_history, "What does it mean in plain English?")
+    current = wire.bodies(GENERATE)[-1]
+    assert "Regarding the compatibility reading:" in current["input"]
+    assert "Calculated linked facts" in current["instructions"]
+    assert '"kind":"compatibility"' in current["instructions"]
+    assert "Calculated transit facts" not in current["instructions"]
+    assert len(current["knowledge_refs"]) >= 3
+    assert reply == model.reply and (await work_row(worker, event_id)).receipt
+    assert "1992-06-02" not in json.dumps(model.calls)
+    assert "Saved in your private profile" not in json.dumps(model.calls)
+    await send(real_history, "Switch topics: how do rainbows form?")
+    await send(real_history, "Tell me more")
+    assert "Calculated linked facts" not in wire.bodies(GENERATE)[-1]["instructions"]
+    assert wire.bodies(GENERATE)[-1]["input"] == "Tell me more"
+
+
 async def test_exact_followups_options_corrections_topic_changes_and_recent_bound(real_history):
     _, _, model, wire, _, _ = real_history
     exchanges = []

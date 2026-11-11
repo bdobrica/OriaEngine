@@ -23,7 +23,7 @@ from oria_engine.context.second_context import SecondContextProvider
 from oria_engine.db.astrology_profiles import AstrologyProfileRepository
 from oria_engine.db.conversation_sessions import ConversationSessionRepository
 from oria_engine.db.history import REMOTE_PENDING_LIFETIME, HistoryRepository, stop_history
-from oria_engine.db.knowledge import MemoryProgress
+from oria_engine.db.knowledge import KnowledgeRepository, MemoryProgress
 from oria_engine.db.models import (
     ConversationHistoryWork,
     ConversationSession,
@@ -463,11 +463,15 @@ class EventWorker:
                 or await session.get(ConversationHistoryWork, event_id) is not None
                 or await session.get(OnboardingProgress, user_id) is not None
                 or await session.get(TemporalClarification, user_id) is not None
-                or await session.get(KnowledgeDialogue, user_id) is not None
             ):
                 return
             current = await ConsentRepository(session).current(user_id, self.flow.policy_version)
             if current is None or current.id != event.admitted_consent_id:
+                return
+            progress = await KnowledgeRepository(
+                session, self.encryption, self.flow.policy_version
+            ).progress(user_id)
+            if progress is not None and progress.action is not None:
                 return
             payload = InputPayload.model_validate_json(
                 self.decrypt(event, event.encrypted_input, "input")

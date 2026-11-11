@@ -107,8 +107,10 @@ correction passed live calculated-reading/follow-up/date probes.
 - [x] Verify published compatible images and capability before enabling recent
   history; deploy consistent disclosure versions to ingress and workers.
 - [x] Confirm policy acceptance and deletion with the participating Telegram user.
-- [ ] Retest private Telegram continuity after the deployed Oria 0.2.2 correction;
-  preserve unrelated projects and keep external `KNOWLEDGE_ENABLED` disabled.
+- [ ] Publish/deploy the verified [Oria 0.2.3 private-reading handoff](docs/evidence/reading-focus-handoff.md) and retest horoscope →
+  compatibility → private date → plain-English follow-up → unrelated topic. Basic
+  continuity improved in the 0.2.2 Telegram retest; the local reading handoff failed.
+  Preserve unrelated projects and keep external `KNOWLEDGE_ENABLED` disabled.
 - [ ] Deferred until CH4–CH6: enable adaptive mode only after evaluation; keep Decisions credentials,
   routing, cache policy and metrics inside SecondContext.
 - [x] Exercise live provider capture rollback/re-enable with pending generated

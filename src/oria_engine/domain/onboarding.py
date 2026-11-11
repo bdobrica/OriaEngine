@@ -27,6 +27,7 @@ from oria_engine.domain.memory import NO_REMEMBER, requested_follow_up
 from oria_engine.domain.onboarding_data import OnboardingDraft, parse_birth_date, parse_birth_time
 from oria_engine.domain.places import PlaceResolutionUnavailable, PlaceResolver, TooManyPlaces
 from oria_engine.domain.policy import PRIVACY_REPLY
+from oria_engine.domain.reading_focus import keep_reading_focus, take_reading_focus
 from oria_engine.domain.readings import (
     hold_date_question,
     prepare_linked_reading,
@@ -334,6 +335,7 @@ class OnboardingFlow:
                         dialogue = None
                         memory_receipt = None
                         follow_up = None
+                        reading_focus = None
                         from oria_engine.context.history_workflow import history_attempt
 
                         history = history_attempt(session)
@@ -347,6 +349,9 @@ class OnboardingFlow:
                         if intent.kind != "unsupported_high_stakes":
                             knowledge = KnowledgeConversation(
                                 session, self.encryption, self.policy_version
+                            )
+                            reading_focus = await take_reading_focus(
+                                knowledge.repository, user_id, message.text
                             )
                             turn = await knowledge.resume(user_id, message)
                             if history is not None and turn.source is not None:
@@ -441,7 +446,7 @@ class OnboardingFlow:
                         linked_facts = None
                         if (
                             dialogue is not None
-                            and wants_linked(dialogue.text)
+                            and (wants_linked(dialogue.text) or reading_focus is not None)
                             and intent.kind != "unsupported_high_stakes"
                         ):
                             linked_preparation = await prepare_linked_reading(
@@ -452,6 +457,7 @@ class OnboardingFlow:
                                 client=self.astrology,
                                 resolver=self.resolver,
                                 dialogue=dialogue,
+                                focus=reading_focus,
                             )
                             if linked_preparation.question:
                                 await hold_date_question(
@@ -469,9 +475,25 @@ class OnboardingFlow:
                                 return ConsentReply(State.ACTIVE, cap_reply(text))
                             linked_facts = linked_preparation.facts
                             assert linked_facts is not None
+                            if linked_preparation.focus is not None and not NO_REMEMBER.search(
+                                dialogue.text
+                            ):
+                                await keep_reading_focus(
+                                    knowledge.repository,
+                                    user_id,
+                                    linked_preparation.focus,
+                                    message.received_at,
+                                )
                             from oria_engine.domain.active import ActiveIntent
 
                             intent = ActiveIntent(kind="follow_up")
+                            if reading_focus is not None:
+                                subject = (
+                                    "compatibility"
+                                    if linked_facts.kind == "compatibility"
+                                    else "event"
+                                )
+                                active_text = f"Regarding the {subject} reading: {active_text}"
                             active_text = active_text.replace(
                                 "no additional calculation was performed",
                                 "linked calculation facts are supplied separately",

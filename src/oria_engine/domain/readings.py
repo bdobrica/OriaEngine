@@ -23,7 +23,7 @@ from oria_engine.astrology.linked import (
     validate_chart,
 )
 from oria_engine.db.birth_profiles import BirthProfileRepository
-from oria_engine.db.knowledge import KnowledgeRepository, SavedRecord
+from oria_engine.db.knowledge import KnowledgeRepository, ReadingFocus, SavedRecord
 from oria_engine.db.temporal import PendingTemporal, TemporalRepository
 from oria_engine.domain.birth_time import birth_zone, utc_candidates
 from oria_engine.domain.knowledge import names, supplied_place
@@ -124,6 +124,7 @@ class ReadingPreparation:
     question: str | None = None
     date_template: str | None = None
     selected_record: RecordRef | None = None
+    focus: ReadingFocus | None = None
 
 
 async def hold_date_question(
@@ -253,17 +254,37 @@ async def prepare_linked_reading(
     client: AstrologyClient,
     resolver: PlaceResolver,
     dialogue: TemporalDialogue,
+    focus: ReadingFocus | None = None,
 ) -> ReadingPreparation:
     text = dialogue.text
-    compatibility = bool(COMPATIBILITY.search(text))
+    compatibility = focus.kind == "compatibility" if focus else bool(COMPATIBILITY.search(text))
     repository = KnowledgeRepository(session, encryption, policy_version)
     await repository.lock(user_id, write=True)
     records = await repository.list(user_id)
-    entities = [s for s in records if isinstance(s.record, EntityRecord) and _mentions(text, s)]
+    if focus is not None:
+        for ref in focus.sources:
+            saved = await repository.get(user_id, ref)
+            if saved is None or saved.needs_review:
+                return ReadingPreparation(
+                    question=(
+                        "That reading's saved details changed. Which person or event should I read?"
+                    )
+                )
+        records = tuple(s for s in records if s.ref in focus.sources)
+    entities = [
+        s
+        for s in records
+        if isinstance(s.record, EntityRecord)
+        and (s.ref == focus.entity if focus is not None else _mentions(text, s))
+    ]
     if len(entities) > 1:
         return ReadingPreparation(question="Which person should I compare your chart with?")
     progress = await repository.progress(user_id)
-    if not entities and re.search(r"\b(?:her|his|their|she|he|they|us|our|it|that)\b", text, re.I):
+    if (
+        focus is None
+        and not entities
+        and re.search(r"\b(?:her|his|their|she|he|they|us|our|it|that)\b", text, re.I)
+    ):
         focus_ids = {r.id for r in progress.focus} if progress else set()
         entities = [
             s for s in records if s.ref.id in focus_ids and isinstance(s.record, EntityRecord)
@@ -295,7 +316,8 @@ async def prepare_linked_reading(
         if isinstance(s.record, EventRecord)
         and s.record.event_type != "birth"
         and (
-            _mentions(text, s)
+            focus is not None
+            or _mentions(text, s)
             or s.ref == dialogue.selected_record
             or (not compatibility or entity_event)
             and any(p.entity_id in entity_ids for p in s.record.participants)
@@ -456,6 +478,13 @@ async def prepare_linked_reading(
         topics.update(themes(saved.record.event_type))
     topics.update(o.house for c in comparisons for o in c.overlays)
     return ReadingPreparation(
+        focus=ReadingFocus(
+            kind="compatibility" if compatibility else "event_reading",
+            sources=tuple(sources.values()),
+            entity=entities[0].ref if entities else None,
+        )
+        if transient is None
+        else None,
         facts=LinkedReading(
             kind="compatibility" if compatibility else "event_reading",
             charts=tuple(
@@ -466,7 +495,7 @@ async def prepare_linked_reading(
             sources=tuple(sources.values()),
             house_themes=tuple(sorted(topics)),
             rating=requested_rating(text, comparisons) if compatibility else None,
-        )
+        ),
     )
 
 

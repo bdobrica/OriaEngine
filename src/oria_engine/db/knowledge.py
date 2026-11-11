@@ -55,6 +55,14 @@ class SavedRecord:
         return RecordRef(kind=self.record.kind, id=self.record.id, revision=self.record.revision)
 
 
+class ReadingFocus(WireModel):
+    """Local recalculation selector, never a retained chart or private input."""
+
+    kind: Literal["compatibility", "event_reading"]
+    sources: tuple[RecordRef, ...] = Field(min_length=2, max_length=32)
+    entity: RecordRef | None = None
+
+
 class MemoryProgress(WireModel):
     consent_id: UUID | None
     reference_time_utc: UTCInstant
@@ -69,6 +77,7 @@ class MemoryProgress(WireModel):
     source_message_id: UUID | None = None
     timezone: str | None = None
     timezone_source: Literal["explicit_event", "current_preference"] = "current_preference"
+    reading: ReadingFocus | None = None
 
 
 class KnowledgeRepository:
@@ -408,7 +417,10 @@ class KnowledgeRepository:
             row = KnowledgeDialogue(user_id=user_id, id=uuid4())
             self.session.add(row)
         row.encrypted_payload = self.encryption.encrypt_event(
-            progress.model_dump_json(), user_id=user_id, event_id=row.id, kind="knowledge-dialogue"
+            progress.model_dump_json(exclude={"reading"} if progress.reading is None else None),
+            user_id=user_id,
+            event_id=row.id,
+            kind="knowledge-dialogue",
         )
         row.encryption_key_version = self.encryption.key_version
         row.expires_at = progress.reference_time_utc + timedelta(hours=24)

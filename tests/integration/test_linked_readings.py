@@ -1,6 +1,7 @@
 """Real owner/consent/CRUD path and calculations, synthetic model replies."""
 
 import json
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -10,7 +11,9 @@ from oria_engine.astrology.client import AstrologyUnavailable
 from oria_engine.context.contracts import ContextUnavailable
 from oria_engine.context.projections import LinkedContext, recover_projections
 from oria_engine.context.service import ConversationContext
-from oria_engine.knowledge.contracts import EntityRecord
+from oria_engine.db.knowledge import KnowledgeRepository
+from oria_engine.db.models import KnowledgeDialogue
+from oria_engine.knowledge.contracts import EntityRecord, Participant
 
 from .test_knowledge import active, message, saved
 from .test_onboarding import store as store
@@ -23,6 +26,113 @@ async def ready(store, encryption, birth_payload):
     client.calculate_synastry.side_effect = calculate_synastry
     client.calculate_event_chart.side_effect = calculate_event_chart
     return flow, client, remote, user_id
+
+
+async def test_reading_focus_recalculates_and_keeps_crud_focus_separate(
+    store, encryption, birth_payload
+):
+    flow, client, remote, user_id = await ready(store, encryption, birth_payload)
+    await flow.handle(message("What's my compatibility with my girlfriend?"))
+    await flow.handle(message("1992-06-02"))
+    async with store.transaction() as session:
+        repo = KnowledgeRepository(session, encryption, "v1")
+        progress = await repo.progress(user_id)
+        assert progress.reading.kind == "compatibility"
+        assert len(progress.reading.sources) == 3
+        assert "1992-06-02" not in progress.model_dump_json()
+        assert (await repo.own_birth(user_id)).ref not in progress.focus
+    previous = client.calculate_synastry.call_count
+    await flow.handle(message("What does it mean in plain English?"))
+    assert client.calculate_synastry.call_count == previous + 1
+    request = remote.respond.call_args.args[1]
+    assert request.linked_facts.kind == "compatibility" and request.transit_facts is None
+    assert request.filtered_message.startswith("Regarding the compatibility reading:")
+    await flow.handle(message("How do rainbows form?"))
+    await flow.handle(message("Tell me more"))
+    assert client.calculate_synastry.call_count == previous + 1
+    assert remote.respond.call_args.args[1].linked_facts is None
+
+
+@pytest.mark.parametrize("change", ["expire", "correct", "erase", "withdraw"])
+async def test_reading_focus_cannot_reuse_unavailable_sources(
+    store, encryption, birth_payload, change
+):
+    flow, client, remote, user_id = await ready(store, encryption, birth_payload)
+    await flow.handle(
+        message("Read my compatibility with my girlfriend. Her birthday is June 2nd, 1992")
+    )
+    previous = client.calculate_synastry.call_count
+    async with store.transaction() as session:
+        repo = KnowledgeRepository(session, encryption, "v1")
+        birth = next(s for s in await repo.list(user_id) if s.ref.kind == "event")
+        if change == "expire":
+            state = await session.get(KnowledgeDialogue, user_id)
+            state.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+        elif change == "correct":
+            await repo.save(user_id, birth.record.model_copy(update={"revision": 2}))
+        elif change == "erase":
+            await repo.erase(user_id, birth.ref)
+    if change == "withdraw":
+        await flow.handle(message(callback=flow.buttons[1].data))
+    remote.respond.reset_mock()
+    reply = await flow.handle(message("What does it mean in plain English?"))
+    assert client.calculate_synastry.call_count == previous
+    if change == "correct":
+        assert "saved details changed" in reply.text
+        remote.respond.assert_not_called()
+    elif remote.respond.called:
+        assert remote.respond.call_args.args[1].linked_facts is None
+    async with store.transaction() as session:
+        progress = await KnowledgeRepository(session, encryption, "v1").progress(user_id)
+        assert progress is None or progress.reading is None
+
+
+async def test_opt_out_reading_does_not_create_followup_state(store, encryption, birth_payload):
+    flow, client, remote, user_id = await ready(store, encryption, birth_payload)
+    await flow.handle(
+        message(
+            "Don't remember this. Read my compatibility with my girlfriend. "
+            "Her birthday is June 2nd, 1992"
+        )
+    )
+    async with store.transaction() as session:
+        assert await KnowledgeRepository(session, encryption, "v1").progress(user_id) is None
+    previous = client.calculate_synastry.call_count
+    await flow.handle(message("Explain that"))
+    assert client.calculate_synastry.call_count == previous
+    assert remote.respond.call_args.args[1].linked_facts is None
+
+
+async def test_event_reading_followup_uses_the_selected_event(store, encryption, birth_payload):
+    flow, client, remote, user_id = await ready(store, encryption, birth_payload)
+    await flow.handle(message("We married May 1st, 2020"))
+    async with store.transaction() as session:
+        repo = KnowledgeRepository(session, encryption, "v1")
+        event = next(s for s in await repo.list(user_id) if s.ref.kind == "event")
+        participants = []
+        for label in ("Alice", "Bob"):
+            person = await repo.save(
+                user_id,
+                EntityRecord(
+                    id=uuid4(),
+                    revision=1,
+                    entity_type="person",
+                    label=label,
+                    source_message_id=uuid4(),
+                ),
+            )
+            participants.append(Participant(entity_id=person.ref.id, role="guest"))
+        await repo.save(
+            user_id,
+            event.record.model_copy(update={"revision": 2, "participants": tuple(participants)}),
+        )
+    await flow.handle(message("Interpret our wedding chart"))
+    sources = remote.respond.call_args.args[1].linked_facts.sources
+    await flow.handle(message("Explain that in simple terms"))
+    request = remote.respond.call_args.args[1]
+    assert request.linked_facts.kind == "event_reading"
+    assert request.linked_facts.sources == sources
+    assert request.filtered_message.startswith("Regarding the event reading:")
 
 
 async def test_partner_birthday_rating_is_calculated_without_profile_edit_or_transits(

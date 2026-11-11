@@ -54,6 +54,34 @@ For a non-person entity, a selected founding/purchase/adoption event can supply
 the other chart in a requested compatibility reading. The facts explicitly label
 its convention as an event rather than inventing a human birth.
 
+## Follow-ups after private inputs
+
+A birthday clarification and its save receipt remain local under the history
+contract. After a successful linked reading, Oria keeps a reading selector in the
+existing encrypted, consent-scoped 24-hour progress state: reading kind, exact
+canonical source references/revisions and the selected entity reference. It retains
+no chart facts, birth fields, receipt, transcript or copied model reply. The selector
+is separate from CRUD focus, so it cannot broaden what “forget that” selects.
+
+Bounded standalone follow-ups such as “What does it mean in plain English?”,
+“Explain that”, “Tell me more” and “Make it shorter” select this reading. Oria
+revalidates every source and recalculates the same selected charts before sending
+current facts and an explicit compatibility/event-reading cue with the prepared
+message. Source projection acknowledgement and linked-session erasure gates still
+apply. Private clarification never becomes a captured history exchange.
+
+A new ordinary topic consumes the selector; it cannot select a different person
+or date implicitly. Changed/review-needed sources require a fresh selection. Expiry,
+withdrawal and deletion remove or invalidate the state. “Don't remember this” and
+readings using unsaved transient inputs do not create it. This is bounded English
+routing, not a general classifier or older-conversation search.
+
+Existing progress payloads remain readable. Empty selectors are omitted when
+serializing progress. Payloads containing the new selector need application 0.2.3
+or compatible newer code; use capture switches on that code for rollback instead
+of downgrading a reader while such state remains. No database migration or public
+API/schema change is introduced.
+
 ## Facts, themes and ratings
 
 Every linked reading recalculates selected charts from current authorized inputs.

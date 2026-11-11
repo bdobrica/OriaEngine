@@ -138,3 +138,13 @@ HTTP. Synthetic replies do not establish live model quality or a deployed releas
 
 See the [CH7/OCH5 recent-history release checklist](conversation-history-release.md) for
 independent capture switches, published-image gates, live continuity checks and rollback.
+
+## Local reading handoff
+
+Private birth clarification and mutation receipts remain excluded from accepted
+history. Their resulting linked reading can still be the active subject of the
+next ordinary question. Oria's [short-lived reading selector](linked-readings.md#follow-ups-after-private-inputs)
+revalidates canonical references and recalculates that reading before preparing
+an eligible follow-up. It does not backfill the private exchange or turn past text
+into current facts. Projection preflight now permits ordinary reading/record focus;
+pending private actions and temporal clarification still skip it.
