@@ -56,6 +56,21 @@ def deployment_env():
         "SECOND_CONTEXT_OPENAI_API_KEY": secrets.token_hex(24),
         "SECOND_CONTEXT_OPENAI_BASE_URL": "https://api.openai.com/v1",
         "SECOND_CONTEXT_CHAT_MODEL": "gpt-4.1-mini",
+        "SECOND_CONTEXT_DECISIONS_OBSERVE_ENABLED": "false",
+        "SECOND_CONTEXT_DECISIONS_BASE_URL": "https://api.openai.com/v1",
+        "SECOND_CONTEXT_DECISIONS_API_KEY": "",
+        "SECOND_CONTEXT_DECISIONS_MODEL": "gpt-6-luna",
+        "SECOND_CONTEXT_DECISIONS_RECIPE": "history-dependence-1",
+        "SECOND_CONTEXT_DECISIONS_CACHE_SECRET": "",
+        "SECOND_CONTEXT_DECISIONS_TIMEOUT": "2s",
+        "SECOND_CONTEXT_DECISIONS_MAX_INPUT_BYTES": "65536",
+        "SECOND_CONTEXT_DECISIONS_SEGMENT_EXCHANGES": "32",
+        "SECOND_CONTEXT_DECISIONS_INPUT_USD_PER_MILLION": "",
+        "SECOND_CONTEXT_DECISIONS_CACHED_USD_PER_MILLION": "",
+        "SECOND_CONTEXT_DECISIONS_WRITE_USD_PER_MILLION": "",
+        "SECOND_CONTEXT_HISTORY_GENERATION_INPUT_USD_PER_MILLION": "",
+        "SECOND_CONTEXT_HISTORY_GENERATION_CACHED_USD_PER_MILLION": "",
+        "SECOND_CONTEXT_HISTORY_GENERATION_OUTPUT_USD_PER_MILLION": "",
         "SECOND_CONTEXT_EMBEDDING_MODEL": "text-embedding-3-small",
         "SECOND_CONTEXT_VECTOR_SIZE": "1536",
         "INBOUND_RATE_PER_MINUTE": "20",
@@ -375,3 +390,44 @@ def test_history_rollout_switches_and_provider_budgets_are_independent(
     for name, service in services.items():
         if name != "secondcontext":
             assert not any(key.startswith("HISTORY_") for key in service.get("environment", {}))
+
+
+def test_decisions_observation_secrets_and_rates_stay_in_provider(deployment_env):
+    baseline = render(deployment_env, bundled=True)
+    assert baseline.returncode == 0
+    assert (
+        json.loads(baseline.stdout)["services"]["secondcontext"]["environment"][
+            "DECISIONS_OBSERVE_ENABLED"
+        ]
+        == "false"
+    )
+    key = secrets.token_hex(24)
+    cache_secret = secrets.token_hex(32)
+    deployment_env.update(
+        SECOND_CONTEXT_DECISIONS_OBSERVE_ENABLED="true",
+        SECOND_CONTEXT_DECISIONS_API_KEY=key,
+        SECOND_CONTEXT_DECISIONS_CACHE_SECRET=cache_secret,
+        SECOND_CONTEXT_DECISIONS_TIMEOUT="3s",
+        SECOND_CONTEXT_DECISIONS_INPUT_USD_PER_MILLION="0.1",
+        SECOND_CONTEXT_DECISIONS_CACHED_USD_PER_MILLION="0.01",
+        SECOND_CONTEXT_DECISIONS_WRITE_USD_PER_MILLION="0.125",
+        SECOND_CONTEXT_HISTORY_GENERATION_INPUT_USD_PER_MILLION="0.4",
+        SECOND_CONTEXT_HISTORY_GENERATION_CACHED_USD_PER_MILLION="0.1",
+        SECOND_CONTEXT_HISTORY_GENERATION_OUTPUT_USD_PER_MILLION="1.6",
+    )
+    result = render(deployment_env, bundled=True)
+    assert result.returncode == 0
+    services = json.loads(result.stdout)["services"]
+    provider = services["secondcontext"]["environment"]
+    assert provider["DECISIONS_OBSERVE_ENABLED"] == "true"
+    assert provider["DECISIONS_API_KEY"] == key
+    assert provider["DECISIONS_CACHE_SECRET"] == cache_secret
+    assert provider["DECISIONS_TIMEOUT"] == "3s"
+    assert provider["DECISIONS_WRITE_USD_PER_MILLION"] == "0.125"
+    assert provider["HISTORY_GENERATION_OUTPUT_USD_PER_MILLION"] == "1.6"
+    for name, service in services.items():
+        if name != "secondcontext":
+            env = service.get("environment", {})
+            assert not any("DECISIONS_" in k or "HISTORY_GENERATION_" in k for k in env)
+            assert key not in json.dumps(service)
+            assert cache_secret not in json.dumps(service)

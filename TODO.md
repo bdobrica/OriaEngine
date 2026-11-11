@@ -111,7 +111,11 @@ correction passed live calculated-reading/follow-up/date probes.
   compatibility → private date → plain-English follow-up → unrelated topic. Basic
   continuity improved in the 0.2.2 Telegram retest; the local reading handoff failed.
   Preserve unrelated projects and keep external `KNOWLEDGE_ENABLED` disabled.
-- [ ] Deferred until CH4–CH6: enable adaptive mode only after evaluation; keep Decisions credentials,
+- [x] Add provider-only CH4/CH5 observation/cache settings to the combined deployment;
+  preserve Oria input preparation, consent, history mode and credential isolation.
+  Observation stays disabled pending provider publication and coordinated enablement.
+  See [consumer verification](docs/evidence/decisions-observation.md).
+- [ ] CH6: enable adaptive mode only after evaluation; keep Decisions credentials,
   routing, cache policy and metrics inside SecondContext.
 - [x] Exercise live provider capture rollback/re-enable with pending generated
   acceptance, local receipt retries, legacy generation and erasure. Consumer delivery

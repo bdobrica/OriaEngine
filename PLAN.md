@@ -464,7 +464,12 @@ OCH3 publishes that copy/configuration; deployment and fresh consent remain roll
 Sequence: OCH1/CH1 contract agreement → CH2 OpenAI compatibility and CH3 history
 lifecycle → OCH2 adapter (complete) → OCH3 durable acceptance (complete) →
 OCH4 baseline replay checks (complete).
-CH4 Decisions observation and CH5 cache measurement follow the working baseline;
+CH4 Decisions observation and CH5 cache measurement are implemented in SecondContext,
+with provider-only combined Compose settings, disabled by default.
+[Consumer verification](docs/evidence/decisions-observation.md) covers deployment
+isolation and the reading handoff with observation enabled. Synthetic live
+evaluation and cache measurements inform the next gate; publication/enablement is
+separate. See the [provider evidence](https://github.com/bdobrica/SecondContext/blob/main/docs/evidence/conversation-history-ch45.md).
 CH6 adaptive selection and optional same-session older recall remain gated by
 evaluation. OCH5/CH7 published and deployed Oria/MCP 0.2.1 and SecondContext
 0.2.2, with independent provider/consumer switches, verified immutable digests,

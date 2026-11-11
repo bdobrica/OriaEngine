@@ -22,11 +22,23 @@ checkout. The cross-service gate covers actual HTTP replay and rollback with
 synthetic model/Telegram services; it is separate from live provider quality and
 private Telegram review. Compare the public contract snapshots too.
 
-CH4–CH6 are not implemented. This release advertises only `off` and `recent`.
-Decisions observation, caching economics, adaptive routing and older recall remain
-unavailable. No Decisions credentials, classifier routing or cache controls are
-added to Oria. There is no adaptive-to-recent switch to exercise yet; that rollback
-must pass the CH6 evaluation gate before any later adaptive release.
+CH4/CH5 source now implements optional Decisions observation and cache diagnostics,
+disabled by default. The deployed provider 0.2.2 does not contain that work; publish
+and verify a compatible digest before enabling it. Both current and candidate
+capabilities advertise only `off` and `recent`. Observation preserves recent replay;
+CH6 adaptive routing and older recall remain unavailable.
+
+The combined Compose file passes `SECOND_CONTEXT_DECISIONS_*` settings only to the
+provider as `DECISIONS_*`, including its API key and independent cache-key secret.
+Optional `SECOND_CONTEXT_HISTORY_GENERATION_*_USD_PER_MILLION` rates also belong
+only to the provider. Oria application containers receive none of these settings.
+Do not enable based on health alone: run the provider's synthetic `historyeval`
+access/economics checks and preserve the existing disclosure/consent gates.
+Observation rollback is `SECOND_CONTEXT_DECISIONS_OBSERVE_ENABLED=false`; it does
+not change accepted history or cancel required erasure. The existing deployment
+settings remain untouched. See the provider's
+[configuration and evaluation guide](https://github.com/bdobrica/SecondContext/blob/main/docs/decisions-observation.md)
+and [CH4/CH5 evidence](https://github.com/bdobrica/SecondContext/blob/main/docs/evidence/conversation-history-ch45.md).
 
 ## Independent capture controls
 

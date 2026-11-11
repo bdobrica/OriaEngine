@@ -108,6 +108,7 @@ def gateway_install(tmp_path_factory):
 class ModelRecorder:
     def __init__(self):
         self.calls = []
+        self.decisions = []
         self.reply = "First, take a walk. Second, write a short reflection."
         self.recall_code = False
         self.entered = asyncio.Event()
@@ -116,6 +117,7 @@ class ModelRecorder:
         self.app = web.Application()
         self.app.router.add_post("/v1/chat/completions", self.chat)
         self.app.router.add_post("/v1/embeddings", self.embed)
+        self.app.router.add_post("/v1/decisions", self.decide)
 
     async def chat(self, request):
         self.calls.append(await request.json())
@@ -143,6 +145,19 @@ class ModelRecorder:
                     }
                 ],
                 "usage": {"prompt_tokens": 12, "completion_tokens": 4, "total_tokens": 16},
+            }
+        )
+
+    async def decide(self, request):
+        self.decisions.append(await request.json())
+        # Even confident standalone observations must retain recent generation.
+        return web.json_response(
+            {
+                "model": "gpt-6-luna",
+                "answers": [
+                    {"type": "predicate", "name": name, "probability": 0.01}
+                    for name in ("recent_dependence", "older_reference")
+                ],
             }
         )
 
