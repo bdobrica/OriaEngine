@@ -91,12 +91,13 @@ session reuse or existing memory tests prove dialogue continuity.
 
 ### OCH5 — Coordinate releases and adaptive enablement (depends on OCH4 and CH7)
 
-CH4–CH6 repeat release: [0.2.4/0.2.3 candidate evidence](docs/evidence/conversation-history-ch7-repeat.md).
-Publication/live verification is pending; recent remains the production mode.
+CH4–CH6 repeat release: [0.2.4/0.2.3 release evidence](docs/evidence/conversation-history-ch7-repeat.md).
+Publication and live continuity/erasure/capture-rollback gates passed; recent remains
+the production mode. Private Telegram review and adaptive enablement remain open.
 
 [Release checklist](docs/conversation-history-release.md) and
 [execution evidence](docs/evidence/conversation-history-release.md) distinguish
-synthetic checks from live validation. Oria 0.2.3, MCP 0.2.1 and SecondContext 0.2.2
+synthetic checks from live validation. Oria 0.2.4, MCP 0.2.1 and SecondContext 0.2.3
 are deployed with recent history and disclosure 2026-11-10.1. The conversation
 correction passed live calculated-reading/follow-up/date probes.
 
@@ -110,19 +111,20 @@ correction passed live calculated-reading/follow-up/date probes.
 - [x] Verify published compatible images and capability before enabling recent
   history; deploy consistent disclosure versions to ingress and workers.
 - [x] Confirm policy acceptance and deletion with the participating Telegram user.
-- [ ] Privately retest the deployed [Oria 0.2.3 reading handoff](docs/evidence/reading-focus-handoff.md): horoscope →
+- [ ] Privately retest the current release containing the [Oria 0.2.3 reading handoff](docs/evidence/reading-focus-handoff.md): horoscope →
   compatibility → private date → plain-English follow-up → unrelated topic. Basic
   continuity improved in the 0.2.2 Telegram retest; the local reading handoff failed.
   Preserve unrelated projects and keep external `KNOWLEDGE_ENABLED` disabled.
 - [x] Add provider-only CH4/CH5 observation/cache settings to the combined deployment;
   preserve Oria input preparation, consent, history mode and credential isolation.
-  Observation stays disabled pending provider publication and coordinated enablement.
+  Observation stays disabled pending a separate enablement decision; the compatible
+  provider is now published.
   See [consumer verification](docs/evidence/decisions-observation.md).
 - [x] Wire the provider-only CH6 opt-in flag and test adaptive selection/follow-up/
   recent rollback through the versioned HTTP contract. Oria still requests recent;
   see [CH6 evidence](docs/evidence/adaptive-history.md).
-- [ ] Before consumer adaptive enablement, establish useful workload economics,
-  publish the provider, and add an explicit consumer mode frozen in durable prepared
+- [ ] Before consumer adaptive enablement, establish useful workload economics
+  and add an explicit consumer mode frozen in durable prepared
   work. Keep Decisions credentials, routing, cache policy and metrics inside SecondContext.
 - [x] Exercise live provider capture rollback/re-enable with pending generated
   acceptance, local receipt retries, legacy generation and erasure. Consumer delivery

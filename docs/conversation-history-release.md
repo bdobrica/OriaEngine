@@ -1,6 +1,6 @@
 # Coordinated recent-history release
 
-CH7/OCH5 releases the recent-history baseline. The next coordinated versions are
+CH7/OCH5 releases the recent-history baseline. The released coordinated versions are
 SecondContext **0.2.3**, Oria application **0.2.4** and unchanged astrology MCP **0.2.1**.
 The CH4–CH6 rollout is tracked in
 [repeat-release evidence](evidence/conversation-history-ch7-repeat.md). Version files are
@@ -14,7 +14,8 @@ Keep the existing [ownership and security boundaries](deployment.md) and the
 [conversation-memory release procedure](conversation-memory-release.md). Required
 schemas are Oria **0013** and SecondContext **000005**. Each owner runs its own
 migration. Use the same Oria image and disclosure **2026-11-10.1** for ingress and
-workers. Existing users must accept the new disclosure; old consent does not grant
+workers. This patch preserves valid acceptance of that version. At first history
+enablement, existing users must accept the new disclosure; old consent does not grant
 permission to capture new turns. Do not rotate credentials, subject namespaces,
 encryption keys, canonical user IDs or session IDs as a rollout technique.
 
@@ -24,12 +25,10 @@ checkout. The cross-service gate covers actual HTTP replay and rollback with
 synthetic model/Telegram services; it is separate from live provider quality and
 private Telegram review. Compare the public contract snapshots too.
 
-CH4/CH5 source now implements optional Decisions observation and cache diagnostics,
-disabled by default. The deployed provider 0.2.2 does not contain that work; publish
-and verify a compatible digest before enabling it. With observation and adaptive
-disabled, current and candidate capabilities advertise
-only `off` and `recent`. Observation preserves recent replay; CH6 adaptive selection
-is available only through its separate opt-in. Older recall remains deferred.
+Provider 0.2.3 contains CH4/CH5 observation/cache diagnostics and CH6 conservative
+adaptive selection. The coordinated release keeps both disabled. Capabilities
+advertise only `off` and `recent`; observation does not alter recent replay.
+Adaptive requires its separate opt-in and workload gates. Older recall remains deferred.
 
 The combined Compose file passes `SECOND_CONTEXT_DECISIONS_*` settings only to the
 provider as `DECISIONS_*`, including its API key and independent cache-key secret.
@@ -177,5 +176,7 @@ revision. Future consumer opt-in
 must freeze the requested mode with each durable prepared turn, check capability,
 and drain or abandon pending adaptive work before provider disablement. Never change
 a retry's header to recent. Existing generated finalization/receipts and erasure
-remain available with adaptive disabled. No image, secret, policy or live setting
-changes accompany this implementation, and private Telegram review remains open.
+remain available with adaptive disabled. The coordinated 0.2.3/0.2.4 rollout
+publishes this implementation with both optional
+switches disabled, unchanged policy and preserved secrets. Private Telegram review
+remains open; see the [executed gates](evidence/conversation-history-ch7-repeat.md).
