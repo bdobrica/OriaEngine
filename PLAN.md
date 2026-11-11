@@ -349,8 +349,8 @@ and prompt-budget correction is deployed and live synthetic checks passed. Priva
 Telegram retest confirmed basic continuity but exposed the compatibility handoff:
 a local private-date reading was absent from history. Oria 0.2.3 adds a bounded,
 encrypted reading selector and recalculates current facts for ordinary follow-ups.
-Verification passed; complete publication, rollout and the private topic-switch
-retest. See [handoff evidence](docs/evidence/reading-focus-handoff.md) and the
+The correction is published and deployed; full CI and a live-model topic check
+passed. The private topic-switch retest remains. See [handoff evidence](docs/evidence/reading-focus-handoff.md) and the
 [coordinated checklist](docs/conversation-history-release.md). The [continuity gate](docs/evidence/conversation-history-continuity.md)
 uses the actual provider with synthetic model replies; live review remains separate.
 [ADR 0003](docs/adr/0003-accepted-conversation-history.md) and the

@@ -93,7 +93,7 @@ session reuse or existing memory tests prove dialogue continuity.
 
 [Release checklist](docs/conversation-history-release.md) and
 [execution evidence](docs/evidence/conversation-history-release.md) distinguish
-synthetic checks from live validation. Oria 0.2.2, MCP 0.2.1 and SecondContext 0.2.2
+synthetic checks from live validation. Oria 0.2.3, MCP 0.2.1 and SecondContext 0.2.2
 are deployed with recent history and disclosure 2026-11-10.1. The conversation
 correction passed live calculated-reading/follow-up/date probes.
 
@@ -107,7 +107,7 @@ correction passed live calculated-reading/follow-up/date probes.
 - [x] Verify published compatible images and capability before enabling recent
   history; deploy consistent disclosure versions to ingress and workers.
 - [x] Confirm policy acceptance and deletion with the participating Telegram user.
-- [ ] Publish/deploy the verified [Oria 0.2.3 private-reading handoff](docs/evidence/reading-focus-handoff.md) and retest horoscope →
+- [ ] Privately retest the deployed [Oria 0.2.3 reading handoff](docs/evidence/reading-focus-handoff.md): horoscope →
   compatibility → private date → plain-English follow-up → unrelated topic. Basic
   continuity improved in the 0.2.2 Telegram retest; the local reading handoff failed.
   Preserve unrelated projects and keep external `KNOWLEDGE_ENABLED` disabled.

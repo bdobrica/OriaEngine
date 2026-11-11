@@ -187,3 +187,9 @@ compatibility reading following a private date clarification did not become the
 subject of the next plain-English question. The [0.2.3 handoff correction](reading-focus-handoff.md)
 tracks reproduction, fresh-source recalculation and the next release/retest gate.
 CH7/OCH5 conversation quality is not marked complete by the earlier synthetic probes.
+
+The handoff correction is now deployed as Oria 0.2.3. Its full CI, real-gateway
+regression and limited live-model compatibility → unrelated-topic check passed;
+see the [separate handoff evidence](reading-focus-handoff.md) for the new app digest
+and remaining private Telegram retest. Provider/MCP versions and disclosure stayed
+unchanged. These checks do not mark the wider CH7/OCH5 dialogue-quality gate complete.
