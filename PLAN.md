@@ -475,7 +475,11 @@ with durable retry selections and paired synthetic evaluation. The full case mix
 cost more and had higher median latency; keep Oria on recent. Provider publication,
 workload economics and a consumer opt-in that freezes the mode in durable work
 remain rollout gates. Optional same-session older retrieval remains deferred.
-See [CH6 consumer evidence](docs/evidence/adaptive-history.md). OCH5/CH7 published and deployed Oria/MCP 0.2.1 and SecondContext
+See [CH6 consumer evidence](docs/evidence/adaptive-history.md). The CH7/OCH5 repeat
+release prepares provider 0.2.3 and Oria 0.2.4, pins cross-service CI to the provider
+release, and repeats publication/live continuity, erasure and rollback gates. Keep
+observation/adaptive disabled; see [release evidence](docs/evidence/conversation-history-ch7-repeat.md).
+OCH5/CH7 initially published and deployed Oria/MCP 0.2.1 and SecondContext
 0.2.2, with independent provider/consumer switches, verified immutable digests,
 consistent fresh-consent disclosure, live model continuity/erasure and a provider
 capture rollback drill. Private Telegram review confirmed policy/deletion but exposed

@@ -91,6 +91,9 @@ session reuse or existing memory tests prove dialogue continuity.
 
 ### OCH5 — Coordinate releases and adaptive enablement (depends on OCH4 and CH7)
 
+CH4–CH6 repeat release: [0.2.4/0.2.3 candidate evidence](docs/evidence/conversation-history-ch7-repeat.md).
+Publication/live verification is pending; recent remains the production mode.
+
 [Release checklist](docs/conversation-history-release.md) and
 [execution evidence](docs/evidence/conversation-history-release.md) distinguish
 synthetic checks from live validation. Oria 0.2.3, MCP 0.2.1 and SecondContext 0.2.2

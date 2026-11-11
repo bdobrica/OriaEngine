@@ -1,7 +1,9 @@
 # Coordinated recent-history release
 
-CH7/OCH5 releases the recent-history baseline. Released versions are SecondContext
-**0.2.2**, Oria application **0.2.3** and astrology MCP **0.2.1**. Version files are
+CH7/OCH5 releases the recent-history baseline. The next coordinated versions are
+SecondContext **0.2.3**, Oria application **0.2.4** and unchanged astrology MCP **0.2.1**.
+The CH4–CH6 rollout is tracked in
+[repeat-release evidence](evidence/conversation-history-ch7-repeat.md). Version files are
 publication inputs, not proof that registry images exist. This checklist does not
 automatically deploy. Record publication, selected digests and live results in
 [release evidence](evidence/conversation-history-release.md).
@@ -24,9 +26,10 @@ private Telegram review. Compare the public contract snapshots too.
 
 CH4/CH5 source now implements optional Decisions observation and cache diagnostics,
 disabled by default. The deployed provider 0.2.2 does not contain that work; publish
-and verify a compatible digest before enabling it. Both current and candidate
-capabilities advertise only `off` and `recent`. Observation preserves recent replay;
-CH6 adaptive routing and older recall remain unavailable.
+and verify a compatible digest before enabling it. With observation and adaptive
+disabled, current and candidate capabilities advertise
+only `off` and `recent`. Observation preserves recent replay; CH6 adaptive selection
+is available only through its separate opt-in. Older recall remains deferred.
 
 The combined Compose file passes `SECOND_CONTEXT_DECISIONS_*` settings only to the
 provider as `DECISIONS_*`, including its API key and independent cache-key secret.
@@ -169,7 +172,8 @@ not switch Oria's adapter: Oria continues sending `recent`. Keep that default;
 the provider's paired synthetic evaluation preserved context but increased aggregate
 cost and latency. See [CH6 evidence](evidence/adaptive-history.md).
 
-Land/publish the provider before these consumer regressions. Future consumer opt-in
+Publish the provider before the consumer release; CI must pin that exact provider
+revision. Future consumer opt-in
 must freeze the requested mode with each durable prepared turn, check capability,
 and drain or abandon pending adaptive work before provider disablement. Never change
 a retry's header to recent. Existing generated finalization/receipts and erasure
