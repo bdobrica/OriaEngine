@@ -108,6 +108,7 @@ def gateway_install(tmp_path_factory):
 class ModelRecorder:
     def __init__(self):
         self.calls = []
+        self.interpretations = []
         self.decisions = []
         self.decision_recent = 0.01
         self.reply = "First, take a walk. Second, write a short reflection."
@@ -121,7 +122,26 @@ class ModelRecorder:
         self.app.router.add_post("/v1/decisions", self.decide)
 
     async def chat(self, request):
-        self.calls.append(await request.json())
+        body = await request.json()
+        interpretation = body["messages"][0]["content"].startswith(
+            "Interpret the latest user request for personal-memory retrieval."
+        )
+        if interpretation:
+            self.interpretations.append(body)
+            dialogue = json.loads(body["messages"][-1]["content"])
+            reply = json.dumps(
+                {
+                    "query": dialogue[-1]["content"][:2000],
+                    "goal": "Continue the current conversation",
+                    "people": [],
+                    "topics": [],
+                    "intent": "answer",
+                    "context_messages": [],
+                    "reference_status": "clear",
+                }
+            )
+            return self.completion(reply)
+        self.calls.append(body)
         self.entered.set()
         await self.release.wait()
         reply = self.reply
@@ -132,6 +152,10 @@ class ModelRecorder:
                 if m["role"] == "assistant" and m["content"].startswith("Synthetic code: ")
             ]
             reply = codes[-1] if codes else "No code in the actual model input"
+        return self.completion(reply)
+
+    @staticmethod
+    def completion(reply):
         return web.json_response(
             {
                 "id": "synthetic-upstream-id",

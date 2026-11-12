@@ -105,8 +105,8 @@ async def test_private_compatibility_reading_hands_off_to_plain_english_followup
     assert "Calculated transit facts" not in current["instructions"]
     assert len(current["knowledge_refs"]) >= 3
     assert reply == model.reply and (await work_row(worker, event_id)).receipt
-    assert "1992-06-02" not in json.dumps(model.calls)
-    assert "Saved in your private profile" not in json.dumps(model.calls)
+    assert "1992-06-02" not in json.dumps(model.calls + model.interpretations)
+    assert "Saved in your private profile" not in json.dumps(model.calls + model.interpretations)
     if observe:
         observed = model.decisions[-1]["input"][0]["content"][-1]["text"]
         assert "Regarding the compatibility reading:" in observed
@@ -406,6 +406,7 @@ async def test_pending_selective_erasure_suppresses_replay_and_fences_delayed_re
         )
         assert pending
     before = len(model.calls)
+    interpretations_before = len(model.interpretations)
     await send(real_history, "Tell me more")
     if rollback:
         # Legacy generation may answer without recalled context; pending deletion
@@ -414,8 +415,12 @@ async def test_pending_selective_erasure_suppresses_replay_and_fences_delayed_re
         assert model.calls[-1]["messages"][1:] == [{"role": "user", "content": "Tell me more"}]
         assert "2020-05-01" not in json.dumps(model.calls[-1])
         assert "Reflect on our wedding" not in json.dumps(model.calls[-1])
+        assert "Reflect on our wedding" not in json.dumps(
+            model.interpretations[interpretations_before:]
+        )
     else:
         assert len(model.calls) == before
+        assert len(model.interpretations) == interpretations_before
     await recover_projections(
         worker.database, worker.encryption, worker.flow.policy_version, worker.history_provider
     )
