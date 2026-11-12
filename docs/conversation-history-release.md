@@ -1,7 +1,9 @@
 # Coordinated recent-history release
 
 CH7/OCH5 releases the recent-history baseline. The released coordinated versions are
-SecondContext **0.2.3**, Oria application **0.2.4** and unchanged astrology MCP **0.2.1**.
+SecondContext **0.3.1**, Oria application **0.2.4** and unchanged astrology MCP **0.2.1**.
+The provider upgrade and restored command-response subject echoes are recorded in
+[0.3.1 release evidence](evidence/secondcontext-0.3.1-release.md).
 The CH4–CH6 rollout is tracked in
 [repeat-release evidence](evidence/conversation-history-ch7-repeat.md). Version files are
 publication inputs, not proof that registry images exist. This checklist does not
@@ -12,12 +14,19 @@ automatically deploy. Record publication, selected digests and live results in
 
 Keep the existing [ownership and security boundaries](deployment.md) and the
 [conversation-memory release procedure](conversation-memory-release.md). Required
-schemas are Oria **0013** and SecondContext **000005**. Each owner runs its own
+schemas are Oria **0013** and SecondContext **000009** for the current provider
+(managed history itself was introduced in 000005). Each owner runs its own
 migration. Use the same Oria image and disclosure **2026-11-10.1** for ingress and
 workers. This patch preserves valid acceptance of that version. At first history
 enablement, existing users must accept the new disclosure; old consent does not grant
 permission to capture new turns. Do not rotate credentials, subject namespaces,
 encryption keys, canonical user IDs or session IDs as a rollout technique.
+
+Upgrading from provider 0.2.3 also applies migrations 000006–000009 and changes
+the history configuration recipe. Resolve outstanding old-recipe work before
+switching; do not rewrite a retry's prepared request to bypass a conflict.
+Provider conversational learning remains a separate per-subject opt-in. This
+upgrade preserves the existing history/projection settings without enabling it.
 
 Before publication run both repositories' `make verify`, provider history race
 and image-packaging checks, and Oria `make test-history` with the intended provider

@@ -1,5 +1,7 @@
 # SecondContext 0.3.0 compatibility check — 2026-11-12
 
+Historical check, subsequently resolved by the [0.3.1 compatibility release](secondcontext-0.3.1-release.md).
+
 **Deployment blocked; `oria-live-test` remains on SecondContext 0.2.3.**
 The 0.3.0 memory-command response path omits the subject echo required by Oria's
 existing adapter. No live image reference, setting, schema or storage was changed.

@@ -97,8 +97,9 @@ the production mode. Private Telegram review and adaptive enablement remain open
 
 [Release checklist](docs/conversation-history-release.md) and
 [execution evidence](docs/evidence/conversation-history-release.md) distinguish
-synthetic checks from live validation. Oria 0.2.4, MCP 0.2.1 and SecondContext 0.2.3
-are deployed with recent history and disclosure 2026-11-10.1. The conversation
+synthetic checks from live validation. Oria 0.2.4, MCP 0.2.1 and SecondContext 0.3.1
+are deployed with recent history and disclosure 2026-11-10.1; see the
+[provider compatibility release](docs/evidence/secondcontext-0.3.1-release.md). The conversation
 correction passed live calculated-reading/follow-up/date probes.
 
 - [x] Wire independent provider/consumer capture controls and model budgets;
@@ -110,10 +111,6 @@ correction passed live calculated-reading/follow-up/date probes.
 
 - [x] Verify published compatible images and capability before enabling recent
   history; deploy consistent disclosure versions to ingress and workers.
-- [ ] Before upgrading SecondContext beyond 0.2.3, verify a provider release that
-  preserves subject echoes on memory-command responses and adapt the cross-service
-  recorder for separate interpretation calls. The [0.3.0 compatibility check](docs/evidence/secondcontext-0.3.0-compatibility.md)
-  blocks that candidate; keep the current provider until the gates pass.
 - [x] Confirm policy acceptance and deletion with the participating Telegram user.
 - [ ] Privately retest the current release containing the [Oria 0.2.3 reading handoff](docs/evidence/reading-focus-handoff.md): horoscope →
   compatibility → private date → plain-English follow-up → unrelated topic. Basic
